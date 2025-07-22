@@ -19,12 +19,11 @@ export default function User() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen">
+      <div className="flex h-screen w-full">
         {/* Sidebar ฝั่งซ้าย fixed width */}
         <div className="w-64 border-r bg-white">
           <AppSidebar  />
         </div>
-
         {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
         <div className="flex-1 flex flex-col ">
           <Header
@@ -33,8 +32,10 @@ export default function User() {
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
           />
-          <main className="flex-1 p-4 overflow-auto ">
+          <main className="flex-1 p-4 overflow-auto">
+            <div className="w-full ">
             <UserTable />
+          </div>
           </main>
         </div>
       </div>

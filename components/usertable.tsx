@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
+import EditProfileDialog from "./buttonadduser";
 
 interface User {
   id: string;
@@ -39,17 +40,49 @@ interface User {
   branch: string;
 }
 
-
-
-
-
-export function UserTable( ) {
-
-
-  
-
+export function UserTable() {
   return (
-    <div>
+    <div className="px-4 py-3">
+      <div>
+        <h1 className="text-2xl font-bold">จัดการข้อมูลผู้ใช้</h1>
+      </div>
+      <div className="flex justify-between w-full">
+        <label
+          htmlFor="search"
+          className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
+        >
+          Search
+        </label>
+        <div className="relative w-96 ">
+          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+            <svg
+              className="w-4 h-4 text-gray-500 dark:text-gray-400"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+              />
+            </svg>
+          </div>
+          <input
+            type="search"
+            id="search"
+            className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Search"
+            required
+          />
+        </div>
+        <div className="flex ">
+          <EditProfileDialog />
+        </div>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -62,74 +95,53 @@ export function UserTable( ) {
           </TableRow>
         </TableHeader>
         <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">ss</TableCell>
+            <TableCell>ss</TableCell>
+            <TableCell>ss</TableCell>
+            <TableCell>ss</TableCell>
+            <TableCell>ss</TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
 
-            <TableRow >
-              <TableCell className="font-medium"></TableCell>
-
-              <TableCell>
-                
-
-              </TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell>
-                
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete the user &quot;  &quot; and remove
-                          their data from our servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
-
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        คุณต้องการที่จะลบ ผู็ใช้หรือไม่ ?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete the user &quot; &quot; and remove their data from
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
 
       {/* Pagination */}
 
-        <div className="flex items-center justify-between px-6 py-4 border-t">
-
-          <Pagination>
-            <PaginationContent>
-
-
-
-
-            </PaginationContent>
-          </Pagination>
-        </div>
-
+      <div className="flex items-center justify-between px-6 py-4 border-t">
+        <Pagination>
+          <PaginationContent></PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 }
