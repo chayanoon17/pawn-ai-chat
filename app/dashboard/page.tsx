@@ -1,17 +1,23 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
+import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { useState } from "react";
 
 export default function DashboardPage() {
-  const { user, logout, isLoading } = useAuth();
+  // 🔐 Protected Route Hook - จัดการ authentication และ redirect
+  const { shouldRender, message } = useProtectedRoute();
+
+  // 🔗 Auth Context - เอาข้อมูล user และ logout function
+  const { user, logout } = useAuth();
+
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
-      // ระบบจะ redirect ไป login อัตโนมัติผ่าน Auth Context
+      // ระบบจะ redirect ไป login อัตโนมัติผ่าน useProtectedRoute
     } catch (error) {
       console.error("Logout failed:", error);
       // แม้ logout API fail ระบบก็จะ clear state อยู่แล้ว
@@ -20,13 +26,13 @@ export default function DashboardPage() {
     }
   };
 
-  // Loading state
-  if (isLoading) {
+  // 🔐 Protected Route Guard - ถ้าไม่ควร render ให้แสดงข้อความ
+  if (!shouldRender) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลด...</p>
+          <p className="text-gray-600">{message}</p>
         </div>
       </div>
     );
