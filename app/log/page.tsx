@@ -5,7 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 
-export default function Dashboard() {
+export default function Log() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
