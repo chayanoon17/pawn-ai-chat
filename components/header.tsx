@@ -1,12 +1,14 @@
-import { Button } from "@/components/ui/button";
 import { MessageCircle, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { WidgetFilter, WidgetFilterData } from "@/components/widget-filter";
 
 interface HeaderProps {
   selectedPage: string;
   onChatToggle: () => void;
   onMenuToggle: () => void;
   isChatOpen: boolean;
+  onFilterChange?: (data: WidgetFilterData) => void;
 }
 
 const pageLabels: Record<string, string> = {
@@ -17,15 +19,14 @@ const pageLabels: Record<string, string> = {
   settings: "Settings",
 };
 
-export default function Header  ({
+export default function Header({
   selectedPage,
   onChatToggle,
   onMenuToggle,
   isChatOpen,
-}: HeaderProps)  {
+  onFilterChange,
+}: HeaderProps) {
   const isMobile = useIsMobile();
-
-  
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
@@ -58,6 +59,9 @@ export default function Header  ({
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Widget Filter */}
+          <WidgetFilter onFilterChange={onFilterChange} />
+
           <Button
             onClick={onChatToggle}
             variant={isChatOpen ? "default" : "outline"}
@@ -77,4 +81,4 @@ export default function Header  ({
       </div>
     </header>
   );
-};
+}

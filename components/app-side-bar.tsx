@@ -1,14 +1,9 @@
-// import { cn } from "@/lib/utils";
-import {
-  BarChart3,
-  Home,
-  FileText,
-  DollarSign,
-  Users,
-  Settings,
-  Logs,
-  LogOut,
-} from "lucide-react";
+"use client";
+
+import { BarChart3, FileText, Users, Logs, LogOut } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,11 +16,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { useState } from "react";
 
 interface AppSidebarProps {
   currentPage: string;

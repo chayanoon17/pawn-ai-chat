@@ -1,12 +1,13 @@
 "use client";
-import { AppSidebar } from "@/components/appsidebar";
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { UserTable } from "@/components/usertable";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 
-export default function User() {
+export default function UserPage() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
@@ -48,7 +49,7 @@ export default function User() {
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
           />
-          <main className="flex-1 p-4 overflow-auto">
+          <main className="flex-1 p-4 overflow-auto bg-gray-50">
             <div className="w-full ">
               <UserTable />
             </div>

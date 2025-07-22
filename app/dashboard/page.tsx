@@ -1,16 +1,30 @@
 "use client";
-import { AppSidebar } from "@/components/appsidebar";
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { ContractTransactionSummary } from "@/components/widgets/contract-transaction-summary";
+import { DailyOperationSummary } from "@/components/widgets/daily-operation-summary";
+import { GoldPriceCard } from "@/components/widgets/gold-price";
+import { WeeklyOperationSummary } from "@/components/widgets/weekly-operation-summary";
+import ContractTransactionDetails from "@/components/widgets/contract-transaction-details";
+import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { WidgetFilterData } from "@/components/widget-filter";
 
-export default function Dashboard() {
+export default function DashboardPage() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
+
+  // 🎯 Filter state สำหรับส่งต่อไป widgets
+  const [filterData, setFilterData] = useState<WidgetFilterData>({
+    branchId: "",
+    date: new Date().toISOString().split("T")[0],
+    isLoading: true,
+  });
 
   function onChatToggle() {
     setIsChatOpen((prev) => !prev);
@@ -19,6 +33,16 @@ export default function Dashboard() {
   function onMenuToggle() {
     console.log("Menu toggled");
   }
+
+  // 🎯 Handle เมื่อ filter เปลี่ยน
+  const handleFilterChange = (data: WidgetFilterData) => {
+    setFilterData(data);
+
+    // Log การเปลี่ยนแปลง
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("🎯 Dashboard filter changed:", data);
+    }
+  };
 
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {
@@ -34,7 +58,7 @@ export default function Dashboard() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen">
+      <div className="flex h-screen w-full">
         {/* Sidebar ฝั่งซ้าย fixed width */}
         <div className="w-64 border-r bg-white">
           <AppSidebar />
@@ -47,10 +71,37 @@ export default function Dashboard() {
             onChatToggle={onChatToggle}
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
+            onFilterChange={handleFilterChange}
           />
-          <main className="flex-1 p-4 overflow-auto">
+          <main className="flex-1 p-4 overflow-auto bg-gray-50">
+            <GoldPriceCard />
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+              <DailyOperationSummary
+                branchId={filterData.branchId}
+                date={filterData.date}
+                isLoading={filterData.isLoading}
+              />
+              <ContractTransactionSummary
+                branchId={filterData.branchId}
+                date={filterData.date}
+                isLoading={filterData.isLoading}
+              />
+            </div>
+
+            <WeeklyOperationSummary
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+
+            <ContractTransactionDetails
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+
             {/* ใส่เนื้อหาหน้าตรงนี้ */}
-            <h1 className="text-2xl font-bold">หน้าปัจจุบัน:</h1>
           </main>
         </div>
       </div>

@@ -1,11 +1,12 @@
 "use client";
-import { AppSidebar } from "@/components/appsidebar";
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 
-export default function Log() {
+export default function LogPage() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
@@ -34,7 +35,7 @@ export default function Log() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen">
+      <div className="flex h-screen w-full">
         {/* Sidebar ฝั่งซ้าย fixed width */}
         <div className="w-64 border-r bg-white">
           <AppSidebar />
@@ -48,9 +49,9 @@ export default function Log() {
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
           />
-          <main className="flex-1 p-4 overflow-auto">
+          <main className="flex-1 p-4 overflow-auto bg-gray-50">
             {/* ใส่เนื้อหาหน้าตรงนี้ */}
-            <h1 className="text-2xl font-bold">หน้าปัจจุบัน:</h1>
+            <h1 className="text-2xl font-bold">จัดการ Log</h1>
           </main>
         </div>
       </div>

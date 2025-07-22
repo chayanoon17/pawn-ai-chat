@@ -1,14 +1,9 @@
-/**
- * Login Page
- * หน้าเข้าสู่ระบบที่ใช้ httpOnly Cookies Authentication
- */
-
 "use client";
 
+import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
-import { useAuth } from "../../context/auth-context";
+import { useAuth } from "@/context/auth-context";
 
 export default function LoginPage() {
   // 🎣 ใช้ Auth Context
