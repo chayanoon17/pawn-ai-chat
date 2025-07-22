@@ -1,219 +1,231 @@
 "use client";
 
-import { Dialog, Button, TextField, Flex, Text } from "@radix-ui/themes";
+import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { fromTheme } from "tailwind-merge";
+import { registerUser } from "@/lib/auth-service";
 
 const BRANCHES = [
-  "ทั้งหมด",
-  "สะพานขาว",
-  "หนองจอก",
-  "บางซื่อ",
-  "บางแค",
-  "สาธุประดิษฐ์",
-  "บางขุนเทียน",
-  "หลักสี่",
-  "ม.เกษตร",
-  "ธนบุรี-ปากท่อ",
-  "ห้วยขวาง",
-  "บางกะปิ",
-  "สะพานพุทธ",
-  "อุดมสุข",
-  "ดอนเมือง",
-  "สุวินทวงศ์",
-  "ปากเกร็ด",
-  "บางบอน",
-  "หนองแขม",
-  "ทุ่งสองห้อง",
-  "รามอินทรา",
-  "ระยอง",
-  "พัฒนาการ",
-  "ลาดกระบัง",
-  "สายไหม",
-  "ทุ่งครุ",
-  "สมุทรปราการ",
-  "นนทบุรี",
-  "ประตูน้ำ",
+  { id: 1, name: "สะพานขาว" },
+  { id: 2, name: "หนองจอก" },
+  { id: 3, name: "บางซื่อ" },
+  { id: 4, name: "บางแค" },
+  { id: 5, name: "สาธุประดิษฐ์" },
+  { id: 6, name: "บางขุนเทียน" },
+  { id: 7, name: "หลักสี่" },
+  { id: 8, name: "ม.เกษตร" },
+  { id: 9, name: "ธนบุรี-ปากท่อ" },
+  { id: 10, name: "ห้วยขวาง" },
+  { id: 11, name: "บางกะปิ" },
+  { id: 12, name: "สะพานพุทธ" },
+  { id: 13, name: "อุดมสุข" },
+  { id: 14, name: "ดอนเมือง" },
+  { id: 15, name: "สุวินทวงศ์" },
+  { id: 16, name: "ปากเกร็ด" },
+  { id: 17, name: "บางบอน" },
+  { id: 18, name: "หนองแขม" },
+  { id: 19, name: "ทุ่งสองห้อง" },
+  { id: 20, name: "รามอินทรา" },
+  { id: 21, name: "ระยอง" },
+  { id: 22, name: "พัฒนาการ" },
+  { id: 23, name: "ลาดกระบัง" },
+  { id: 24, name: "สายไหม" },
+  { id: 25, name: "ทุ่งครุ" },
+  { id: 26, name: "สมุทรปราการ" },
+  { id: 27, name: "นนทบุรี" },
+  { id: 28, name: "ประตูน้ำ" },
 ];
-const STATUSES = ["ทั้งหมด", "กำลังดำเนินการ", "เสร็จสิ้น"];
+
+const ROLES = [
+  { id: 1, name: "User" },
+  { id: 2, name: "Admin" },
+  { id: 3, name: "Manager" },
+  { id: 4, name: "Full admin" },
+];
+
+const STATUSES = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+];
 
 export default function EditProfileDialog() {
-  const [selectedBranch, setSelectedBranch] = useState("");
-  const [selectFilter, setSelectFilter] = useState("");
-  const [showSelect, setShowSelect] = useState(false);
 
-  const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
+const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    branch: "",
+    role: "",
+    status: "",
+  });
 
-  const handleFilter = () => {
-    console.log("🟢 Filtered values:", {
-      branch: selectedBranch,
-      status: selectedStatus,
-    });
-  }
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const payload = {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        branch: Number(form.branch),
+        role: Number(form.role),
+        status: form.status,
+      };
+
+      const res = await registerUser(payload);
+      setMessage(res.message || "สมัครสมาชิกสำเร็จ");
+    } catch (error: any) {
+      setMessage(error?.response?.data?.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex">
-       <Dialog.Root>
+    <Dialog.Root>
       <Dialog.Trigger>
-        <Button>Filter</Button>
+        <Button>Add User</Button>
       </Dialog.Trigger>
-      <Dialog.Content className="max-w-md bg-white p-6 rounded shadow">
-        <h2 className="text-lg font-semibold mb-4">กรองข้อมูล</h2>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">สาขา</label>
-            <select
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              {BRANCHES.map((branch) => (
-                <option key={branch} value={branch}>
-                  {branch}
-                </option>
-              ))}
-            </select>
-          </div>
+      <Dialog.Content maxWidth="450px" className="p-6 bg-white rounded shadow">
+        <Dialog.Title>เพิ่มผู้ใช้งาน</Dialog.Title>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">สถานะ</label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              {STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <form onSubmit={handleSubmit}>
+      <Flex direction="column" gap="3" className="mt-4">
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            ชื่อผู้ใช้งาน
+          </Text>
+          <input
+            type="text"
+            name="fullName"
+            value={form.fullName}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </label>
 
-<Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Cancel
-              </Button>
-            </Dialog.Close>
-            <Dialog.Close>
-              <Button onClick={handleFilter}>Save</Button>
-            </Dialog.Close>
-          </Flex>
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Email
+          </Text>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </label>
 
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Password
+          </Text>
+          <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </label>
+
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            เลือกสาขา
+          </Text>
+          <select
+            name="branch"
+            value={form.branch}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">เลือก</option>
+            {BRANCHES.map((b) => (
+              <option key={b.id} value={b.id.toString()}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Role
+          </Text>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">เลือก</option>
+            {ROLES.map((r) => (
+              <option key={r.id} value={r.id.toString()}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Status
+          </Text>
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">เลือก</option>
+            {STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </Flex>
+
+      {message && (
+        <Text color="gray" mt="3">
+          {message}
+        </Text>
+      )}
+
+      <Flex gap="3" mt="4" justify="end">
+        <Dialog.Close>
+          <Button variant="soft" color="gray" type="button">
+            Cancel
+          </Button>
+        </Dialog.Close>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Save"}
+        </Button>
+      </Flex>
+    </form>
       </Dialog.Content>
     </Dialog.Root>
-      <Dialog.Root>
-        <select
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm 
-                   rounded-lg focus:ring-blue-500 focus:border-blue-500 block 
-                   w-full p-2 dark:bg-gray-700 dark:border-gray-600 
-                   dark:placeholder-gray-400 dark:text-white 
-                   dark:focus:ring-blue-500 dark:focus:border-blue-500"
-        >
-          <option value="Oidest">Oidest</option>
-          <option value="Newest">Newest</option>
-        </select>
-        <Dialog.Trigger>
-          <Button>Add User</Button>
-        </Dialog.Trigger>
-
-        <Dialog.Content maxWidth="450px">
-          <Dialog.Title>เพิ่มผู้ใช้งาน</Dialog.Title>
-
-          <Flex direction="column" gap="3">
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                ชื่อผู้ใช้งาน
-              </Text>
-              <TextField.Root
-                defaultValue="Freja Johnsen"
-                placeholder="Enter your full name"
-              />
-            </label>
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                Email
-              </Text>
-              <TextField.Root
-                defaultValue="freja@example.com"
-                placeholder="Enter your email"
-              />
-            </label>
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                เลือกสาขา
-              </Text>
-              <div>
-                <select
-                  id="branch"
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm 
-                   rounded-lg focus:ring-blue-500 focus:border-blue-500 block 
-                   w-full p-2 dark:bg-gray-700 dark:border-gray-600 
-                   dark:placeholder-gray-400 dark:text-white 
-                   dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                >
-                  {BRANCHES.map((branch) => (
-                    <option key={branch} value={branch}>
-                      {branch}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                Role
-              </Text>
-              <select
-                id="countries"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm 
-                   rounded-lg focus:ring-blue-500 focus:border-blue-500 block 
-                   w-full p-2 dark:bg-gray-700 dark:border-gray-600 
-                   dark:placeholder-gray-400 dark:text-white 
-                   dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              >
-                <option defaultValue="">เลือก</option>
-                <option value="US">User</option>
-                <option value="CA">Admin</option>
-                <option value="FR">Manager</option>
-                <option value="DE">Full admin</option>
-              </select>
-            </label>
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                Status
-              </Text>
-              <select
-                id="countries"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm 
-                   rounded-lg focus:ring-blue-500 focus:border-blue-500 block 
-                   w-full p-2 dark:bg-gray-700 dark:border-gray-600 
-                   dark:placeholder-gray-400 dark:text-white 
-                   dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              >
-                <option defaultValue="">เลือก</option>
-                <option value="US">Active</option>
-                <option value="CA">inavtive</option>
-              </select>
-            </label>
-          </Flex>
-
-          <Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Cancel
-              </Button>
-            </Dialog.Close>
-            <Dialog.Close>
-              <Button>Save</Button>
-            </Dialog.Close>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
-    </div>
   );
 }

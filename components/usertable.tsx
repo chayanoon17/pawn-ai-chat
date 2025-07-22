@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -30,22 +30,48 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
 import EditProfileDialog from "./buttonadduser";
+import { getAllUsers } from "@/lib/auth-service";
 
 interface User {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
   status: string;
-  role: string;
-  branch: string;
+  roleId: string;
+  branchId: string;
 }
 
+
 export function UserTable() {
+
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await getAllUsers();
+        setUsers(response.data); // ตามโครงสร้าง response ของ backend
+      } catch (err) {
+        setError("Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUsers();
+  }, []);
+
+  if (loading) return <div>Loading users...</div>;
+  if (error) return <div>{error}</div>;
+
   return (
     <div className="px-4 py-3">
       <div>
         <h1 className="text-2xl font-bold">จัดการข้อมูลผู้ใช้</h1>
       </div>
+      
       <div className="flex justify-between w-full">
         <label
           htmlFor="search"
@@ -84,56 +110,59 @@ export function UserTable() {
         </div>
       </div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ชื่อ</TableHead>
-            <TableHead>บทบาท</TableHead>
-            <TableHead>สาขา</TableHead>
-            <TableHead>อีเมล</TableHead>
-            <TableHead>สถานะ</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">ss</TableCell>
-            <TableCell>ss</TableCell>
-            <TableCell>ss</TableCell>
-            <TableCell>ss</TableCell>
-            <TableCell>ss</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
+  <TableHeader>
+    <TableRow>
+      <TableHead>ชื่อ</TableHead>
+      <TableHead>บทบาท</TableHead>
+      <TableHead>สาขา</TableHead>
+      <TableHead>อีเมล</TableHead>
+      <TableHead>สถานะ</TableHead>
+      <TableHead className="text-right">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {users.map((user) => (
+      <TableRow key={user.id}>
+        <TableCell className="font-medium">{user.fullName}</TableCell>
+        <TableCell>{user.roleId}</TableCell>
+        <TableCell>{user.branchId}</TableCell>
+        <TableCell>{user.email}</TableCell>
+        <TableCell>{user.status === "ACTIVE" ? "ใช้งาน" : "ปิดใช้งาน"}</TableCell>
+        <TableCell className="text-right">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4" />
+            </Button>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        คุณต้องการที่จะลบ ผู็ใช้หรือไม่ ?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the user &quot; &quot; and remove their data from
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    คุณต้องการที่จะลบผู้ใช้หรือไม่ ?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    การกระทำนี้ไม่สามารถย้อนกลับได้ จะลบผู้ใช้{" "}
+                    <strong>{user.fullName}</strong> อย่างถาวร
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                  <AlertDialogAction>ลบ</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+
 
       {/* Pagination */}
 

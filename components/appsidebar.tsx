@@ -62,7 +62,7 @@ export function AppSidebar() {
                 const isActive = pathname === id;
                 return (
                   <SidebarMenuItem key={id}>
-                    <Link href={id} passHref legacyBehavior>
+                    <Link href={id}>
                       <SidebarMenuButton
                         isActive={isActive}
                         className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${

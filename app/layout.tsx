@@ -36,13 +36,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Theme>
-        {children}
-
-        </Theme>
+        <AuthProvider>
+          <Theme>{children}</Theme>
+        </AuthProvider>
 
         {/*  AuthProvider ครอบ App ทั้งหมด เพื่อให้ทุก Component เข้าถึง Auth Context */}
-        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

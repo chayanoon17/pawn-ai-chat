@@ -5,7 +5,26 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Header from "@/components/header";
 import { UserTable } from "@/components/usertable";
 
+import { useAuth } from "@/context/auth-context";
+
+
 export default function User() {
+  const { user, logout, isLoading } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      // ระบบจะ redirect ไป login อัตโนมัติผ่าน Auth Context
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // แม้ logout API fail ระบบก็จะ clear state อยู่แล้ว
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+  
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
 
