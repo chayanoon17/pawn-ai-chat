@@ -23,6 +23,14 @@ interface Message {
   timestamp: Date;
 }
 
+// Mock data ราคาทอง (สามารถปรับเปลี่ยนได้)
+const goldPrice = {
+  buy: 30000,  // ราคาซื้อ
+  sell: 30500, // ราคาขาย
+  source: "สมาคมค้าทองคำ",
+};
+
+
 export const ChatSidebar = ({
   isOpen,
   onClose,
@@ -66,6 +74,14 @@ export const ChatSidebar = ({
           timestamp: new Date(),
         },
       ]);
+
+
+      // Response จาก AI หรือ bot จะเปลี่ยนไปตามข้อความของผู้ใช้
+      if (inputValue.includes("ราคาทอง")) {
+        botReply = `ราคาทองวันนี้: ซื้อที่ ${goldPrice.buy} บาท/บาททองคำ, ขายที่ ${goldPrice.sell} บาท/บาททองคำ (แหล่งที่มา: ${goldPrice.source})`;
+      } else {
+        botReply = "ขอโทษครับ ฉันไม่เข้าใจคำถามนี้";
+      }
 
       const historyMessages: {
         role: "user" | "assistant" | "system";
@@ -179,6 +195,31 @@ export const ChatSidebar = ({
       </ScrollArea>
 
       {/* Input */}
+
+      {/* Suggested Prompts */}
+      <div className="px-4 pt-2">
+        <div className="flex flex-wrap gap-2">
+          {[
+            "ราคาทองวันนี้เท่าไร?",
+            "แนวโน้มราคาทองช่วงนี้เป็นอย่างไร?",
+            "ควรขายทองตอนนี้ไหม?",
+          ].map((prompt) => (
+            <Button
+              key={prompt}
+              variant="outline"
+              size="sm"
+              className="text-sm"
+              onClick={() => {
+                setInputValue(prompt);
+                handleSendMessage(); // ส่งทันที หรือเอาออกถ้าต้องการแค่เติมในช่อง
+              }}
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       
       <div className="p-4 border-t border-gray-200">
         <div className="flex space-x-2">
