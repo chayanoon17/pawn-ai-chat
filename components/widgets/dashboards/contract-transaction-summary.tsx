@@ -243,7 +243,7 @@ export const ContractTransactionSummary = ({
         {/* Chart Display */}
         {data.length > 0 && !isLoading && (
           <>
-            <div className="h-[500px]">
+            <div className="h-[360px]">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -289,7 +289,7 @@ export const ContractTransactionSummary = ({
         {data.length === 0 && !isLoading && !error && branchId !== "all" && (
           <div className="text-center text-gray-400 py-16">
             <div className="text-4xl mb-2">📊</div>
-            <p>ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
+            <p className="text-sm">ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}

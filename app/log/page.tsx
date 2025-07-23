@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { WidgetFilterData } from "@/components/widget-filter";
 
 type Tab = 'login' | 'export' | 'view' | 'chat'
 
@@ -56,17 +57,17 @@ const overview = [
 ]
 
 const tabs: { key: Tab; label: string; count: number }[] = [
-  { key: 'login', label: 'User/Login', count: 123 },
-  { key: 'export', label: 'Export', count: 1245 },
-  { key: 'view', label: 'View menu', count: 6586 },
-  { key: 'chat', label: 'Chat history', count: 4391 },
+  { key: 'login', label: 'ผู้ใช้/เข้าสู่ระบบ', count: 123 },
+  { key: 'export', label: 'ส่งออกไฟล์', count: 1245 },
+  { key: 'view', label: 'การเข้าถึงเมนู', count: 6586 },
+  { key: 'chat', label: 'ประวัติแชท', count: 4391 },
 ]
 
 const loginData: LoginRow[] = Array.from({ length: 10 }).map((_, i) => ({
   name: `ผู้ใช้ ${i + 1}`,
   email: `user${i + 1}@pawn.co.th`,
   datetime: `2025-06-${10 + i} 09:0${i}`,
-  action: i % 2 === 0 ? 'login_success' : 'login_failed',
+  action: i % 2 === 0 ? 'log_in' : 'log_out',
   ip: `203.150.3.${i + 4}`,
   agent: ['Chrome 114.0 บน Windows 10', 'Firefox 101.0 บน macOS'][i % 2],
   session: `sess_ab${i + 100}`,
@@ -85,17 +86,18 @@ const exportData: ExportRow[] = Array.from({ length: 8 }).map((_, i) => ({
 }))
 
 const viewData: ViewRow[] = [
-  { name: 'ธวัชชัย ญาณศิริ', email: 'support@pawn.co.th', menuId: 'menu_reports', menuName: 'ข้อมูลรับจำนำ', duration: '00:02:15' },
-  { name: 'ปราณี สุกิจกุล', email: 'info@pawn.co.th', menuId: 'menu_inventory', menuName: 'สต็อกสินค้า', duration: '00:03:45' },
-  { name: 'นารีลักษณ์ ยิ่งกุล', email: 'service@pawn.co.th', menuId: 'menu_customers', menuName: 'ข้อมูลลูกค้า', duration: '00:05:30' },
-  { name: 'เอนกธรา สมุทรสิริ', email: 'contact@pawn.co.th', menuId: 'menu_transactions', menuName: 'ประวัติการทำรายการ', duration: '00:01:50' },
-  { name: 'ประวิทย์ ประกิตกุล', email: 'help@pawn.co.th', menuId: 'menu_settings', menuName: 'การตั้งค่า', duration: '00:07:20' },
-  { name: 'สุภาษิต ศักดิ์รัตน์', email: 'admin@pawn.co.th', menuId: 'menu_dashboard', menuName: 'แดชบอร์ดหลัก', duration: '00:04:10' },
-  { name: 'อังคณา ไพโรจน์', email: 'support@pawn.co.th', menuId: 'menu_summary', menuName: 'สรุปรายงาน', duration: '00:02:05' },
-  { name: 'ชลธิชา วชิรบัณฑิต', email: 'info@pawn.co.th', menuId: 'menu_feedback', menuName: 'ความคิดเห็นลูกค้า', duration: '00:03:15' },
-  { name: 'ประมวล กองคำ', email: 'service@pawn.co.th', menuId: 'menu_analytics', menuName: 'การวิเคราะห์ข้อมูล', duration: '00:06:00' },
-  { name: 'พิมพ์ชนก แสงอรุณ', email: 'contact@pawn.co.th', menuId: 'menu_help', menuName: 'ศูนย์ช่วยเหลือ', duration: '00:08:25' },
-]
+  { name: 'ธวัชชัย ญาณศิริ', email: 'support@pawn.co.th', menuId: 'menu_pawn_data', menuName: 'ข้อมูลตัวรับจำนำ', duration: '00:02:15' },
+  { name: 'ปราณี สุกิจกุล', email: 'info@pawn.co.th', menuId: 'menu_asset_types', menuName: 'ประเภททรัพย์และราคา', duration: '00:03:45' },
+  { name: 'นารีลักษณ์ ยิ่งกุล', email: 'service@pawn.co.th', menuId: 'menu_user', menuName: 'จัดการข้อมูลผู้ใช้', duration: '00:05:30' },
+  { name: 'เอนกธรา สมุทรสิริ', email: 'contact@pawn.co.th', menuId: 'menu_logs', menuName: 'จัดการ Log', duration: '00:01:50' },
+  { name: 'ประวิทย์ ประกิตกุล', email: 'help@pawn.co.th', menuId: 'menu_logs', menuName: 'จัดการ Log', duration: '00:07:20' },
+  { name: 'สุภาษิต ศักดิ์รัตน์', email: 'admin@pawn.co.th', menuId: 'menu_asset_types', menuName: 'ประเภททรัพย์และราคา', duration: '00:04:10' },
+  { name: 'อังคณา ไพโรจน์', email: 'support@pawn.co.th', menuId: 'menu_user', menuName: 'จัดการข้อมูลผู้ใช้', duration: '00:02:05' },
+  { name: 'ชลธิชา วชิรบัณฑิต', email: 'info@pawn.co.th', menuId: 'menu_pawn_data', menuName: 'ข้อมูลตัวรับจำนำ', duration: '00:03:15' },
+  { name: 'ประมวล กองคำ', email: 'service@pawn.co.th', menuId: 'menu_asset_types', menuName: 'ประเภททรัพย์และราคา', duration: '00:06:00' },
+  { name: 'พิมพ์ชนก แสงอรุณ', email: 'contact@pawn.co.th', menuId: 'menu_user', menuName: 'จัดการข้อมูลผู้ใช้', duration: '00:08:25' },
+];
+
 
 const chatData: ChatRow[] = Array.from({ length: 10 }).map((_, i) => ({
   name: ['ธวัชชัย ญาณศิริ', 'จิราพร มะลี'][i % 2],
@@ -121,7 +123,15 @@ export default function LogPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
+  const [currentPage, setCurrentPage] = useState("log-management");
+
+  // 🎯 Filter state สำหรับส่งต่อไป widgets
+  const [filterData, setFilterData] = useState<WidgetFilterData>({
+    branchId: "",
+    date: new Date().toISOString().split("T")[0],
+    isLoading: true,
+  });
+
 
   function onChatToggle() {
     setIsChatOpen((prev) => !prev);
@@ -214,7 +224,6 @@ export default function LogPage() {
               <tr>
                 <th className="px-4 py-2 text-left">ชื่อ</th>
                 <th className="px-4 py-2 text-left">อีเมล</th>
-                <th className="px-4 py-2 text-left">รหัสเมนู</th>
                 <th className="px-4 py-2 text-left">ชื่อเมนู</th>
                 <th className="px-4 py-2 text-left">ระยะเวลาในหน้า</th>
               </tr>
@@ -224,7 +233,6 @@ export default function LogPage() {
                 <tr key={i} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2">{r.name}</td>
                   <td className="px-4 py-2">{r.email}</td>
-                  <td className="px-4 py-2">{r.menuId}</td>
                   <td className="px-4 py-2">{r.menuName}</td>
                   <td className="px-4 py-2">{r.duration}</td>
                 </tr>
@@ -271,6 +279,15 @@ export default function LogPage() {
     }
   }
 
+  const handleFilterChange = (data: WidgetFilterData) => {
+    setFilterData(data);
+
+    // Log การเปลี่ยนแปลง
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("🎯 Dashboard filter changed:", data);
+    }
+  };
+
 
   return (
     <SidebarProvider>
@@ -282,10 +299,14 @@ export default function LogPage() {
 
         {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
         <div className="flex-1 flex flex-col">
-
+          <Header
+            selectedPage={currentPage}
+            onChatToggle={onChatToggle}
+            onMenuToggle={onMenuToggle}
+            isChatOpen={isChatOpen}
+            onFilterChange={handleFilterChange}
+          />
           <main className="flex-1 p-8">
-            <h1 className="text-2xl font-semibold mb-6">Log management</h1>
-
             {/* Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {overview.map(o => (
@@ -337,7 +358,15 @@ export default function LogPage() {
                   <div className="text-lg font-semibold capitalize">
                     {tabs.find(t => t.key === activeTab)?.label}
                   </div>
-                  <div className="text-sm text-blue-500">วันที่ 20 มิถุนายน 2568</div>
+                  <div className="text-sm text-blue-500">
+                    วันที่{" "}
+                    {new Date().toLocaleDateString("th-TH", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+
                 </div>
                 <div className="flex space-x-3">
                   <input type="text" placeholder="ค้นหาชื่อ" className="border px-3 py-2 rounded w-64" />

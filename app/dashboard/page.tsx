@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
+  const [currentPage, setCurrentPage] = useState("pawn-tickets");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({

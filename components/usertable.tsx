@@ -68,10 +68,6 @@ export function UserTable() {
 
   return (
     <div className="px-4 py-3">
-      <div>
-        <h1 className="text-2xl font-bold">จัดการข้อมูลผู้ใช้</h1>
-      </div>
-      
       <div className="flex justify-between w-full">
         <label
           htmlFor="search"

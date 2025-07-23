@@ -14,6 +14,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
+import { Download, Upload } from "lucide-react";
 
 interface WeeklyOperationData {
   total: number;
@@ -88,16 +89,17 @@ export const WeeklyOperationSummary = ({
 
   const formatPercentChange = (percent: number) => {
     const isPositive = percent >= 0;
-    const emoji = isPositive ? "📈" : "📉";
+    const icon = isPositive ? "/icons/up.png" : "/icons/down.png"; // 👈 ใช้ path public/
     const text = isPositive ? "เพิ่มขึ้น" : "ลดลง";
     const color = isPositive ? "text-[#02B670]" : "text-red-600";
 
     return {
-      emoji,
+      icon, // 👈 เปลี่ยนจาก emoji
       text: `${text} ${Math.abs(percent).toFixed(2)}%`,
       color,
     };
   };
+
 
   // 🔄 ดึงข้อมูลจาก API
   const fetchWeeklyOperationSummary = async () => {
@@ -214,16 +216,22 @@ export const WeeklyOperationSummary = ({
               
           <div className="text-center text-gray-400 py-16">
             <div className="text-4xl mb-2">📊</div>
-            <p>ไม่มีข้อมูลยอดรับจำนำและรายละเอียด</p>
+            <p className="text-sm">ไม่มีข้อมูลยอดรับจำนำและรายละเอียด</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="space-y-4 min-w-0">
-              <div className="flex items-center space-x-2">
-                <span className="inline-block w-3 h-3 bg-green-500 rounded"></span>
-                <span className="text-sm font-medium">
-                  เงินสดรับ ณ วันที่ {formatDate(date)}
+              <div className="flex items-center space-x-3">
+                {/* Badge สีเขียว */}
+                <div className="flex items-center px-3 py-1 bg-green-100 text-green-600 rounded-md text-sm font-medium">
+                  <Download className="w-4 h-4 mr-1" />
+                  เงินสดรับ
+                </div>
+
+                {/* ข้อความวันที่ */}
+                <span className="text-sm text-gray-800 font-medium">
+                  ณ วันที่ {formatDate(date)}
                 </span>
               </div>
               <div className="text-2xl font-bold">
@@ -233,11 +241,14 @@ export const WeeklyOperationSummary = ({
                 {cashInChange && (
                   <>
                     <span className={`${cashInChange.color} flex items-center`}>
-                      {cashInChange.emoji}{" "}
-                      <span className="font-medium ml-1">
-                        {cashInChange.text}
-                      </span>
+                      <img
+                        src={cashInChange.icon}
+                        alt="trend"
+                        className="w-4 h-4 mr-1 object-contain"
+                      />
+                      <span className="font-medium">{cashInChange.text}</span>
                     </span>
+
                     <span className="ml-1 text-[#344A61]">
                       เทียบกับค่าเฉลี่ยของสัปดาห์ก่อน
                     </span>
@@ -316,10 +327,16 @@ export const WeeklyOperationSummary = ({
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <span className="inline-block w-3 h-3 bg-blue-500 rounded"></span>
-                <span className="text-sm font-medium">
-                  เงินสดจ่าย ณ วันที่ {formatDate(date)}
+              <div className="flex items-center space-x-3">
+                {/* Badge สีฟ้า */}
+                <div className="flex items-center px-3 py-1 bg-blue-100 text-sky-600 rounded-md text-sm font-medium">
+                  <Upload className="w-4 h-4 mr-1" />
+                  เงินสดจ่าย
+                </div>
+
+                {/* ข้อความวันที่ */}
+                <span className="text-sm text-gray-800 font-medium">
+                  ณ วันที่ {formatDate(date)}
                 </span>
               </div>
               <div className="text-2xl font-bold">
@@ -328,13 +345,13 @@ export const WeeklyOperationSummary = ({
               <div className="flex items-center text-sm">
                 {cashOutChange && (
                   <>
-                    <span
-                      className={`${cashOutChange.color} flex items-center`}
-                    >
-                      {cashOutChange.emoji}{" "}
-                      <span className="font-medium ml-1">
-                        {cashOutChange.text}
-                      </span>
+                    <span className={`${cashOutChange.color} flex items-center`}>
+                      <img
+                        src={cashOutChange.icon}
+                        alt="trend"
+                        className="w-4 h-4 mr-1 object-contain"
+                      />
+                      <span className="font-medium">{cashOutChange.text}</span>
                     </span>
                     <span className="ml-1 text-[#344A61]">
                       เทียบกับค่าเฉลี่ยของสัปดาห์ก่อน

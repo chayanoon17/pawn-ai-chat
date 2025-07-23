@@ -12,7 +12,7 @@ export default function UserPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("จัดการข้อมูลผู้ใช้");
+  const [currentPage, setCurrentPage] = useState("user-management");
 
   function onChatToggle() {
     setIsChatOpen((prev) => !prev);
