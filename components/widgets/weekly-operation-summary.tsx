@@ -235,7 +235,7 @@ export const WeeklyOperationSummary = ({
                 แนวโน้มของเงินสดรับช่วง 7 วันที่ผ่านมา
               </p>
 
-              <div className="h-48">
+              <div className="flex-1 mt-4">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={leftChartData}>
