@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ContractTransactionSummary } from "@/components/widgets/dashboards/contract-transaction-summary";
-import { DailyOperationSummary } from "@/components/widgets/dashboards/daily-operation-summary";
-import { GoldPriceCard } from "@/components/widgets/dashboards/gold-price";
-import { WeeklyOperationSummary } from "@/components/widgets/dashboards/weekly-operation-summary";
-import ContractTransactionDetails from "@/components/widgets/dashboards/contract-transaction-details";
+import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-summary";
+import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-operation-summary";
+import { GoldPriceCard } from "@/components/widgets/dashboard/gold-price";
+import { WeeklyOperationSummary } from "@/components/widgets/dashboard/weekly-operation-summary";
+import ContractTransactionDetails from "@/components/widgets/dashboard/contract-transaction-details";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
@@ -112,12 +112,12 @@ export default function DashboardPage() {
             <ChatSidebar
               isOpen={isChatOpen}
               onClose={() => setIsChatOpen(false)}
-              className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${isChatOpen ? "translate-x-0" : "translate-x-full"
-                }`}
+              className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+                isChatOpen ? "translate-x-0" : "translate-x-full"
+              }`}
             />
           )}
         </div>
-
       </div>
     </SidebarProvider>
   );
