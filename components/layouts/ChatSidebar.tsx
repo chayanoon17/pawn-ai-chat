@@ -1,14 +1,19 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Send, Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sendChatMessageStream } from "@/lib/api";
 
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   className?: string;
+
+
 }
 
 interface Message {
@@ -22,18 +27,18 @@ export const ChatSidebar = ({
   isOpen,
   onClose,
   className,
-}: ChatSidebarProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "bot",
-      content: "สวัสดีครับ! ผมเป็น AI ผู้ช่วยของคุณ มีอะไรให้ช่วยเหลือไหมครับ?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
 
-  const handleSendMessage = () => {
+}: ChatSidebarProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const latestMessagesRef = useRef<Message[]>(messages);
+  useEffect(() => {
+    latestMessagesRef.current = messages;
+  }, [messages]);
+
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
@@ -43,19 +48,69 @@ export const ChatSidebar = ({
       timestamp: new Date(),
     };
 
+    const streamingId = `streaming-${Date.now()}`;
+
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+    setIsSending(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "bot",
-        content: `ขอบคุณสำหรับคำถาม "${inputValue}" ผมจะช่วยคุณแก้ไขปัญหานี้ครับ`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+    try {
+      let botReply = "";
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: streamingId,
+          type: "bot",
+          content: "",
+          timestamp: new Date(),
+        },
+      ]);
+
+      const historyMessages: {
+        role: "user" | "assistant" | "system";
+        content: string;
+      }[] = [...latestMessagesRef.current, userMessage].map((msg) => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.content,
+      }));
+
+      await sendChatMessageStream(
+        userMessage.content,
+        (chunk: string) => {
+          botReply += chunk;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === streamingId ? { ...msg, content: botReply } : msg
+            )
+          );
+        },
+        historyMessages
+      );
+
+      setMessages((prev) => [
+        ...prev.filter((msg) => msg.id !== streamingId),
+        {
+          id: Date.now().toString(),
+          type: "bot",
+          content: botReply,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (error) {
+      console.error("❌ Error จาก AI:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          type: "bot",
+          content: "❌ เกิดข้อผิดพลาดในการติดต่อ AI โปรดลองใหม่อีกครั้ง",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -86,7 +141,8 @@ export const ChatSidebar = ({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
+      
+      <ScrollArea className="flex-1 p-4 overflow-auto">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -123,8 +179,10 @@ export const ChatSidebar = ({
       </ScrollArea>
 
       {/* Input */}
+      
       <div className="p-4 border-t border-gray-200">
         <div className="flex space-x-2">
+          
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
