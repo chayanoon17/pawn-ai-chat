@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatSidebar } from "@/components/layouts/ChatSidebar";
+import { ChatSidebar } from "@/components/chat-side-bar";
 import { WidgetFilterData } from "@/components/widget-filter";
 import { AssetTypesSummary } from "@/components/widgets/asset-type/asset-type-summary";
 import { RankingByPeriodAssetType } from "@/components/widgets/asset-type/ranking-by-period-asset-type";
@@ -19,7 +19,7 @@ export default function AssetTypePage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
+  const [currentPage, setCurrentPage] = useState("asset-types");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({

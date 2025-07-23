@@ -45,7 +45,7 @@ export function AppSidebar() {
     { id: "/dashboard", label: "ข้อมูลตั๋วรับจำนำ", icon: BarChart3 },
     { id: "/asset-type", label: "ประเภททรัพย์และราคา", icon: FileText },
     { id: "/user", label: "จัดการข้อมูลผู้ใช้", icon: Users },
-    { id: "/log", label: "จัดการ Log", icon: Logs },
+    { id: "/log", label: "ประวัติการใช้งาน", icon: Logs },
   ];
 
   return (
@@ -76,10 +76,11 @@ export function AppSidebar() {
                     <Link href={id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${isActive
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          }`}
+                        className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${
+                          isActive
+                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
                       >
                         <Icon className="h-5 w-5" />
                         <span>{label}</span>
@@ -148,7 +149,6 @@ export function AppSidebar() {
                   )}
                 </div>
               </button>
-
             </div>
           </SidebarGroupContent>
         </SidebarGroup>

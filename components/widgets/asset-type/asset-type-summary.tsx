@@ -213,21 +213,11 @@ export const AssetTypesSummary = ({
           </div>
         ) : data.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500 py-12">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-12 h-12 mb-4 text-gray-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.75 9.75h.008v.008H9.75V9.75zM14.25 9.75h.008v.008h-.008V9.75zM12 15.75c-2.25 0-4.5-1.5-4.5-4.5s2.25-4.5 4.5-4.5 4.5 2.25 4.5 4.5-2.25 4.5-4.5 4.5z"
-              />
-            </svg>
-            <p className="text-sm">ไม่มีข้อมูลในช่วงเวลานี้</p>
+            <div className="text-center text-gray-400 py-16">
+              <div className="text-4xl mb-2">📊</div>
+              <p className="text-sm">ไม่มีข้อมูล</p>
+              <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
+            </div>
           </div>
         ) : (
           <>

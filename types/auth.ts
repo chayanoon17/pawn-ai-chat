@@ -66,6 +66,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>; // อัพเดทข้อมูลผู้ใช้ล่าสุด
+  clearRememberMe: () => void; // ล้างข้อมูล remember me
 
   /** Helper functions สำหรับตรวจสอบสิทธิ์ */
   hasPermission: (action: string) => boolean;

@@ -14,9 +14,10 @@ interface HeaderProps {
 
 const pageLabels: Record<string, string> = {
   dashboard: "Dashboard Overview",
-  "pawn-tickets": "Pawn Ticket Info",
-  "asset-types": "Asset Types and Prices",
-  "user-management": "User Management",
+  "pawn-tickets": "ข้อมูลตั๋วรับจำนำ",
+  "asset-types": "ประเภททรัพย์และราคา",
+  "user-management": "จัดการข้อมูลผู้ใช้",
+  "log-management": "ประวัติการใช้งาน",
   settings: "Settings",
 };
 
@@ -35,6 +36,8 @@ export default function Header({
     pathname === "/dashboard" || pathname === "/asset-type";
   const shouldShowAIChat =
     pathname === "/dashboard" || pathname === "/asset-type";
+
+  console.log("Header rendered for page:", selectedPage);
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
@@ -55,14 +58,17 @@ export default function Header({
             <h1 className="text-xl font-semibold text-gray-900">
               {pageLabels[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
             </h1>
-            <p className="text-sm text-gray-500">
-              วันที่{" "}
-              {new Date().toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+            {!["user-management", "log-management"].includes(selectedPage) && (
+              <p className="text-sm text-gray-500">
+                วันที่{" "}
+                {new Date().toLocaleDateString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            )}
+
           </div>
         </div>
 
@@ -91,6 +97,7 @@ export default function Header({
             </Button>
           )}
         </div>
+
       </div>
     </header>
   );

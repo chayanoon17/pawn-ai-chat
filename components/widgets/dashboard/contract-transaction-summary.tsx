@@ -28,6 +28,7 @@ type TransactionSummaryData = {
   name: string;
   value: number;
   color: string;
+  percentage: number; 
 };
 
 type TransactionSummaryResponse = {
@@ -80,7 +81,9 @@ export const ContractTransactionSummary = ({
         name: item.type,
         value: item.value,
         color: COLORS[index % COLORS.length],
+        percentage: item.percentage, 
       }));
+
 
       setData(chartData);
       setTimestamp(response.data.timestamp);
@@ -119,19 +122,19 @@ export const ContractTransactionSummary = ({
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
-          summaries: data.map((item) => ({
-            type: item.name,
-            count: item.value,
-            color: item.color,
-          })),
-          totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
-          lastUpdated: timestamp,
-          topTransactionType: data.reduce(
-            (max, item) => (item.value > max.value ? item : max),
-            data[0]
-          )?.name,
-        }
+        branchId: parseInt(branchId),
+        summaries: data.map((item) => ({
+          type: item.name,
+          count: item.value,
+          color: item.color,
+        })),
+        totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
+        lastUpdated: timestamp,
+        topTransactionType: data.reduce(
+          (max, item) => (item.value > max.value ? item : max),
+          data[0]
+        )?.name,
+      }
       : null
   );
 
@@ -162,7 +165,6 @@ export const ContractTransactionSummary = ({
     outerRadius,
     name,
     value,
-    percent,
     index,
   }: any) => {
     const RADIAN = Math.PI / 180;
@@ -171,7 +173,7 @@ export const ContractTransactionSummary = ({
     const ex = cx + (outerRadius + 40) * Math.cos(-midAngle * RADIAN);
     const ey = cy + (outerRadius + 40) * Math.sin(-midAngle * RADIAN);
     const textAnchor = ex > cx ? "start" : "end";
-    const color = data[index].color;
+    const { color, percentage } = data[index];
 
     return (
       <g>
@@ -194,7 +196,7 @@ export const ContractTransactionSummary = ({
           fontSize={13}
           fontWeight={500}
         >
-          {`${formatNumber(value)} (${percent.toFixed(2)}%)`}
+          {`${formatNumber(value)} (${percentage.toFixed(2)}%)`}
         </text>
       </g>
     );
@@ -212,12 +214,12 @@ export const ContractTransactionSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : error
-                ? `เกิดข้อผิดพลาด: ${error}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                : "ไม่พบข้อมูล"}
+                  ? `เกิดข้อผิดพลาด: ${error}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : timestamp
+                      ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                      : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -267,7 +269,7 @@ export const ContractTransactionSummary = ({
         {/* Chart Display */}
         {data.length > 0 && !isLoading && (
           <>
-            <div className="h-[500px]">
+            <div className="h-[360px]">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -313,7 +315,7 @@ export const ContractTransactionSummary = ({
         {data.length === 0 && !isLoading && !error && branchId !== "all" && (
           <div className="text-center text-gray-400 py-16">
             <div className="text-4xl mb-2">📊</div>
-            <p>ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
+            <p className="text-sm">ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}

@@ -7,19 +7,31 @@ import { useAuth } from "@/context/auth-context";
 import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, clearRememberMe } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
+
+  // โหลดข้อมูล remember me จาก localStorage
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberMe_email");
+    const savedRememberMe = localStorage.getItem("rememberMe_enabled");
+
+    if (savedEmail && savedRememberMe === "true") {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +44,16 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
+
+      // บันทึกหรือลบข้อมูล remember me
+      if (rememberMe) {
+        localStorage.setItem("rememberMe_email", email);
+        localStorage.setItem("rememberMe_enabled", "true");
+      } else {
+        localStorage.removeItem("rememberMe_email");
+        localStorage.removeItem("rememberMe_enabled");
+      }
+
       await login(email, password);
     } catch (error) {
       const errorMessage =
@@ -59,13 +81,11 @@ export default function LoginPage() {
         <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
           {/* Logo + Text aligned left */}
           <div className="bg-white p-6 rounded-md self-start">
-            <img
-              src="/logo 1.png"
-              alt="logo"
-              className="h-24"
-            />
+            <img src="/logo 1.png" alt="logo" className="h-24" />
           </div>
-          <h1 className="text-2xl font-bold mt-4 text-left">สำนักงานธนานุเคราะห์</h1>
+          <h1 className="text-2xl font-bold mt-4 text-left">
+            สำนักงานธนานุเคราะห์
+          </h1>
           <p className="text-sm text-white/80 text-left">โรงรับจำนำรัฐบาล</p>
         </div>
       </div>
@@ -75,9 +95,7 @@ export default function LoginPage() {
           <h2 className="text-3xl font-semibold text-left text-gray-800 mb-1">
             สำนักงานธนานุเคราะห์
           </h2>
-          <p className="text-left text-base text-gray-500 mt-0">
-            เข้าสู่ระบบ
-          </p>
+          <p className="text-left text-base text-gray-500 mt-0">เข้าสู่ระบบ</p>
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-600">
               {error}
@@ -125,8 +143,25 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="text-center text-sm text-gray-500">
-            <a href="#" className="hover:underline">
+          {/* Remember Me and Forgot Password - Below Login Button */}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                disabled={isSubmitting}
+              />
+              <label
+                htmlFor="rememberMe"
+                className="ml-2 text-gray-600 cursor-pointer"
+              >
+                จดจำฉัน
+              </label>
+            </div>
+            <a href="#" className="text-gray-500 hover:underline">
               ลืมรหัสผ่าน?
             </a>
           </div>

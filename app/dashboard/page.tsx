@@ -11,7 +11,7 @@ import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { WidgetFilterData } from "@/components/widget-filter";
-import { ChatSidebar } from "@/components/layouts/ChatSidebar";
+import { ChatSidebar } from "@/components/chat-side-bar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WidgetProvider } from "@/context/widget-context";
 
@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
+  const [currentPage, setCurrentPage] = useState("pawn-tickets");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({

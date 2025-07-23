@@ -129,10 +129,10 @@ export const DailyOperationSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -153,7 +153,7 @@ export const DailyOperationSummary = ({
         {error && !isLoading && (
           <div className="text-center text-gray-400 py-16">
             <div className="text-4xl mb-2">📊</div>
-            <p>ไม่มีข้อมูลรายงานผลการดำเนินงาน</p>
+            <p className="text-sm">ไม่มีข้อมูลรายงานผลการดำเนินงาน</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}
@@ -220,11 +220,10 @@ export const DailyOperationSummary = ({
                       </div>
                       {summary.countChange !== 0 && (
                         <div
-                          className={`flex items-center ${
-                            summary.countChange > 0
+                          className={`flex items-center ${summary.countChange > 0
                               ? "text-green-600"
                               : "text-red-600"
-                          }`}
+                            }`}
                         >
                           {summary.countChange > 0 ? (
                             <TrendingUp className="w-4 h-4 mr-1" />
@@ -250,11 +249,10 @@ export const DailyOperationSummary = ({
                       </div>
                       {summary.amountChange !== 0 && (
                         <div
-                          className={`flex items-center ${
-                            summary.amountChange > 0
+                          className={`flex items-center ${summary.amountChange > 0
                               ? "text-green-600"
                               : "text-red-600"
-                          }`}
+                            }`}
                         >
                           {summary.amountChange > 0 ? (
                             <TrendingUp className="w-4 h-4 mr-1" />
@@ -274,59 +272,80 @@ export const DailyOperationSummary = ({
             </div>
 
             {/* Summary */}
+            {/* Summary (ใหม่) */}
             <div className="mt-6 pt-4 border-t">
-              <h4 className="font-medium mb-2">สรุปอัตราการทรัพย์จำนำ</h4>
-              <div className="text-sm text-gray-600">
+              <h4 className="font-semibold text-gray-700 mb-2">
+                สรุปอัตราผลการดำเนินงานของทรัพย์จำนำ
+              </h4>
+              <div className="space-y-1 text-[15px] font-medium text-gray-700">
+                {/* Line 1: เพิ่มขึ้น/ลดลง */}
                 <p>
-                  จำนวนราย{" "}
+                  ทรัพย์จำนำ{" "}
                   <span
                     className={
-                      summary.countChange > 0
+                      summary.endingBalance.count > summary.beginningBalance.count
                         ? "text-green-600"
-                        : summary.countChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
+                        : summary.endingBalance.count < summary.beginningBalance.count
+                          ? "text-red-600"
+                          : "text-gray-600"
                     }
                   >
-                    {summary.countChange > 0
+                    {summary.endingBalance.count > summary.beginningBalance.count
                       ? "เพิ่มขึ้น"
-                      : summary.countChange < 0
-                      ? "ลดลง"
-                      : "ไม่มีการเปลี่ยนแปลง"}
-                  </span>{" "}
-                  {summary.countChange !== 0 && (
-                    <>
-                      {summary.countChange > 0 ? "+" : ""}
-                      {summary.countChange.toFixed(2)}%
-                    </>
-                  )}
+                      : summary.endingBalance.count < summary.beginningBalance.count
+                        ? "ลดลง"
+                        : "ไม่มีการเปลี่ยนแปลง"}
+                  </span>
                 </p>
+
+                {/* Line 2: จำนวนเงิน */}
                 <p>
-                  จำนวนเงิน{" "}
+                  {Math.abs(
+                    summary.endingBalance.amount - summary.beginningBalance.amount
+                  ).toLocaleString("th-TH", { minimumFractionDigits: 2 })}{" "}
+                  บาท{" "}
                   <span
                     className={
                       summary.amountChange > 0
                         ? "text-green-600"
                         : summary.amountChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
+                          ? "text-red-600"
+                          : "text-gray-600"
                     }
                   >
                     {summary.amountChange > 0
-                      ? "เพิ่มขึ้น"
+                      ? `เพิ่มขึ้น ${summary.amountChange.toFixed(2)}%`
                       : summary.amountChange < 0
-                      ? "ลดลง"
-                      : "ไม่มีการเปลี่ยนแปลง"}
-                  </span>{" "}
-                  {summary.amountChange !== 0 && (
-                    <>
-                      {summary.amountChange > 0 ? "+" : ""}
-                      {summary.amountChange.toFixed(2)}%
-                    </>
-                  )}
+                        ? `ลดลง ${Math.abs(summary.amountChange).toFixed(2)}%`
+                        : "ไม่เปลี่ยนแปลง"}
+                  </span>
+                </p>
+
+                {/* Line 3: จำนวนราย */}
+                <p>
+                  {Math.abs(
+                    summary.endingBalance.count - summary.beginningBalance.count
+                  ).toLocaleString("th-TH")}{" "}
+                  ราย{" "}
+                  <span
+                    className={
+                      summary.countChange > 0
+                        ? "text-green-600"
+                        : summary.countChange < 0
+                          ? "text-red-600"
+                          : "text-gray-600"
+                    }
+                  >
+                    {summary.countChange > 0
+                      ? `เพิ่มขึ้น ${summary.countChange.toFixed(2)}%`
+                      : summary.countChange < 0
+                        ? `ลดลง ${Math.abs(summary.countChange).toFixed(2)}%`
+                        : "ไม่เปลี่ยนแปลง"}
+                  </span>
                 </p>
               </div>
             </div>
+
           </>
         )}
       </CardContent>
