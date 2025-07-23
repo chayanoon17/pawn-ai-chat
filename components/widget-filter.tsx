@@ -1,16 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Check, ChevronDown } from "lucide-react";
 import apiClient from "@/lib/api";
+import { format } from "date-fns";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Branch = {
   id: number;
@@ -31,13 +39,16 @@ interface WidgetFilterProps {
 export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0] // วันนี้ในรูปแบบ YYYY-MM-DD
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 🌟 โหลดข้อมูลสาขาจาก API
+  // หาวันที่วันนี้เป็น string "yyyy-MM-dd" เพื่อใช้ max attribute
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  // โหลดข้อมูลสาขา
   useEffect(() => {
     const fetchBranches = async () => {
       try {
@@ -47,34 +58,19 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         const response = await apiClient.get<Branch[]>("/api/v1/menu/branches");
         setBranches(response.data);
 
-        // Set default เป็นสาขาแรก
         if (response.data.length > 0) {
           const firstBranchId = response.data[0].id.toString();
           setSelectedBranchId(firstBranchId);
-
-          // ส่งข้อมูลเริ่มต้นไปยัง parent component
           onFilterChange?.({
             branchId: firstBranchId,
-            date: selectedDate,
+            date: todayStr,
             isLoading: false,
           });
         }
-
-        // Log ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("✨ Branches loaded:", response.data);
-        }
       } catch (err: any) {
         const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "ไม่สามารถโหลดข้อมูลสาขาได้";
+          err.response?.data?.message || err.message || "ไม่สามารถโหลดข้อมูลสาขาได้";
         setError(errorMessage);
-
-        // Log error ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.error("❌ Failed to fetch branches:", err);
-        }
       } finally {
         setIsLoading(false);
       }
@@ -83,81 +79,78 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     fetchBranches();
   }, []);
 
-  // 🎯 Handle เมื่อเปลี่ยนสาขา
   const handleBranchChange = (branchId: string) => {
     setSelectedBranchId(branchId);
-
-    // Log การเปลี่ยนแปลง
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.log("🔄 Branch changed:", branchId);
-    }
-
-    // ส่งข้อมูลกลับไปยัง parent component
     onFilterChange?.({
       branchId,
-      date: selectedDate,
+      date: selectedDate?.toISOString().split("T")[0] || todayStr,
       isLoading: false,
     });
   };
 
-  // 🎯 Handle เมื่อเปลี่ยนวันที่
-  const handleDateChange = (date: string) => {
+  // รับ event จาก input[type=date]
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value; // "yyyy-MM-dd"
+    const date = value ? new Date(value) : undefined;
     setSelectedDate(date);
-
-    // Log การเปลี่ยนแปลง
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.log("🔄 Date changed:", date);
-    }
-
-    // ส่งข้อมูลกลับไปยัง parent component
     onFilterChange?.({
       branchId: selectedBranchId,
-      date,
+      date: value,
       isLoading: false,
     });
-  };
-
-  // 🎨 Format วันที่เป็น dd/mm/yyyy
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB"); // จะได้ dd/mm/yyyy
   };
 
   return (
     <div className="flex items-center gap-3">
-      {/* เลือกสาขา */}
-      <Select
-        value={selectedBranchId}
-        onValueChange={handleBranchChange}
-        disabled={isLoading || branches.length === 0}
-      >
-        <SelectTrigger className="w-[140px] h-[36px] text-sm">
-          <SelectValue placeholder="เลือกสาขา" />
-        </SelectTrigger>
-        <SelectContent>
-          {branches.map((branch) => (
-            <SelectItem key={branch.id} value={branch.id.toString()}>
-              {branch.location}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* 🔎 Branch Select with Search */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-[160px] justify-between h-[36px] text-sm"
+            disabled={isLoading || branches.length === 0}
+          >
+            {branches.find((b) => b.id.toString() === selectedBranchId)
+              ?.location ?? "เลือกสาขา"}
+            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[200px] max-h-[300px] overflow-y-auto">
+          <Command>
+            <CommandInput placeholder="ค้นหาสาขา..." className="h-9" />
+            <CommandEmpty>ไม่พบสาขา</CommandEmpty>
+            <CommandGroup>
+              {branches.map((branch) => (
+                <CommandItem
+                  key={branch.id}
+                  value={branch.location}
+                  onSelect={() => handleBranchChange(branch.id.toString())}
+                >
+                  {branch.location}
+                  {branch.id.toString() === selectedBranchId && (
+                    <Check className="ml-auto h-4 w-4" />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
 
-      {/* วันที่ */}
-      <div className="relative">
+      {/* 📅 Date Picker (native input[type=date] แบบใหม่ พร้อมจำกัดไม่ให้เลือกอนาคต) */}
+      <div>
         <Input
           type="date"
-          value={selectedDate}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className="pl-8 w-[130px] h-[36px] text-sm"
+          max={todayStr}
+          value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : todayStr}
+          onChange={handleDateInputChange}
+          className="w-[160px] h-[36px] text-sm pl-3"
         />
-        <CalendarIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
       </div>
 
-      {/* แสดง Error สำหรับ development */}
+      {/* Debug Error */}
       {error && process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && (
-        <div className="text-red-500 text-xs">⚠️</div>
+        <div className="text-red-500 text-xs">⚠️ {error}</div>
       )}
     </div>
   );

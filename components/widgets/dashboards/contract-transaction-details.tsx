@@ -224,12 +224,12 @@ export default function ContractTransactionDetails({
           <p className="text-sm text-blue-500">
             {data
               ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(data.timestamp))} น.`
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(data.timestamp))} น.`
               : `ประจำวันที่ ${formatDate(date)}`}
           </p>
         </div>
@@ -241,6 +241,12 @@ export default function ContractTransactionDetails({
         ) : error ? (
           <div className="flex justify-center items-center h-64">
             <p className="text-red-500">{error}</p>
+          </div>
+        ) : !data || data.transactions.length === 0 ? (
+          <div className="text-center text-gray-400 py-16">
+            <div className="text-4xl mb-2">📊</div>
+            <p>ไม่มีข้อมูลรายการรับจำนำ</p>
+            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         ) : (
           <>
@@ -374,6 +380,7 @@ export default function ContractTransactionDetails({
             </div>
 
             {/* ✅ Pagination */}
+            {/* ✅ Pagination แบบปรับปรุง */}
             <div className="flex justify-center mt-6">
               <Pagination>
                 <PaginationContent>
@@ -387,25 +394,46 @@ export default function ContractTransactionDetails({
                     />
                   </PaginationItem>
 
-                  {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
-                    const startPage = Math.max(1, page - 4);
-                    const currentPage = startPage + i;
-                    if (currentPage > totalPages) return null;
-                    return (
-                      <PaginationItem key={currentPage}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === currentPage}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPage(currentPage);
-                          }}
-                        >
-                          {currentPage}
-                        </PaginationLink>
-                      </PaginationItem>
+                  {(() => {
+                    const pages: (number | string)[] = [];
+                    const maxVisible = 5;
+
+                    if (totalPages <= maxVisible + 2) {
+                      for (let i = 1; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      if (page > 3) pages.push("...");
+
+                      const start = Math.max(2, page - 1);
+                      const end = Math.min(totalPages - 1, page + 1);
+
+                      for (let i = start; i <= end; i++) pages.push(i);
+
+                      if (page < totalPages - 2) pages.push("...");
+                      pages.push(totalPages);
+                    }
+
+                    return pages.map((p, idx) =>
+                      p === "..." ? (
+                        <PaginationItem key={`ellipsis-${idx}`}>
+                          <span className="px-2 text-gray-400">...</span>
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            href="#"
+                            isActive={page === p}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPage(Number(p));
+                            }}
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
                     );
-                  })}
+                  })()}
 
                   <PaginationItem>
                     <PaginationNext
@@ -419,6 +447,7 @@ export default function ContractTransactionDetails({
                 </PaginationContent>
               </Pagination>
             </div>
+
           </>
         )}
       </CardContent>

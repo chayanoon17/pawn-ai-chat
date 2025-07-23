@@ -7,8 +7,10 @@ import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatSidebar } from "@/components/layouts/ChatSidebar";
-import { AssetTypeSummaryTable } from "@/components/widgets/asset-type-summary";
 import { WidgetFilterData } from "@/components/widget-filter";
+import { AssetTypesSummary } from "@/components/widgets/asset-type/asset-type-summary";
+import { RankingByPeriodAssetType } from "@/components/widgets/asset-type/ranking-by-period-asset-type";
+import { TopRankingAssetType } from "@/components/widgets/asset-type/top-ranking-asset-type";
 
 export default function AssetTypePage() {
   const isMobile = useIsMobile();
@@ -32,6 +34,16 @@ export default function AssetTypePage() {
   function onMenuToggle() {
     console.log("Menu toggled");
   }
+
+  const handleFilterChange = (data: WidgetFilterData) => {
+    setFilterData(data);
+
+    // Log การเปลี่ยนแปลง
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("🎯 Dashboard filter changed:", data);
+    }
+  };
+
 
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {
@@ -60,17 +72,28 @@ export default function AssetTypePage() {
             onChatToggle={onChatToggle}
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
+            onFilterChange={handleFilterChange}
           />
 
           <main className="flex-1 p-4 overflow-auto bg-gray-50">
 
-            <div className="flex h-screen w-full">
-              <AssetTypeSummaryTable
-                branchId={filterData.branchId}
-                date={filterData.date}
-                isLoading={filterData.isLoading}
-              />
-
+            <div className="flex-1  overflow-y-auto">
+              <div className="flex-1  overflow-y-auto">
+                <TopRankingAssetType
+                  branchId={filterData.branchId}
+                  date={filterData.date}
+                />
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                  <AssetTypesSummary
+                    branchId={filterData.branchId}
+                    date={filterData.date}
+                    isLoading={filterData.isLoading} />
+                  <RankingByPeriodAssetType
+                    branchId={filterData.branchId}
+                    date={filterData.date}
+                  />
+                </div>
+              </div>
             </div>
           </main>
           {/*Chat Sidebar*/}

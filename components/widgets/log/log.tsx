@@ -1,10 +1,8 @@
-"use client";
-
+"use client"
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
-import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { AppSidebar } from "@/components/app-side-bar";
 
 type Tab = 'login' | 'export' | 'view' | 'chat'
 
@@ -112,36 +110,12 @@ const chatData: ChatRow[] = Array.from({ length: 10 }).map((_, i) => ({
   ]
 }))
 
-
-export default function LogPage() {
+export default function Log() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
   const [activeTab, setActiveTab] = useState<Tab>('login')
   const [selectedChat, setSelectedChat] = useState<ChatRow | null>(null)
 
-  // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
-  const { shouldRender, message } = useProtectedRoute();
-
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
-
-  function onChatToggle() {
-    setIsChatOpen((prev) => !prev);
-  }
-
-  function onMenuToggle() {
-    console.log("Menu toggled");
-  }
-
-  // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
-  if (!shouldRender) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">{message}</p>
-        </div>
-      </div>
-    );
-  }
 
   const renderTable = () => {
     switch (activeTab) {
@@ -272,17 +246,31 @@ export default function LogPage() {
   }
 
 
+
+  function onChatToggle() {
+    setIsChatOpen(prev => !prev);
+  }
+
+  function onMenuToggle() {
+    console.log("Menu toggled");
+  }
+
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen">
         {/* Sidebar ฝั่งซ้าย fixed width */}
         <div className="w-64 border-r bg-white">
           <AppSidebar />
         </div>
 
         {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        <div className="flex-1 flex flex-col">
-
+        <div className="flex-1 flex flex-col ">
+          <Header
+            selectedPage={currentPage}
+            onChatToggle={onChatToggle}
+            onMenuToggle={onMenuToggle}
+            isChatOpen={isChatOpen}
+          />
           <main className="flex-1 p-8">
             <h1 className="text-2xl font-semibold mb-6">Log management</h1>
 
