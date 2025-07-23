@@ -4,15 +4,14 @@ import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
-import { UserTable } from "@/components/usertable";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 
-export default function UserPage() {
+export default function LogPage() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("จัดการข้อมูลผู้ใช้");
+  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
 
   function onChatToggle() {
     setIsChatOpen((prev) => !prev);
@@ -41,8 +40,9 @@ export default function UserPage() {
         <div className="w-64 border-r bg-white">
           <AppSidebar />
         </div>
+
         {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        <div className="flex-1 flex flex-col ">
+        <div className="flex-1 flex flex-col">
           <Header
             selectedPage={currentPage}
             onChatToggle={onChatToggle}
@@ -50,9 +50,8 @@ export default function UserPage() {
             isChatOpen={isChatOpen}
           />
           <main className="flex-1 p-4 overflow-auto bg-gray-50">
-            <div className="w-full ">
-              <UserTable />
-            </div>
+            {/* ใส่เนื้อหาหน้าตรงนี้ */}
+            <h1 className="text-2xl font-bold">จัดการ Log</h1>
           </main>
         </div>
       </div>

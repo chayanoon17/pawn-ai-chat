@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
+
 import AuthProvider from "../context/auth-context";
 import "./globals.css";
 
@@ -34,8 +36,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 🔐 AuthProvider ครอบ App ทั้งหมด เพื่อให้ทุก Component เข้าถึง Auth Context */}
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Theme>{children}</Theme>
+        </AuthProvider>
+
+        {/*  AuthProvider ครอบ App ทั้งหมด เพื่อให้ทุก Component เข้าถึง Auth Context */}
       </body>
     </html>
   );

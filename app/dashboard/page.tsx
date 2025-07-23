@@ -1,32 +1,50 @@
 "use client";
 
-import { useAuth } from "@/context/auth-context";
-import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { useState } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { ContractTransactionSummary } from "@/components/widgets/contract-transaction-summary";
+import { DailyOperationSummary } from "@/components/widgets/daily-operation-summary";
+import { GoldPriceCard } from "@/components/widgets/gold-price";
+import { WeeklyOperationSummary } from "@/components/widgets/weekly-operation-summary";
+import ContractTransactionDetails from "@/components/widgets/contract-transaction-details";
+import { AppSidebar } from "@/components/app-side-bar";
+import Header from "@/components/header";
+import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { WidgetFilterData } from "@/components/widget-filter";
 
 export default function DashboardPage() {
-  // 🔐 Protected Route Hook - จัดการ authentication และ redirect
+  // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
 
-  // 🔗 Auth Context - เอาข้อมูล user และ logout function
-  const { user, logout } = useAuth();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
 
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // 🎯 Filter state สำหรับส่งต่อไป widgets
+  const [filterData, setFilterData] = useState<WidgetFilterData>({
+    branchId: "",
+    date: new Date().toISOString().split("T")[0],
+    isLoading: true,
+  });
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      // ระบบจะ redirect ไป login อัตโนมัติผ่าน useProtectedRoute
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // แม้ logout API fail ระบบก็จะ clear state อยู่แล้ว
-    } finally {
-      setIsLoggingOut(false);
+  function onChatToggle() {
+    setIsChatOpen((prev) => !prev);
+  }
+
+  function onMenuToggle() {
+    console.log("Menu toggled");
+  }
+
+  // 🎯 Handle เมื่อ filter เปลี่ยน
+  const handleFilterChange = (data: WidgetFilterData) => {
+    setFilterData(data);
+
+    // Log การเปลี่ยนแปลง
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("🎯 Dashboard filter changed:", data);
     }
   };
 
-  // 🔐 Protected Route Guard - ถ้าไม่ควร render ให้แสดงข้อความ
+  // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -39,139 +57,54 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">ระบบจัดการร้านจำนำ</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* User Info */}
-              {user && (
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user.fullName}
-                  </p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
-                  <p className="text-xs text-blue-600">{user.role.name}</p>
-                </div>
-              )}
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center space-x-2"
-              >
-                {isLoggingOut ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>กำลังออกจากระบบ...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    <span>ออกจากระบบ</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg
-                  className="h-8 w-8 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                เข้าสู่ระบบสำเร็จ! 🎉
-              </h3>
-              <p className="text-gray-600 mb-6">
-                ยินดีต้อนรับสู่ระบบจัดการร้านจำนำ
-              </p>
-
-              {/* User Details Card */}
-              {user && (
-                <div className="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
-                  <h4 className="font-semibold text-gray-900 mb-3">
-                    ข้อมูลผู้ใช้งาน
-                  </h4>
-                  <dl className="space-y-2">
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-600">ชื่อ:</dt>
-                      <dd className="text-sm font-medium text-gray-900">
-                        {user.fullName}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-600">อีเมล:</dt>
-                      <dd className="text-sm font-medium text-gray-900">
-                        {user.email}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-600">ตำแหน่ง:</dt>
-                      <dd className="text-sm font-medium text-blue-600">
-                        {user.role.name}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-600">ID:</dt>
-                      <dd className="text-sm font-medium text-gray-900">
-                        {user.id}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              )}
-            </div>
-          </div>
+    <SidebarProvider>
+      <div className="flex h-screen w-full">
+        {/* Sidebar ฝั่งซ้าย fixed width */}
+        <div className="w-64 border-r bg-white">
+          <AppSidebar />
         </div>
 
-        {/* Development Debug Panel */}
-        {process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && user && (
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-yellow-800 mb-2">
-              🔧 Development Debug Info
-            </h4>
-            <pre className="text-xs text-yellow-700 bg-yellow-100 p-2 rounded overflow-auto">
-              {JSON.stringify(user, null, 2)}
-            </pre>
-          </div>
-        )}
-      </main>
-    </div>
+        {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
+        <div className="flex-1 flex flex-col">
+          <Header
+            selectedPage={currentPage}
+            onChatToggle={onChatToggle}
+            onMenuToggle={onMenuToggle}
+            isChatOpen={isChatOpen}
+            onFilterChange={handleFilterChange}
+          />
+          <main className="flex-1 p-4 overflow-auto bg-gray-50">
+            <GoldPriceCard />
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+              <DailyOperationSummary
+                branchId={filterData.branchId}
+                date={filterData.date}
+                isLoading={filterData.isLoading}
+              />
+              <ContractTransactionSummary
+                branchId={filterData.branchId}
+                date={filterData.date}
+                isLoading={filterData.isLoading}
+              />
+            </div>
+
+            <WeeklyOperationSummary
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+
+            <ContractTransactionDetails
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+
+            {/* ใส่เนื้อหาหน้าตรงนี้ */}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }

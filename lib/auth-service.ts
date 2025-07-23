@@ -8,6 +8,23 @@ import { User } from "@/types/auth";
 import { ApiResponse, LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";
 
+
+export async function registerUser(data: {
+  fullName: string;
+  email: string;
+  password: string;
+  branch: number;
+  role: number;
+  status: string;
+}) {
+  const res = await apiClient.post("/api/auth/register", data);
+  return res;
+}
+export async function getAllUsers() {
+  const res = await apiClient.get("/api/auth/register"); // หรือ path ที่ backend กำหนด GET users
+  return res;
+}
+
 /**
  * Login Credentials Interface
  */

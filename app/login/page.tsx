@@ -1,14 +1,10 @@
-/**
- * Login Page
- * หน้าเข้าสู่ระบบที่ใช้ httpOnly Cookies Authentication
- */
-
 "use client";
 
+import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
-import { useAuth } from "../../context/auth-context";
+import { useAuth } from "@/context/auth-context";
+import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
   // 🎣 ใช้ Auth Context
@@ -48,6 +44,23 @@ export default function LoginPage() {
 
       // เรียก login function จาก Auth Context
       await login(email, password);
+
+      // Debug: ตรวจสอบ cookies หลัง login
+      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+        console.log("🍪 Cookies after login:", document.cookie);
+        console.log("🍪 All cookies:", document.cookie.split(";"));
+
+        // ตรวจสอบว่ามี cookie ที่จำเป็นหรือไม่
+        const hasCookie =
+          document.cookie.includes("auth-token") ||
+          document.cookie.includes("session") ||
+          document.cookie.includes("jwt");
+
+        if (!hasCookie) {
+          console.warn("⚠️ Warning: No auth cookie detected after login!");
+          console.log("🔍 This might cause 401 errors on subsequent requests");
+        }
+      }
 
       // หลัง login สำเร็จ จะ redirect อัตโนมัติใน useEffect
       console.log("🎉 Login successful!");
@@ -188,11 +201,27 @@ export default function LoginPage() {
                   admin123456
                 </p>
                 <p>ตรวจสอบ Console สำหรับ debug logs</p>
+                <p>
+                  <strong>Cookie Debug:</strong> กด F12 → Application → Cookies
+                </p>
+                <div className="mt-2 p-2 bg-yellow-100 rounded text-xs">
+                  <p className="font-semibold">🍪 Cookie Troubleshooting:</p>
+                  <p>• ตรวจสอบว่า Browser ไม่ได้บล็อค cookies</p>
+                  <p>• ตรวจสอบ HTTPS vs HTTP</p>
+                  <p>• ลองใช้ Incognito Mode</p>
+                  <p>• ตรวจสอบ SameSite policy ใน Network tab</p>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Cookie Consent Popup */}
+      <CookieConsent
+        onAccept={() => console.log("🍪 Cookies accepted")}
+        onDecline={() => console.log("🚫 Cookies declined")}
+      />
     </div>
   );
 }
