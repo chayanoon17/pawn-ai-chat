@@ -152,19 +152,37 @@ export const WeeklyOperationSummary = ({
   }, [branchId, date]);
 
   // 📊 แปลงข้อมูลสำหรับ Chart
-  const leftChartData =
-    data?.cashIn.data.map((item) => ({
-      name: formatDate(item.date),
-      เงินสดรับ: item.total / 1000000, // แปลงเป็นล้านบาท
-      เงินสดรับสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
-    })) || [];
+  // const leftChartData =
+  //   data?.cashIn.data.map((item) => ({
+  //     name: formatDate(item.date),
+  //     เงินสดรับ: item.total / 1000000, // แปลงเป็นล้านบาท
+  //     เงินสดรับสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
+  //   })) || [];
 
-  const rightChartData =
-    data?.cashOut.data.map((item) => ({
+  // const rightChartData =
+  //   data?.cashOut.data.map((item) => ({
+  //     name: formatDate(item.date),
+  //     เงินสดจ่าย: item.total / 1000000, // แปลงเป็นล้านบาท
+  //     เงินสดจ่ายสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
+  //   })) || [];
+
+
+  const leftChartData = Array.isArray(data?.cashIn?.data)
+  ? data.cashIn.data.map((item) => ({
       name: formatDate(item.date),
-      เงินสดจ่าย: item.total / 1000000, // แปลงเป็นล้านบาท
-      เงินสดจ่ายสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
-    })) || [];
+      เงินสดรับ: item.total / 1000000,
+      เงินสดรับสัปดาห์ก่อน: 0,
+    }))
+  : [];
+
+const rightChartData = Array.isArray(data?.cashOut?.data)
+  ? data.cashOut.data.map((item) => ({
+      name: formatDate(item.date),
+      เงินสดจ่าย: item.total / 1000000,
+      เงินสดจ่ายสัปดาห์ก่อน: 0,
+    }))
+  : [];
+
 
   const cashInChange = data
     ? formatPercentChange(data.cashIn.percentChange)
@@ -235,7 +253,7 @@ export const WeeklyOperationSummary = ({
                 แนวโน้มของเงินสดรับช่วง 7 วันที่ผ่านมา
               </p>
 
-              <div className="h-48">
+              <div className="flex-1 mt-4">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={leftChartData}>

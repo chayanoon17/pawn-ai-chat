@@ -8,8 +8,95 @@ import axios, {
   AxiosError,
   AxiosRequestConfig,
   AxiosResponse,
-} from "axios";
+} from "axios"; 
 import { ApiResponse, ApiErrorResponse } from "@/types/api";
+
+export async function sendChatMessage(message: string): Promise<string> {
+  const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
+
+  const response = await fetch("http://localhost:3000/api/v1/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+    credentials: "include", // ✅ สำคัญ: เพื่อส่ง cookie / token ไปด้วย
+    signal: controller.signal,
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error("การเชื่อมต่อกับ AI ล้มเหลว");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+
+  let result = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    result += chunk;
+
+    // 👉 หากต้องการแสดงทีละ chunk:
+    // onChunk(chunk); // คุณจะต้องส่ง callback มาในฟังก์ชัน
+  }
+
+  return result;
+}
+
+export async function sendChatMessageStream(
+  message: string,
+  onChunk: (chunk: string) => void,
+  messages: { role: "user" | "assistant" | "system"; content: string }[] = []
+): Promise<void> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+    credentials: "include",
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split("\n\n");
+    for (let i = 0; i < lines.length - 1; i++) {
+      const line = lines[i].trim();
+      if (line.startsWith("data: ")) {
+        const json = line.replace(/^data:\s*/, "");
+        try {
+          const parsed = JSON.parse(json);
+          if (parsed.content) {
+            onChunk(parsed.content);
+          }
+        } catch (err) {
+          console.error("❌ JSON parse error:", err);
+        }
+      }
+    }
+
+    buffer = lines[lines.length - 1];
+  }
+}
+
+
+
 
 /**
  * API Client Class - Singleton pattern สำหรับการจัดการ HTTP requests
@@ -24,6 +111,7 @@ class ApiClient {
     this.setupInterceptors();
   }
 
+
   /**
    * สร้าง Axios instance พร้อม configuration สำหรับ httpOnly cookies
    */
@@ -35,7 +123,7 @@ class ApiClient {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "User-Agent": "Pawn-Shop-Frontend/1.0",
+        // "User-Agent": "Pawn-Shop-Frontend/1.0",
         // "X-API-Key": "your-api-key-here", // ถ้า Backend ต้องการ
       },
     });
