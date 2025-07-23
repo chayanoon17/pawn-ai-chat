@@ -1,0 +1,38 @@
+{
+  "status": "success",
+  "message": "Branch weekly summary retrieved successfully",
+  "data": {
+    "branchId": 1,
+    "cashIn": {
+      "data": [
+        { "total": 28500, "date": "2025-07-16T00:00:00.000Z" },
+        { "total": 29000, "date": "2025-07-17T00:00:00.000Z" },
+        { "total": 30000, "date": "2025-07-18T00:00:00.000Z" },
+        { "total": 31000, "date": "2025-07-19T00:00:00.000Z" },
+        { "total": 29500, "date": "2025-07-20T00:00:00.000Z" },
+        { "total": 30500, "date": "2025-07-21T00:00:00.000Z" },
+        { "total": 29500, "date": "2025-07-22T00:00:00.000Z" }
+      ],
+      "total": 208000,
+      "last7Days": 208000,
+      "prev7Days": 198000,
+      "percentChange": 5.05
+    },
+    "cashOut": {
+      "data": [
+        { "total": 27000, "date": "2025-07-16T00:00:00.000Z" },
+        { "total": 26000, "date": "2025-07-17T00:00:00.000Z" },
+        { "total": 27500, "date": "2025-07-18T00:00:00.000Z" },
+        { "total": 28500, "date": "2025-07-19T00:00:00.000Z" },
+        { "total": 28000, "date": "2025-07-20T00:00:00.000Z" },
+        { "total": 29000, "date": "2025-07-21T00:00:00.000Z" },
+        { "total": 29500, "date": "2025-07-22T00:00:00.000Z" }
+      ],
+      "total": 196500,
+      "last7Days": 196500,
+      "prev7Days": 192000,
+      "percentChange": 2.34
+    },
+    "timestamp": "2025-07-22T07:44:20.286Z"
+  }
+}

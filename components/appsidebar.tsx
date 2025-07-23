@@ -22,23 +22,16 @@ import {
 } from "@/components/ui/sidebar";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
-
-
-interface AppSidebarProps {
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
-}
-
+import { usePathname } from "next/navigation";
 
 export function AppSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
     { id: "/home", label: "ข้อมูลตั๋วรับจำนำ", icon: Home },
-    { id: "/ประเภททรัพย์และราคา", label: "ประเภททรัพย์และราคา", icon: FileText },
+    { id: "/asset-types", label: "ประเภททรัพย์และราคา", icon: FileText },
     { id: "/user", label: "จัดการข้อมูลผู้ใช้", icon: Users },
-    { id: "/Log", label: "จัดการ Log", icon: Logs },
+    { id: "/log", label: "จัดการ Log", icon: Logs },
   ];
 
   return (
@@ -62,7 +55,7 @@ export function AppSidebar() {
                 const isActive = pathname === id;
                 return (
                   <SidebarMenuItem key={id}>
-                    <Link href={id} passHref legacyBehavior>
+                    <Link href={id}>
                       <SidebarMenuButton
                         isActive={isActive}
                         className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${

@@ -3,14 +3,12 @@ import { AppSidebar } from "@/components/appsidebar";
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Header from "@/components/header";
-import { HomePage } from "@/components/overview/overview";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatSidebar } from "../layouts/ChatSidebar";
+import { MainContent } from "@/components/overview/overview";
 
-export default function Dashboard() {
+
+export default function AssetTypesPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("ข้อมูลตั๋วรับจำนำ");
-  const isMobile = useIsMobile();
 
   function onChatToggle() {
     setIsChatOpen(prev => !prev);
@@ -23,29 +21,22 @@ export default function Dashboard() {
   return (
     <SidebarProvider>
       <div className="flex h-screen">
+        {/* Sidebar ฝั่งซ้าย fixed width */}
         <div className="w-64 border-r bg-white">
           <AppSidebar />
         </div>
-        <div className="flex-1 flex flex-col">
+
+        {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
+        <div className="flex-1 flex flex-col ">
           <Header
             selectedPage={currentPage}
             onChatToggle={onChatToggle}
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
           />
-          <div className="flex flex-1">
-            {/* Main area */}
-            <main className="flex-1 p-6 bg-gray-50"><HomePage></HomePage></main>
-
-            {/* Chat Sidebar (desktop only) */}
-            {!isMobile && isChatOpen && (
-              <ChatSidebar
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                className="w-80 flex-shrink-0"
-              />
-            )}
-          </div>
+          <main className="flex-1 p-4 overflow-auto ">
+            <MainContent></MainContent>
+          </main>
         </div>
       </div>
     </SidebarProvider>
