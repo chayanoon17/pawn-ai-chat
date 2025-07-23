@@ -144,7 +144,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
           max={todayStr}
           value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : todayStr}
           onChange={handleDateInputChange}
-          className="w-[160px] h-[36px] text-sm pl-3"
+          className="h-[36px] text-sm px-3"
         />
       </div>
 
