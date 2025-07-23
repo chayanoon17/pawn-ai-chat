@@ -50,8 +50,7 @@ const STATUSES = [
 ];
 
 export default function EditProfileDialog() {
-
-const [form, setForm] = useState({
+  const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
@@ -97,134 +96,134 @@ const [form, setForm] = useState({
   return (
     <Dialog.Root>
       <Dialog.Trigger>
-        <Button>Add User</Button>
+        <Button>เพิ่มผู้ใช้งาน</Button>
       </Dialog.Trigger>
 
       <Dialog.Content maxWidth="450px" className="p-6 bg-white rounded shadow">
         <Dialog.Title>เพิ่มผู้ใช้งาน</Dialog.Title>
 
         <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="3" className="mt-4">
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            ชื่อผู้ใช้งาน
-          </Text>
-          <input
-            type="text"
-            name="fullName"
-            value={form.fullName}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </label>
+          <Flex direction="column" gap="3" className="mt-4">
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                ชื่อผู้ใช้งาน
+              </Text>
+              <input
+                type="text"
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </label>
 
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            Email
-          </Text>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </label>
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Email
+              </Text>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </label>
 
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            Password
-          </Text>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </label>
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Password
+              </Text>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </label>
 
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            เลือกสาขา
-          </Text>
-          <select
-            name="branch"
-            value={form.branch}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">เลือก</option>
-            {BRANCHES.map((b) => (
-              <option key={b.id} value={b.id.toString()}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                เลือกสาขา
+              </Text>
+              <select
+                name="branch"
+                value={form.branch}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              >
+                <option value="">เลือก</option>
+                {BRANCHES.map((b) => (
+                  <option key={b.id} value={b.id.toString()}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            Role
-          </Text>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">เลือก</option>
-            {ROLES.map((r) => (
-              <option key={r.id} value={r.id.toString()}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Role
+              </Text>
+              <select
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              >
+                <option value="">เลือก</option>
+                {ROLES.map((r) => (
+                  <option key={r.id} value={r.id.toString()}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        <label>
-          <Text as="div" size="2" mb="1" weight="bold">
-            Status
-          </Text>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">เลือก</option>
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </Flex>
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Status
+              </Text>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              >
+                <option value="">เลือก</option>
+                {STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </Flex>
 
-      {message && (
-        <Text color="gray" mt="3">
-          {message}
-        </Text>
-      )}
+          {message && (
+            <Text color="gray" mt="3">
+              {message}
+            </Text>
+          )}
 
-      <Flex gap="3" mt="4" justify="end">
-        <Dialog.Close>
-          <Button variant="soft" color="gray" type="button">
-            Cancel
-          </Button>
-        </Dialog.Close>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save"}
-        </Button>
-      </Flex>
-    </form>
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray" type="button">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save"}
+            </Button>
+          </Flex>
+        </form>
       </Dialog.Content>
     </Dialog.Root>
   );

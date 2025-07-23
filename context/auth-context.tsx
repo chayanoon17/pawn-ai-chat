@@ -161,6 +161,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // เรียก Auth Service เพื่อ logout
       await authService.logout();
 
+      // 🧹 Clear widget filter session และ localStorage เมื่อ logout
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("widgetFilter_session");
+        localStorage.removeItem("widgetFilter_branchId");
+        localStorage.removeItem("widgetFilter_date");
+
+        // ล้างข้อมูล remember me เมื่อ logout (ยกเว้นถ้าผู้ใช้เลือกให้จดจำ)
+        const rememberMeEnabled = localStorage.getItem("rememberMe_enabled");
+        if (rememberMeEnabled !== "true") {
+          localStorage.removeItem("rememberMe_email");
+        }
+      }
+
       dispatch({ type: "AUTH_LOGOUT" });
 
       // Log success ใน development mode
@@ -169,6 +182,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error) {
       // แม้ logout API fail เราก็ควร clear local state
+
+      // 🧹 Clear widget filter session และ localStorage เมื่อ logout (แม้ API fail)
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("widgetFilter_session");
+        localStorage.removeItem("widgetFilter_branchId");
+        localStorage.removeItem("widgetFilter_date");
+
+        // ล้างข้อมูล remember me เมื่อ logout (ยกเว้นถ้าผู้ใช้เลือกให้จดจำ)
+        const rememberMeEnabled = localStorage.getItem("rememberMe_enabled");
+        if (rememberMeEnabled !== "true") {
+          localStorage.removeItem("rememberMe_email");
+        }
+      }
+
       dispatch({ type: "AUTH_LOGOUT" });
 
       // Log warning ใน development mode
@@ -206,6 +233,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.error("❌ Failed to refresh user in context:", error);
       }
+    }
+  }, []);
+
+  /**
+   * Clear Remember Me Function
+   */
+  const clearRememberMe = useCallback((): void => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("rememberMe_email");
+      localStorage.removeItem("rememberMe_enabled");
     }
   }, []);
 
@@ -270,6 +307,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     refreshUser,
+    clearRememberMe,
 
     // Permission Helpers
     hasPermission,

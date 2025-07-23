@@ -38,10 +38,43 @@ interface WidgetFilterProps {
 
 export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
-  );
+
+  // 🔄 Load saved values from localStorage with session check
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      // ตรวจสอบว่าเป็น session ใหม่หรือไม่
+      const isNewSession = !sessionStorage.getItem("widgetFilter_session");
+
+      if (isNewSession) {
+        // ถ้าเป็น session ใหม่ ให้ clear localStorage และ mark session
+        localStorage.removeItem("widgetFilter_branchId");
+        localStorage.removeItem("widgetFilter_date");
+        sessionStorage.setItem("widgetFilter_session", "active");
+        return "";
+      } else {
+        // ถ้าไม่ใช่ session ใหม่ ให้ใช้ค่าจาก localStorage
+        return localStorage.getItem("widgetFilter_branchId") || "";
+      }
+    }
+    return "";
+  });
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    if (typeof window !== "undefined") {
+      const isNewSession = !sessionStorage.getItem("widgetFilter_session");
+
+      if (isNewSession) {
+        return new Date(); // วันนี้
+      } else {
+        const savedDate = localStorage.getItem("widgetFilter_date");
+        if (savedDate) {
+          return new Date(savedDate);
+        }
+      }
+    }
+    return new Date();
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -72,12 +105,26 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         const response = await apiClient.get<Branch[]>("/api/v1/menu/branches");
         setBranches(response.data);
 
-        if (response.data.length > 0) {
+        // เฉพาะกรณีที่ยังไม่มีการเลือกสาขา (ครั้งแรกที่โหลด)
+        if (response.data.length > 0 && !selectedBranchId) {
           const firstBranchId = response.data[0].id.toString();
           setSelectedBranchId(firstBranchId);
+
+          // 💾 Save to localStorage
+          if (typeof window !== "undefined") {
+            localStorage.setItem("widgetFilter_branchId", firstBranchId);
+          }
+
           onFilterChange?.({
             branchId: firstBranchId,
-            date: todayStr,
+            date: selectedDate?.toISOString().split("T")[0] || todayStr,
+            isLoading: false,
+          });
+        } else if (selectedBranchId && selectedDate) {
+          // ถ้ามีค่า saved อยู่แล้ว ให้ trigger onFilterChange
+          onFilterChange?.({
+            branchId: selectedBranchId,
+            date: selectedDate.toISOString().split("T")[0],
             isLoading: false,
           });
         }
@@ -97,6 +144,12 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
 
   const handleBranchChange = (branchId: string) => {
     setSelectedBranchId(branchId);
+
+    // 💾 Save to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("widgetFilter_branchId", branchId);
+    }
+
     onFilterChange?.({
       branchId,
       date: selectedDate?.toISOString().split("T")[0] || todayStr,
@@ -110,6 +163,12 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     const date = value ? new Date(value) : undefined;
     setSelectedDate(date);
     setIsDatePickerOpen(false);
+
+    // 💾 Save to localStorage
+    if (typeof window !== "undefined" && date) {
+      localStorage.setItem("widgetFilter_date", date.toISOString());
+    }
+
     onFilterChange?.({
       branchId: selectedBranchId,
       date: value,

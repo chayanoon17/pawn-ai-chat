@@ -6,10 +6,13 @@ import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { UserTable } from "@/components/usertable";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ChatSidebar } from "@/components/chat-side-bar";
 
 export default function UserPage() {
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
+  const isMobile = useIsMobile();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("user-management");
@@ -42,18 +45,31 @@ export default function UserPage() {
           <AppSidebar />
         </div>
         {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        <div className="flex-1 flex flex-col ">
+        <div className="relative flex-1 flex flex-col">
           <Header
             selectedPage={currentPage}
             onChatToggle={onChatToggle}
             onMenuToggle={onMenuToggle}
             isChatOpen={isChatOpen}
           />
-          <main className="flex-1 p-4 overflow-auto bg-gray-50">
-            <div className="w-full ">
-              <UserTable />
+          <main className="flex-1 p-6 overflow-auto bg-gray-50">
+            <div className="w-full">
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <UserTable />
+              </div>
             </div>
           </main>
+
+          {/*Chat Sidebar*/}
+          {!isMobile && isChatOpen && (
+            <ChatSidebar
+              isOpen={isChatOpen}
+              onClose={() => setIsChatOpen(false)}
+              className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+                isChatOpen ? "translate-x-0" : "translate-x-full"
+              }`}
+            />
+          )}
         </div>
       </div>
     </SidebarProvider>

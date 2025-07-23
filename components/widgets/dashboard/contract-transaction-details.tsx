@@ -10,6 +10,7 @@ import {
   DivideSquare,
   PlusCircle,
   Clock,
+  Download,
 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 
@@ -151,6 +159,7 @@ export default function ContractTransactionDetails({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -186,6 +195,29 @@ export default function ContractTransactionDetails({
     fetchTransactionDetails();
   }, [branchId, date]);
 
+  // 🔄 Reset pagination when search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedType]);
+
+  // 📥 Export CSV Function
+  const handleExportCSV = () => {
+    if (!branchId || !date) {
+      alert("ไม่สามารถ export ได้ กรุณาเลือกสาขาและวันที่");
+      return;
+    }
+
+    // สร้าง URL และเปิดในหน้าต่างใหม่เพื่อให้ browser จัดการการดาวน์โหลด
+    const exportUrl = `http://localhost:3000/api/v1/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`;
+
+    // เปิดลิงค์ในหน้าต่างใหม่
+    window.open(exportUrl, "_blank");
+
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("✅ Opening CSV export URL:", exportUrl);
+    }
+  };
+
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "contract-transaction-details",
@@ -218,8 +250,10 @@ export default function ContractTransactionDetails({
 
   // 🔍 Filter ข้อมูลตามการค้นหา
   const filteredTransactions =
-    data?.transactions.filter(
-      (transaction) =>
+    data?.transactions.filter((transaction) => {
+      // Search filter - ค้นหาจากทุกฟิลด์
+      const matchesSearch =
+        searchTerm === "" ||
         transaction.customerName
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
@@ -227,10 +261,25 @@ export default function ContractTransactionDetails({
         transaction.assetType
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
+        transaction.assetDetail
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        transaction.pawnPrice.toString().includes(searchTerm) ||
         transaction.transactionType
           .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    ) || [];
+          .includes(searchTerm.toLowerCase());
+
+      // Type filter
+      const matchesType =
+        selectedType === "all" || transaction.transactionType === selectedType;
+
+      return matchesSearch && matchesType;
+    }) || [];
+
+  // 🎯 Get unique transaction types for dropdown
+  const transactionTypes = data
+    ? [...new Set(data.transactions.map((t) => t.transactionType))].sort()
+    : [];
 
   const paginatedData = filteredTransactions.slice(
     (page - 1) * pageSize,
@@ -250,19 +299,35 @@ export default function ContractTransactionDetails({
   return (
     <Card className="mb-6">
       <CardContent className="p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold">รายการรับจำนำทั้งหมด</h2>
-          <p className="text-sm text-blue-500">
-            {data
-              ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(data.timestamp))} น.`
-              : `ประจำวันที่ ${formatDate(date)}`}
-          </p>
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h2 className="text-xl font-semibold">รายการรับจำนำทั้งหมด</h2>
+            <p className="text-sm text-blue-500">
+              {data
+                ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(data.timestamp))} น.`
+                : `ประจำวันที่ ${formatDate(date)}`}
+            </p>
+          </div>
+
+          {/* Export Button */}
+          {data && data.transactions.length > 0 && (
+            <Button
+              onClick={handleExportCSV}
+              disabled={loading || isLoading}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </Button>
+          )}
         </div>
 
         {loading || isLoading ? (
@@ -350,20 +415,72 @@ export default function ContractTransactionDetails({
                 })}
             </div>
 
-            {/* ✅ Search */}
+            {/* ✅ Search & Filter */}
             <div className="my-4">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="ค้นหาข้อมูล"
-                  className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                {/* Search Box - Full Width */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="ค้นหาจากเลขที่สัญญา, ชื่อ, ประเภททรัพย์, รายละเอียด, หรือราคา..."
+                    className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                {/* Type Filter Dropdown */}
+                <div className="w-full sm:w-48">
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="เลือกประเภท" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ทุกประเภท</SelectItem>
+                      {transactionTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
+            {/* ✅ Search Results Stats */}
+            {(searchTerm || selectedType !== "all") && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-700">
+                  🔍 พบ{" "}
+                  <span className="font-semibold">
+                    {filteredTransactions.length}
+                  </span>{" "}
+                  รายการ
+                  {searchTerm && (
+                    <span>
+                      {" "}
+                      จากการค้นหา "
+                      <span className="font-semibold">{searchTerm}</span>"
+                    </span>
+                  )}
+                  {selectedType !== "all" && (
+                    <span>
+                      {" "}
+                      ในประเภท "
+                      <span className="font-semibold">{selectedType}</span>"
+                    </span>
+                  )}
+                  {data && (
+                    <span className="text-blue-600">
+                      {" "}
+                      จากทั้งหมด {data.transactions.length} รายการ
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
 
             {/* ✅ Table */}
             <div className="overflow-x-auto min-h-[400px]">
