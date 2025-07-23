@@ -45,21 +45,21 @@ interface WeeklyOperationSummaryProps {
 
 // 🎨 Chart Configuration
 const chartConfig = {
-  เงินสดรับ: {
-    label: "เงินสดรับ",
-    color: "#10b981",
+  เงินสดรับอาทิตย์นี้: {
+    label: "เงินสดรับ (อาทิตย์นี้)",
+    color: "#059669", // เขียวเข้ม
   },
-  เงินสดรับสัปดาห์ก่อน: {
-    label: "เงินสดรับ (สัปดาห์ก่อน)",
-    color: "#f97316",
+  เงินสดรับอาทิตย์ที่แล้ว: {
+    label: "เงินสดรับ (อาทิตย์ที่แล้ว)",
+    color: "#fb7185", // ชมพูส้ม
   },
-  เงินสดจ่าย: {
-    label: "เงินสดจ่าย",
-    color: "#06b6d4",
+  เงินสดจ่ายอาทิตย์นี้: {
+    label: "เงินสดจ่าย (อาทิตย์นี้)",
+    color: "#0284c7", // น้ำเงินเข้ม
   },
-  เงินสดจ่ายสัปดาห์ก่อน: {
-    label: "เงินสดจ่าย (สัปดาห์ก่อน)",
-    color: "#f59e0b",
+  เงินสดจ่ายอาทิตย์ที่แล้ว: {
+    label: "เงินสดจ่าย (อาทิตย์ที่แล้ว)",
+    color: "#f59e0b", // ส้มทอง
   },
 };
 
@@ -131,43 +131,124 @@ export const WeeklyOperationSummary = ({
     fetchWeeklyOperationSummary();
   }, [branchId, date]);
 
-  // ดึงข้อมูลทั้ง 2 ชุดมารวมใน chart (thisWeek + lastWeek)
-  const leftChartData = (data?.cashIn?.thisWeek || []).map((item) => ({
-    name: formatDate(item.date),
-    เงินสดรับ: item.total / 1_000_000,
-  })) as any[];
+  // 📊 แปลงข้อมูลสำหรับกราห - รวมข้อมูล thisWeek และ lastWeek
+  const prepareChartData = (
+    thisWeekData: WeeklyOperationData[],
+    lastWeekData: WeeklyOperationData[],
+    dataKey: string
+  ) => {
+    // สร้าง Map สำหรับเก็บข้อมูลตามวันในสัปดาห์
+    const chartDataMap = new Map();
 
-  // เพิ่มข้อมูลสัปดาห์ก่อน (ถ้ามี)
-  data?.cashIn?.lastWeek?.forEach((item) => {
-    const dateStr = formatDate(item.date);
-    const existing = leftChartData.find((d) => d.name === dateStr);
-    if (existing) {
-      existing["เงินสดรับสัปดาห์ก่อน"] = item.total / 1_000_000;
-    } else {
-      leftChartData.push({
-        name: dateStr,
-        เงินสดรับสัปดาห์ก่อน: item.total / 1_000_000,
+    // เพิ่มข้อมูลอาทิตย์นี้
+    thisWeekData.forEach((item) => {
+      const date = new Date(item.date);
+      const dayName = date.toLocaleDateString("th-TH", { weekday: "long" }); // เปลี่ยนเป็น "long" เพื่อให้ได้ชื่อเต็ม
+      const dateStr = formatDate(item.date);
+      const fullDate = date.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
-    }
-  });
 
-  const rightChartData = (data?.cashOut?.thisWeek || []).map((item) => ({
-    name: formatDate(item.date),
-    เงินสดจ่าย: item.total / 1_000_000,
-  })) as any[];
-
-  data?.cashOut?.lastWeek?.forEach((item) => {
-    const dateStr = formatDate(item.date);
-    const existing = rightChartData.find((d) => d.name === dateStr);
-    if (existing) {
-      existing["เงินสดจ่ายสัปดาห์ก่อน"] = item.total / 1_000_000;
-    } else {
-      rightChartData.push({
-        name: dateStr,
-        เงินสดจ่ายสัปดาห์ก่อน: item.total / 1_000_000,
+      chartDataMap.set(dayName, {
+        name: dayName, // แสดงเฉพาะชื่อวันบนแกน X
+        fullDate: fullDate, // เก็บวันที่เต็มสำหรับ tooltip
+        dateStr: dateStr,
+        [`${dataKey}อาทิตย์นี้`]: item.total / 1_000_000,
+        [`${dataKey}อาทิตย์ที่แล้ว`]: 0,
       });
+    });
+
+    // เพิ่มข้อมูลอาทิตย์ที่แล้ว
+    lastWeekData.forEach((item) => {
+      const date = new Date(item.date);
+      const dayName = date.toLocaleDateString("th-TH", { weekday: "long" });
+      const dateStr = formatDate(item.date);
+      const fullDate = date.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      if (chartDataMap.has(dayName)) {
+        const existing = chartDataMap.get(dayName);
+        existing[`${dataKey}อาทิตย์ที่แล้ว`] = item.total / 1_000_000;
+        // เก็บวันที่ของอาทิตย์ที่แล้วด้วย
+        existing.lastWeekDate = fullDate;
+      } else {
+        chartDataMap.set(dayName, {
+          name: dayName,
+          fullDate: fullDate,
+          dateStr: dateStr,
+          [`${dataKey}อาทิตย์นี้`]: 0,
+          [`${dataKey}อาทิตย์ที่แล้ว`]: item.total / 1_000_000,
+          lastWeekDate: fullDate,
+        });
+      }
+    });
+
+    // แปลงเป็น Array และเรียงตามวันในสัปดาห์
+    const weekOrder = [
+      "วันจันทร์",
+      "วันอังคาร",
+      "วันพุธ",
+      "วันพฤหัสบดี",
+      "วันศุกร์",
+      "วันเสาร์",
+      "วันอาทิตย์",
+    ];
+    return Array.from(chartDataMap.values()).sort(
+      (a, b) => weekOrder.indexOf(a.name) - weekOrder.indexOf(b.name)
+    );
+  };
+
+  const leftChartData = data
+    ? prepareChartData(data.cashIn.thisWeek, data.cashIn.lastWeek, "เงินสดรับ")
+    : [];
+
+  const rightChartData = data
+    ? prepareChartData(
+        data.cashOut.thisWeek,
+        data.cashOut.lastWeek,
+        "เงินสดจ่าย"
+      )
+    : [];
+  // 🎯 Custom Tooltip Component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <h3 className="font-semibold text-gray-800 mb-2">{label}</h3>
+          {data.fullDate && (
+            <p className="text-xs text-gray-500 mb-2">
+              อาทิตย์นี้: {data.fullDate}
+            </p>
+          )}
+          {data.lastWeekDate && (
+            <p className="text-xs text-gray-500 mb-2">
+              อาทิตย์ที่แล้ว: {data.lastWeekDate}
+            </p>
+          )}
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2 mb-1">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-sm font-medium">{entry.name}:</span>
+              <span className="text-sm font-bold">
+                {entry.value.toFixed(2)} ล้านบาท
+              </span>
+            </div>
+          ))}
+        </div>
+      );
     }
-  });
+    return null;
+  };
+
   const cashInChange = data
     ? formatPercentChange(data.cashIn.percentChange)
     : null;
@@ -186,12 +267,12 @@ export const WeeklyOperationSummary = ({
             <p className="text-sm text-blue-500">
               {data
                 ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(data.timestamp))} น.`
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(data.timestamp))} น.`
                 : "กำลังโหลดข้อมูล..."}
             </p>
           </div>
@@ -211,7 +292,6 @@ export const WeeklyOperationSummary = ({
             data.cashIn.lastWeek.length === 0 &&
             data.cashOut.thisWeek.length === 0 &&
             data.cashOut.lastWeek.length === 0) ? (
-              
           <div className="text-center text-gray-400 py-16">
             <div className="text-4xl mb-2">📊</div>
             <p>ไม่มีข้อมูลยอดรับจำนำและรายละเอียด</p>
@@ -227,7 +307,9 @@ export const WeeklyOperationSummary = ({
                 </span>
               </div>
               <div className="text-2xl font-bold">
-                {data ? `${formatCurrency(data.cashIn.total)} บาท` : "0 บาท"}
+                {data
+                  ? `${formatCurrency(data.cashIn.totalThisWeek)} บาท`
+                  : "0 บาท"}
               </div>
               <div className="flex items-center text-sm">
                 {cashInChange && (
@@ -239,14 +321,14 @@ export const WeeklyOperationSummary = ({
                       </span>
                     </span>
                     <span className="ml-1 text-[#344A61]">
-                      เทียบกับค่าเฉลี่ยของสัปดาห์ก่อน
+                      เทียบกับอาทิตย์ที่แล้ว
                     </span>
                   </>
                 )}
               </div>
 
               <p className="text-xs text-gray-500">
-                แนวโน้มของเงินสดรับช่วง 7 วันที่ผ่านมา
+                เปรียบเทียบเงินสดรับอาทิตย์นี้กับอาทิตย์ที่แล้ว
               </p>
 
               <div className="flex-1 mt-4">
@@ -269,20 +351,22 @@ export const WeeklyOperationSummary = ({
                           },
                         }}
                       />
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <ChartTooltip content={<CustomTooltip />} />
                       <Area
                         type="monotone"
-                        dataKey="เงินสดรับ"
-                        stroke="#10b981"
-                        fill="#10b981"
-                        fillOpacity={0.3}
+                        dataKey="เงินสดรับอาทิตย์นี้"
+                        stroke="#059669"
+                        fill="#059669"
+                        fillOpacity={0.2}
+                        strokeWidth={2}
                       />
                       <Area
                         type="monotone"
-                        dataKey="เงินสดรับสัปดาห์ก่อน"
-                        stroke="#f97316"
-                        fill="#f97316"
-                        fillOpacity={0.3}
+                        dataKey="เงินสดรับอาทิตย์ที่แล้ว"
+                        stroke="#fb7185"
+                        fill="#fb7185"
+                        fillOpacity={0.2}
+                        strokeWidth={2}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -292,11 +376,12 @@ export const WeeklyOperationSummary = ({
                     <span
                       className="inline-block w-3 h-3 rounded-full"
                       style={{
-                        backgroundColor: chartConfig["เงินสดรับ"].color,
+                        backgroundColor:
+                          chartConfig["เงินสดรับอาทิตย์นี้"].color,
                       }}
                     ></span>
                     <span className="text-xs text-gray-600">
-                      {chartConfig["เงินสดรับ"].label}
+                      {chartConfig["เงินสดรับอาทิตย์นี้"].label}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -304,11 +389,11 @@ export const WeeklyOperationSummary = ({
                       className="inline-block w-3 h-3 rounded-full"
                       style={{
                         backgroundColor:
-                          chartConfig["เงินสดรับสัปดาห์ก่อน"].color,
+                          chartConfig["เงินสดรับอาทิตย์ที่แล้ว"].color,
                       }}
                     ></span>
                     <span className="text-xs text-gray-600">
-                      {chartConfig["เงินสดรับสัปดาห์ก่อน"].label}
+                      {chartConfig["เงินสดรับอาทิตย์ที่แล้ว"].label}
                     </span>
                   </div>
                 </div>
@@ -323,7 +408,9 @@ export const WeeklyOperationSummary = ({
                 </span>
               </div>
               <div className="text-2xl font-bold">
-                {data ? `${formatCurrency(data.cashOut.total)} บาท` : "0 บาท"}
+                {data
+                  ? `${formatCurrency(data.cashOut.totalThisWeek)} บาท`
+                  : "0 บาท"}
               </div>
               <div className="flex items-center text-sm">
                 {cashOutChange && (
@@ -337,13 +424,13 @@ export const WeeklyOperationSummary = ({
                       </span>
                     </span>
                     <span className="ml-1 text-[#344A61]">
-                      เทียบกับค่าเฉลี่ยของสัปดาห์ก่อน
+                      เทียบกับอาทิตย์ที่แล้ว
                     </span>
                   </>
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                แนวโน้มของเงินสดจ่ายช่วง 7 วันที่ผ่านมา
+                เปรียบเทียบเงินสดจ่ายอาทิตย์นี้กับอาทิตย์ที่แล้ว
               </p>
 
               <div className="h-48">
@@ -366,20 +453,22 @@ export const WeeklyOperationSummary = ({
                           },
                         }}
                       />
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <ChartTooltip content={<CustomTooltip />} />
                       <Area
                         type="monotone"
-                        dataKey="เงินสดจ่าย"
-                        stroke="#06b6d4"
-                        fill="#06b6d4"
-                        fillOpacity={0.3}
+                        dataKey="เงินสดจ่ายอาทิตย์นี้"
+                        stroke="#0284c7"
+                        fill="#0284c7"
+                        fillOpacity={0.2}
+                        strokeWidth={2}
                       />
                       <Area
                         type="monotone"
-                        dataKey="เงินสดจ่ายสัปดาห์ก่อน"
+                        dataKey="เงินสดจ่ายอาทิตย์ที่แล้ว"
                         stroke="#f59e0b"
                         fill="#f59e0b"
-                        fillOpacity={0.3}
+                        fillOpacity={0.2}
+                        strokeWidth={2}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -389,11 +478,12 @@ export const WeeklyOperationSummary = ({
                     <span
                       className="inline-block w-3 h-3 rounded-full"
                       style={{
-                        backgroundColor: chartConfig["เงินสดจ่าย"].color,
+                        backgroundColor:
+                          chartConfig["เงินสดจ่ายอาทิตย์นี้"].color,
                       }}
                     ></span>
                     <span className="text-xs text-gray-600">
-                      {chartConfig["เงินสดจ่าย"].label}
+                      {chartConfig["เงินสดจ่ายอาทิตย์นี้"].label}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -401,11 +491,11 @@ export const WeeklyOperationSummary = ({
                       className="inline-block w-3 h-3 rounded-full"
                       style={{
                         backgroundColor:
-                          chartConfig["เงินสดจ่ายสัปดาห์ก่อน"].color,
+                          chartConfig["เงินสดจ่ายอาทิตย์ที่แล้ว"].color,
                       }}
                     ></span>
                     <span className="text-xs text-gray-600">
-                      {chartConfig["เงินสดจ่ายสัปดาห์ก่อน"].label}
+                      {chartConfig["เงินสดจ่ายอาทิตย์ที่แล้ว"].label}
                     </span>
                   </div>
                 </div>
@@ -416,6 +506,4 @@ export const WeeklyOperationSummary = ({
       </CardContent>
     </Card>
   );
-
-
 };
