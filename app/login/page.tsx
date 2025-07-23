@@ -1,39 +1,30 @@
 "use client";
 
-import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Mail, Lock, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
-  // 🎣 ใช้ Auth Context
   const { login, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // 📝 Form State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔄 Redirect ถ้า login แล้ว
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
 
-  /**
-   * Handle Login Form Submit
-   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Clear previous error
     setError("");
 
-    // Validation
     if (!email || !password) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน");
       return;
@@ -41,179 +32,104 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true);
-
-      // เรียก login function จาก Auth Context
       await login(email, password);
-
-      // Debug: ตรวจสอบ cookies หลัง login
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🍪 Cookies after login:", document.cookie);
-        console.log("🍪 All cookies:", document.cookie.split(";"));
-
-        // ตรวจสอบว่ามี cookie ที่จำเป็นหรือไม่
-        const hasCookie =
-          document.cookie.includes("auth-token") ||
-          document.cookie.includes("session") ||
-          document.cookie.includes("jwt");
-
-        if (!hasCookie) {
-          console.warn("⚠️ Warning: No auth cookie detected after login!");
-          console.log("🔍 This might cause 401 errors on subsequent requests");
-        }
-      }
-
-      // หลัง login สำเร็จ จะ redirect อัตโนมัติใน useEffect
-      console.log("🎉 Login successful!");
     } catch (error) {
-      // แสดง error message
       const errorMessage =
         error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
       setError(errorMessage);
-      console.error("❌ Login failed:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 🔄 แสดง Loading หรือ Checking Auth Status
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">กำลังตรวจสอบสถานะการเข้าสู่ระบบ...</p>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="ml-2 text-gray-600">กำลังตรวจสอบสถานะ...</p>
       </div>
     );
   }
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Panel - ข้อมูลระบบ */}
-      <div className="hidden md:flex w-1/2 bg-gradient-to-b from-blue-500 to-blue-800 flex-col justify-center items-center text-white p-8">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center">
-            <span className="text-4xl">🏛️</span>
+      {/* Left panel */}
+      {/* Left panel */}
+      <div className="hidden md:flex w-1/2 bg-gradient-to-b from-blue-400 to-blue-800 items-center justify-center text-white flex-col px-6">
+        <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
+          {/* Logo + Text aligned left */}
+          <div className="bg-white p-6 rounded-md self-start">
+            <img
+              src="/logo 1.png"
+              alt="logo"
+              className="h-24"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-center">
-            Pawn Shop Management
-          </h1>
-          <p className="text-lg text-center opacity-90">ระบบจัดการร้านจำนำ</p>
-          <div className="text-sm text-center opacity-75">
-            <p>🔐 ระบบยืนยันตัวตนด้วย httpOnly Cookies</p>
-            <p>🛡️ ความปลอดภัยระดับสูง</p>
-          </div>
+          <h1 className="text-2xl font-bold mt-4 text-left">สำนักงานธนานุเคราะห์</h1>
+          <p className="text-sm text-white/80 text-left">โรงรับจำนำรัฐบาล</p>
         </div>
       </div>
-
-      {/* Right Panel - Login Form */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 px-8">
+      {/* Right panel */}
+      <div className="flex flex-1 items-center justify-center bg-white px-6">
         <div className="w-full max-w-md space-y-6">
-          {/* หัวข้อ */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">เข้าสู่ระบบ</h2>
-            <p className="text-gray-600 mt-2">กรุณาใส่ข้อมูลเพื่อเข้าสู่ระบบ</p>
-          </div>
-
-          {/* Error Message */}
+          <h2 className="text-3xl font-semibold text-left text-gray-800 mb-1">
+            สำนักงานธนานุเคราะห์
+          </h2>
+          <p className="text-left text-base text-gray-500 mt-0">
+            เข้าสู่ระบบ
+          </p>
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-600">
+              {error}
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email Input */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                อีเมล
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="กรุณากรอกอีเมล"
-                  disabled={isSubmitting}
-                />
-              </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isSubmitting}
+              />
             </div>
 
-            {/* Password Input */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                รหัสผ่าน
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="กรุณากรอกรหัสผ่าน"
-                  disabled={isSubmitting}
-                />
-              </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isSubmitting}
+              />
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full text-sm font-medium transition-colors flex justify-center"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>กำลังเข้าสู่ระบบ...</span>
+                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                  กำลังเข้าสู่ระบบ...
                 </>
               ) : (
-                <span>เข้าสู่ระบบ</span>
+                "เข้าสู่ระบบ"
               )}
             </button>
           </form>
 
-          {/* Development Info */}
-          {process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-              <h4 className="font-medium text-yellow-800 mb-2">
-                🛠️ Development Mode
-              </h4>
-              <div className="text-sm text-yellow-700 space-y-1">
-                <p>
-                  <strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL}
-                </p>
-                <p>
-                  <strong>Test Account:</strong> admin@pawnshop.com /
-                  admin123456
-                </p>
-                <p>ตรวจสอบ Console สำหรับ debug logs</p>
-                <p>
-                  <strong>Cookie Debug:</strong> กด F12 → Application → Cookies
-                </p>
-                <div className="mt-2 p-2 bg-yellow-100 rounded text-xs">
-                  <p className="font-semibold">🍪 Cookie Troubleshooting:</p>
-                  <p>• ตรวจสอบว่า Browser ไม่ได้บล็อค cookies</p>
-                  <p>• ตรวจสอบ HTTPS vs HTTP</p>
-                  <p>• ลองใช้ Incognito Mode</p>
-                  <p>• ตรวจสอบ SameSite policy ใน Network tab</p>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="text-center text-sm text-gray-500">
+            <a href="#" className="hover:underline">
+              ลืมรหัสผ่าน?
+            </a>
+          </div>
         </div>
       </div>
 

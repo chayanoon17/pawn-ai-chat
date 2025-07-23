@@ -15,24 +15,24 @@ import {
 } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
 
-// 📊 Types สำหรับ API Response
 interface WeeklyOperationData {
   total: number;
   date: string;
 }
 
-interface WeeklyOperationSummary {
-  data: WeeklyOperationData[];
+interface OperationSummary {
+  thisWeek: WeeklyOperationData[];
+  lastWeek: WeeklyOperationData[];
   total: number;
-  last7Days: number;
-  prev7Days: number;
+  totalThisWeek: number;
+  totalLastWeek: number;
   percentChange: number;
 }
 
 interface WeeklyOperationResponse {
   branchId: number;
-  cashIn: WeeklyOperationSummary;
-  cashOut: WeeklyOperationSummary;
+  cashIn: OperationSummary;
+  cashOut: OperationSummary;
   timestamp: string;
 }
 
@@ -62,26 +62,6 @@ const chartConfig = {
     color: "#f59e0b",
   },
 };
-
-const leftChartData = [
-  { name: "15 พ.ค.", เงินสดรับ: 3.8, เงินสดรับสัปดาห์ก่อน: 3.2 },
-  { name: "16 พ.ค.", เงินสดรับ: 3.0, เงินสดรับสัปดาห์ก่อน: 3.4 },
-  { name: "17 พ.ค.", เงินสดรับ: 3.6, เงินสดรับสัปดาห์ก่อน: 3.0 },
-  { name: "18 พ.ค.", เงินสดรับ: 3.0, เงินสดรับสัปดาห์ก่อน: 3.6 },
-  { name: "19 พ.ค.", เงินสดรับ: 2.9, เงินสดรับสัปดาห์ก่อน: 3.8 },
-  { name: "20 พ.ค.", เงินสดรับ: 3.6, เงินสดรับสัปดาห์ก่อน: 3.6 },
-  { name: "21 พ.ค.", เงินสดรับ: 4.1, เงินสดรับสัปดาห์ก่อน: 3.3 },
-];
-
-const rightChartData = [
-  { name: "15 พ.ค.", เงินสดจ่าย: 3.8, เงินสดจ่ายสัปดาห์ก่อน: 3.7 },
-  { name: "16 พ.ค.", เงินสดจ่าย: 3.6, เงินสดจ่ายสัปดาห์ก่อน: 3.8 },
-  { name: "17 พ.ค.", เงินสดจ่าย: 3.3, เงินสดจ่ายสัปดาห์ก่อน: 3.9 },
-  { name: "18 พ.ค.", เงินสดจ่าย: 3.6, เงินสดจ่ายสัปดาห์ก่อน: 4.2 },
-  { name: "19 พ.ค.", เงินสดจ่าย: 3.2, เงินสดจ่ายสัปดาห์ก่อน: 3.6 },
-  { name: "20 พ.ค.", เงินสดจ่าย: 3.6, เงินสดจ่ายสัปดาห์ก่อน: 3.7 },
-  { name: "21 พ.ค.", เงินสดจ่าย: 3.7, เงินสดจ่ายสัปดาห์ก่อน: 3.7 },
-];
 
 export const WeeklyOperationSummary = ({
   branchId,
@@ -151,45 +131,50 @@ export const WeeklyOperationSummary = ({
     fetchWeeklyOperationSummary();
   }, [branchId, date]);
 
-  // 📊 แปลงข้อมูลสำหรับ Chart
-  // const leftChartData =
-  //   data?.cashIn.data.map((item) => ({
-  //     name: formatDate(item.date),
-  //     เงินสดรับ: item.total / 1000000, // แปลงเป็นล้านบาท
-  //     เงินสดรับสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
-  //   })) || [];
+  // ดึงข้อมูลทั้ง 2 ชุดมารวมใน chart (thisWeek + lastWeek)
+  const leftChartData = (data?.cashIn?.thisWeek || []).map((item) => ({
+    name: formatDate(item.date),
+    เงินสดรับ: item.total / 1_000_000,
+  })) as any[];
 
-  // const rightChartData =
-  //   data?.cashOut.data.map((item) => ({
-  //     name: formatDate(item.date),
-  //     เงินสดจ่าย: item.total / 1000000, // แปลงเป็นล้านบาท
-  //     เงินสดจ่ายสัปดาห์ก่อน: 0, // TODO: ต้องมีข้อมูลสัปดาห์ก่อนจาก API
-  //   })) || [];
+  // เพิ่มข้อมูลสัปดาห์ก่อน (ถ้ามี)
+  data?.cashIn?.lastWeek?.forEach((item) => {
+    const dateStr = formatDate(item.date);
+    const existing = leftChartData.find((d) => d.name === dateStr);
+    if (existing) {
+      existing["เงินสดรับสัปดาห์ก่อน"] = item.total / 1_000_000;
+    } else {
+      leftChartData.push({
+        name: dateStr,
+        เงินสดรับสัปดาห์ก่อน: item.total / 1_000_000,
+      });
+    }
+  });
 
+  const rightChartData = (data?.cashOut?.thisWeek || []).map((item) => ({
+    name: formatDate(item.date),
+    เงินสดจ่าย: item.total / 1_000_000,
+  })) as any[];
 
-  const leftChartData = Array.isArray(data?.cashIn?.data)
-  ? data.cashIn.data.map((item) => ({
-      name: formatDate(item.date),
-      เงินสดรับ: item.total / 1000000,
-      เงินสดรับสัปดาห์ก่อน: 0,
-    }))
-  : [];
-
-const rightChartData = Array.isArray(data?.cashOut?.data)
-  ? data.cashOut.data.map((item) => ({
-      name: formatDate(item.date),
-      เงินสดจ่าย: item.total / 1000000,
-      เงินสดจ่ายสัปดาห์ก่อน: 0,
-    }))
-  : [];
-
-
+  data?.cashOut?.lastWeek?.forEach((item) => {
+    const dateStr = formatDate(item.date);
+    const existing = rightChartData.find((d) => d.name === dateStr);
+    if (existing) {
+      existing["เงินสดจ่ายสัปดาห์ก่อน"] = item.total / 1_000_000;
+    } else {
+      rightChartData.push({
+        name: dateStr,
+        เงินสดจ่ายสัปดาห์ก่อน: item.total / 1_000_000,
+      });
+    }
+  });
   const cashInChange = data
     ? formatPercentChange(data.cashIn.percentChange)
     : null;
   const cashOutChange = data
     ? formatPercentChange(data.cashOut.percentChange)
     : null;
+
   return (
     <Card className="mb-6">
       <CardHeader className="pb-4">
@@ -201,12 +186,12 @@ const rightChartData = Array.isArray(data?.cashOut?.data)
             <p className="text-sm text-blue-500">
               {data
                 ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }).format(new Date(data.timestamp))} น.`
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(data.timestamp))} น.`
                 : "กำลังโหลดข้อมูล..."}
             </p>
           </div>
@@ -220,6 +205,17 @@ const rightChartData = Array.isArray(data?.cashOut?.data)
         ) : error ? (
           <div className="flex justify-center items-center h-64">
             <p className="text-red-500">{error}</p>
+          </div>
+        ) : !data ||
+          (data.cashIn.thisWeek.length === 0 &&
+            data.cashIn.lastWeek.length === 0 &&
+            data.cashOut.thisWeek.length === 0 &&
+            data.cashOut.lastWeek.length === 0) ? (
+              
+          <div className="text-center text-gray-400 py-16">
+            <div className="text-4xl mb-2">📊</div>
+            <p>ไม่มีข้อมูลยอดรับจำนำและรายละเอียด</p>
+            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -420,4 +416,6 @@ const rightChartData = Array.isArray(data?.cashOut?.data)
       </CardContent>
     </Card>
   );
+
+
 };

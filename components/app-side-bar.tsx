@@ -76,11 +76,10 @@ export function AppSidebar() {
                     <Link href={id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${
-                          isActive
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        }`}
+                        className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${isActive
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
                       >
                         <Icon className="h-5 w-5" />
                         <span>{label}</span>
@@ -133,29 +132,23 @@ export function AppSidebar() {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full group relative overflow-hidden bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:transform-none disabled:cursor-not-allowed"
+                className="w-full group relative overflow-hidden bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 hover:text-black font-medium py-2.5 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:text-gray-400"
               >
-                {/* Background Animation */}
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
-
-                {/* Button Content */}
                 <div className="relative flex items-center justify-center space-x-2">
                   {isLoggingOut ? (
                     <>
-                      <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                      <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
                       <span className="text-sm">กำลังออกจากระบบ...</span>
                     </>
                   ) : (
                     <>
-                      <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
+                      <LogOut className="w-4 h-4 group-hover:text-blue-600 transition-colors duration-200" />
                       <span className="text-sm">ออกจากระบบ</span>
                     </>
                   )}
                 </div>
-
-                {/* Ripple effect on click */}
-                <div className="absolute inset-0 rounded-xl opacity-0 group-active:opacity-20 bg-white transition-opacity duration-150"></div>
               </button>
+
             </div>
           </SidebarGroupContent>
         </SidebarGroup>

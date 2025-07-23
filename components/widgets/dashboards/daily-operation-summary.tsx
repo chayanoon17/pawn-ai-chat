@@ -53,6 +53,8 @@ export const DailyOperationSummary = ({
         `/api/v1/branches/daily-operation/summary?branchId=${branchId}&date=${date}`
       );
 
+      console.log("✅ Fetched Daily Operation Summary:", response.data);
+
       setSummary(response.data);
 
       // Log ใน development mode
@@ -130,16 +132,10 @@ export const DailyOperationSummary = ({
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <div className="text-red-500">⚠️</div>
-              <div>
-                <p className="text-red-800 font-medium">
-                  ไม่สามารถโหลดรายงานได้
-                </p>
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            </div>
+          <div className="text-center text-gray-400 py-16">
+            <div className="text-4xl mb-2">📊</div>
+            <p>ไม่มีข้อมูลรายงานผลการดำเนินงาน</p>
+            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}
 

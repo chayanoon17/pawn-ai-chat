@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ContractTransactionSummary } from "@/components/widgets/contract-transaction-summary";
-import { DailyOperationSummary } from "@/components/widgets/daily-operation-summary";
-import { GoldPriceCard } from "@/components/widgets/gold-price";
-import { WeeklyOperationSummary } from "@/components/widgets/weekly-operation-summary";
-import ContractTransactionDetails from "@/components/widgets/contract-transaction-details";
+import { ContractTransactionSummary } from "@/components/widgets/dashboards/contract-transaction-summary";
+import { DailyOperationSummary } from "@/components/widgets/dashboards/daily-operation-summary";
+import { GoldPriceCard } from "@/components/widgets/dashboards/gold-price";
+import { WeeklyOperationSummary } from "@/components/widgets/dashboards/weekly-operation-summary";
+import ContractTransactionDetails from "@/components/widgets/dashboards/contract-transaction-details";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
