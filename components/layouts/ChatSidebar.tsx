@@ -12,8 +12,6 @@ interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   className?: string;
-
-
 }
 
 interface Message {
@@ -25,21 +23,20 @@ interface Message {
 
 // Mock data ราคาทอง (สามารถปรับเปลี่ยนได้)
 const goldPrice = {
-  buy: 30000,  // ราคาซื้อ
+  buy: 30000, // ราคาซื้อ
   sell: 30500, // ราคาขาย
   source: "สมาคมค้าทองคำ",
 };
-
 
 export const ChatSidebar = ({
   isOpen,
   onClose,
   className,
-
 }: ChatSidebarProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [promptsVisible, setPromptsVisible] = useState(true); // State สำหรับควบคุมการแสดงผลของ prompt
 
   const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
@@ -61,6 +58,7 @@ export const ChatSidebar = ({
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsSending(true);
+    setPromptsVisible(false); // เมื่อส่งข้อความ ให้ซ่อน prompt
 
     try {
       let botReply = "";
@@ -74,7 +72,6 @@ export const ChatSidebar = ({
           timestamp: new Date(),
         },
       ]);
-
 
       // Response จาก AI หรือ bot จะเปลี่ยนไปตามข้อความของผู้ใช้
       if (inputValue.includes("ราคาทอง")) {
@@ -157,7 +154,7 @@ export const ChatSidebar = ({
       </div>
 
       {/* Messages */}
-      
+
       <ScrollArea className="flex-1 p-4 overflow-auto">
         <div className="space-y-4">
           {messages.map((message) => (
@@ -195,35 +192,33 @@ export const ChatSidebar = ({
       </ScrollArea>
 
       {/* Input */}
-
-      {/* Suggested Prompts */}
-      <div className="px-4 pt-2">
-        <div className="flex flex-wrap gap-2">
-          {[
-            "ราคาทองวันนี้เท่าไร?",
-            "แนวโน้มราคาทองช่วงนี้เป็นอย่างไร?",
-            "ควรขายทองตอนนี้ไหม?",
-          ].map((prompt) => (
-            <Button
-              key={prompt}
-              variant="outline"
-              size="sm"
-              className="text-sm"
-              onClick={() => {
-                setInputValue(prompt);
-                handleSendMessage(); // ส่งทันที หรือเอาออกถ้าต้องการแค่เติมในช่อง
-              }}
-            >
-              {prompt}
-            </Button>
-          ))}
+      {promptsVisible && (
+        <div className="px-4 pt-2">
+          <div className="flex flex-wrap gap-2">
+            {[
+              "ราคาทองวันนี้เท่าไร?",
+              "แนวโน้มราคาทองช่วงนี้เป็นอย่างไร?",
+              "ควรขายทองตอนนี้ไหม?",
+            ].map((prompt) => (
+              <Button
+                key={prompt}
+                variant="outline"
+                size="sm"
+                className="text-sm"
+                onClick={() => {
+                  setInputValue(prompt); // กำหนดค่า input เป็นข้อความจาก prompt
+                  handleSendMessage(); // ส่งข้อความเมื่อคลิก
+                }}
+              >
+                {prompt}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      
       <div className="p-4 border-t border-gray-200">
         <div className="flex space-x-2">
-          
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
