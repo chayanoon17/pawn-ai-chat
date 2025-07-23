@@ -76,6 +76,8 @@ export const ChatSidebar = ({
       // Response จาก AI หรือ bot จะเปลี่ยนไปตามข้อความของผู้ใช้
       if (inputValue.includes("ราคาทอง")) {
         botReply = `ราคาทองวันนี้: ซื้อที่ ${goldPrice.buy} บาท/บาททองคำ, ขายที่ ${goldPrice.sell} บาท/บาททองคำ (แหล่งที่มา: ${goldPrice.source})`;
+      } else if (inputValue.includes("จำนำ") || inputValue.includes("pawn")) {
+        botReply = "หากคุณต้องการข้อมูลเกี่ยวกับการจำนำ โปรดระบุคำถามที่เกี่ยวข้อง";
       } else {
         botReply = "ขอโทษครับ ฉันไม่เข้าใจคำถามนี้";
       }
@@ -154,7 +156,6 @@ export const ChatSidebar = ({
       </div>
 
       {/* Messages */}
-
       <ScrollArea className="flex-1 p-4 overflow-auto">
         <div className="space-y-4">
           {messages.map((message) => (
@@ -199,6 +200,8 @@ export const ChatSidebar = ({
               "ราคาทองวันนี้เท่าไร?",
               "แนวโน้มราคาทองช่วงนี้เป็นอย่างไร?",
               "ควรขายทองตอนนี้ไหม?",
+              "จำนำทองทำยังไง?",
+              "การประเมินราคาทองคำเป็นอย่างไร?",
             ].map((prompt) => (
               <Button
                 key={prompt}
