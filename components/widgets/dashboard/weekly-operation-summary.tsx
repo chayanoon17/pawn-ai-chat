@@ -212,10 +212,10 @@ export const WeeklyOperationSummary = ({
 
   const rightChartData = data
     ? prepareChartData(
-        data.cashOut.thisWeek,
-        data.cashOut.lastWeek,
-        "เงินสดจ่าย"
-      )
+      data.cashOut.thisWeek,
+      data.cashOut.lastWeek,
+      "เงินสดจ่าย"
+    )
     : [];
   // 🎯 Custom Tooltip Component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -266,36 +266,36 @@ export const WeeklyOperationSummary = ({
     "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
     data
       ? {
-          branchId: data.branchId,
-          cashIn: {
-            thisWeek: data.cashIn.thisWeek,
-            lastWeek: data.cashIn.lastWeek,
-            totalThisWeek: data.cashIn.totalThisWeek,
-            totalLastWeek: data.cashIn.totalLastWeek,
-            percentChange: data.cashIn.percentChange,
+        branchId: data.branchId,
+        cashIn: {
+          thisWeek: data.cashIn.thisWeek,
+          lastWeek: data.cashIn.lastWeek,
+          totalThisWeek: data.cashIn.totalThisWeek,
+          totalLastWeek: data.cashIn.totalLastWeek,
+          percentChange: data.cashIn.percentChange,
+        },
+        cashOut: {
+          thisWeek: data.cashOut.thisWeek,
+          lastWeek: data.cashOut.lastWeek,
+          totalThisWeek: data.cashOut.totalThisWeek,
+          totalLastWeek: data.cashOut.totalLastWeek,
+          percentChange: data.cashOut.percentChange,
+        },
+        timestamp: data.timestamp,
+        // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
+        analysis: {
+          chartDataLeft: leftChartData,
+          chartDataRight: rightChartData,
+          summary: {
+            cashInThisWeek: data.cashIn.totalThisWeek,
+            cashInLastWeek: data.cashIn.totalLastWeek,
+            cashInChange: data.cashIn.percentChange,
+            cashOutThisWeek: data.cashOut.totalThisWeek,
+            cashOutLastWeek: data.cashOut.totalLastWeek,
+            cashOutChange: data.cashOut.percentChange,
           },
-          cashOut: {
-            thisWeek: data.cashOut.thisWeek,
-            lastWeek: data.cashOut.lastWeek,
-            totalThisWeek: data.cashOut.totalThisWeek,
-            totalLastWeek: data.cashOut.totalLastWeek,
-            percentChange: data.cashOut.percentChange,
-          },
-          timestamp: data.timestamp,
-          // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
-          analysis: {
-            chartDataLeft: leftChartData,
-            chartDataRight: rightChartData,
-            summary: {
-              cashInThisWeek: data.cashIn.totalThisWeek,
-              cashInLastWeek: data.cashIn.totalLastWeek,
-              cashInChange: data.cashIn.percentChange,
-              cashOutThisWeek: data.cashOut.totalThisWeek,
-              cashOutLastWeek: data.cashOut.totalLastWeek,
-              cashOutChange: data.cashOut.percentChange,
-            },
-          },
-        }
+        },
+      }
       : null,
     [data]
   );
@@ -311,12 +311,12 @@ export const WeeklyOperationSummary = ({
             <p className="text-sm text-blue-500">
               {data
                 ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }).format(new Date(data.timestamp))} น.`
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(data.timestamp))} น.`
                 : "กำลังโหลดข้อมูล..."}
             </p>
           </div>
