@@ -8,7 +8,7 @@ import axios, {
   AxiosError,
   AxiosRequestConfig,
   AxiosResponse,
-} from "axios"; 
+} from "axios";
 import { ApiResponse, ApiErrorResponse } from "@/types/api";
 
 export async function sendChatMessage(message: string): Promise<string> {
@@ -50,53 +50,67 @@ export async function sendChatMessage(message: string): Promise<string> {
 export async function sendChatMessageStream(
   message: string,
   onChunk: (chunk: string) => void,
-  messages: { role: "user" | "assistant" | "system"; content: string }[] = []
+  messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
+  onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
 ): Promise<void> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
-    credentials: "include",
-  });
-
-  if (!response.ok || !response.body) {
-    throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-
-    const lines = buffer.split("\n\n");
-    for (let i = 0; i < lines.length - 1; i++) {
-      const line = lines[i].trim();
-      if (line.startsWith("data: ")) {
-        const json = line.replace(/^data:\s*/, "");
-        try {
-          const parsed = JSON.parse(json);
-          if (parsed.content) {
-            onChunk(parsed.content);
-          }
-        } catch (err) {
-          console.error("❌ JSON parse error:", err);
-        }
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+        credentials: "include",
       }
+    );
+
+    if (!response.ok || !response.body) {
+      throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
     }
 
-    buffer = lines[lines.length - 1];
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n\n");
+      for (let i = 0; i < lines.length - 1; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("data: ")) {
+          const json = line.replace(/^data:\s*/, "");
+          try {
+            const parsed = JSON.parse(json);
+            if (parsed.content) {
+              onChunk(parsed.content);
+            }
+          } catch (err) {
+            console.error("❌ JSON parse error:", err);
+          }
+        }
+      }
+
+      buffer = lines[lines.length - 1];
+    }
+
+    // 🎯 เรียก callback เมื่อ streaming จบ
+    if (onComplete) {
+      onComplete();
+    }
+  } catch (error) {
+    // รอบการจัดการ error และเรียก onComplete ด้วย
+    if (onComplete) {
+      onComplete();
+    }
+    throw error;
   }
 }
-
-
-
 
 /**
  * API Client Class - Singleton pattern สำหรับการจัดการ HTTP requests
@@ -110,7 +124,6 @@ class ApiClient {
     this.api = this.createAxiosInstance();
     this.setupInterceptors();
   }
-
 
   /**
    * สร้าง Axios instance พร้อม configuration สำหรับ httpOnly cookies

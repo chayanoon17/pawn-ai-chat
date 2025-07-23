@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 // 📊 Types สำหรับ API Response
 interface TransactionSummaryItem {
@@ -185,6 +186,36 @@ export default function ContractTransactionDetails({
     fetchTransactionDetails();
   }, [branchId, date]);
 
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "contract-transaction-details",
+    "รายละเอียดธุรกรรมตั๋วจำนำ",
+    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
+    data
+      ? {
+          branchId: data.branchId,
+          totalTransactions: data.transactions.length,
+          summaries: data.summaries,
+          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+            contractNumber: t.contractNumber,
+            customerName: t.customerName,
+            transactionType: t.transactionType,
+            remainingAmount: t.remainingAmount,
+            assetType: t.assetType,
+            ticketStatus: t.ticketStatus,
+          })),
+          transactionTypes: [
+            ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          totalAmount: data.transactions.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          lastUpdated: data.timestamp,
+        }
+      : null
+  );
+
   // 🔍 Filter ข้อมูลตามการค้นหา
   const filteredTransactions =
     data?.transactions.filter(
@@ -224,12 +255,12 @@ export default function ContractTransactionDetails({
           <p className="text-sm text-blue-500">
             {data
               ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              }).format(new Date(data.timestamp))} น.`
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(data.timestamp))} น.`
               : `ประจำวันที่ ${formatDate(date)}`}
           </p>
         </div>
@@ -451,7 +482,6 @@ export default function ContractTransactionDetails({
                 </PaginationContent>
               </Pagination>
             </div>
-
           </>
         )}
       </CardContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Calendar } from "lucide-react";
 import apiClient from "@/lib/api";
 import { format } from "date-fns";
 
@@ -44,9 +44,23 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   // หาวันที่วันนี้เป็น string "yyyy-MM-dd" เพื่อใช้ max attribute
   const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  // 🎯 Helper function สำหรับแปลง date format
+  const formatDateForDisplay = (date: Date): string => {
+    return format(date, "dd/MM/yyyy");
+  };
+
+  const formatDateForValue = (date: Date): string => {
+    return format(date, "yyyy-MM-dd");
+  };
+
+  const parseDateFromValue = (value: string): Date => {
+    return new Date(value);
+  };
 
   // โหลดข้อมูลสาขา
   useEffect(() => {
@@ -69,7 +83,9 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         }
       } catch (err: any) {
         const errorMessage =
-          err.response?.data?.message || err.message || "ไม่สามารถโหลดข้อมูลสาขาได้";
+          err.response?.data?.message ||
+          err.message ||
+          "ไม่สามารถโหลดข้อมูลสาขาได้";
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -93,6 +109,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     const value = e.target.value; // "yyyy-MM-dd"
     const date = value ? new Date(value) : undefined;
     setSelectedDate(date);
+    setIsDatePickerOpen(false);
     onFilterChange?.({
       branchId: selectedBranchId,
       date: value,
@@ -137,16 +154,32 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         </PopoverContent>
       </Popover>
 
-      {/* 📅 Date Picker (native input[type=date] แบบใหม่ พร้อมจำกัดไม่ให้เลือกอนาคต) */}
-      <div>
-        <Input
-          type="date"
-          max={todayStr}
-          value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : todayStr}
-          onChange={handleDateInputChange}
-          className="h-[36px] text-sm px-3"
-        />
-      </div>
+      {/* 📅 Custom Date Picker (แสดง dd/mm/yyyy แต่ใช้ yyyy-mm-dd) */}
+      <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-[140px] justify-between h-[36px] text-sm"
+          >
+            {selectedDate ? formatDateForDisplay(selectedDate) : "เลือกวันที่"}
+            <Calendar className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" align="start">
+          <div className="flex flex-col space-y-2">
+            <div className="text-sm font-medium text-gray-700 px-2">
+              เลือกวันที่
+            </div>
+            <Input
+              type="date"
+              max={todayStr}
+              value={selectedDate ? formatDateForValue(selectedDate) : todayStr}
+              onChange={handleDateInputChange}
+              className="h-[36px] text-sm"
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
 
       {/* Debug Error */}
       {error && process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && (

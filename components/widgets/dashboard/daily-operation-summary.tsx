@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 type BranchDailySummary = {
   branchId: number;
@@ -82,6 +83,24 @@ export const DailyOperationSummary = ({
   useEffect(() => {
     fetchSummary();
   }, [branchId, date, parentLoading]);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "daily-operation-summary",
+    "สรุปยอดสต็อกจำนำรายวัน",
+    "ข้อมูลยอดคงเหลือตอนเปิด-ปิด ทั้งจำนวนรายการและมูลค่า พร้อมการเปลี่ยนแปลง",
+    summary
+      ? {
+          branchId: summary.branchId,
+          beginningBalance: summary.beginningBalance,
+          endingBalance: summary.endingBalance,
+          countChange: summary.countChange,
+          amountChange: summary.amountChange,
+          lastUpdated: summary.timestamp,
+          netChangeDirection: summary.amountChange >= 0 ? "เพิ่มขึ้น" : "ลดลง",
+        }
+      : null
+  );
 
   const formatAmount = (value: number) =>
     value.toLocaleString("th-TH", { minimumFractionDigits: 2 });

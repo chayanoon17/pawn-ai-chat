@@ -16,6 +16,7 @@ import {
   AreaChart,
 } from "recharts";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 interface Props {
   branchId: string;
@@ -43,14 +44,20 @@ interface ApiResponse {
   timestamp: string;
 }
 
-
 const COLORS = [
-  "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ef4444", "#06b6d4",
+  "#f59e0b",
+  "#10b981",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ef4444",
+  "#06b6d4",
 ];
 
 export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const [chartData, setChartData] = useState<any[]>([]);
-  const [chartConfig, setChartConfig] = useState<Record<string, { label: string; color: string }>>({});
+  const [chartConfig, setChartConfig] = useState<
+    Record<string, { label: string; color: string }>
+  >({});
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -86,32 +93,58 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       const dateMap: Record<string, any> = {};
       rankings.forEach((r) => {
         r.dailyData.forEach(({ date, count }) => {
-          if (!dateMap[date]) dateMap[date] = { name: new Date(date).toLocaleDateString("th-TH") };
+          if (!dateMap[date])
+            dateMap[date] = {
+              name: new Date(date).toLocaleDateString("th-TH"),
+            };
           dateMap[date][r.assetType] = count;
         });
       });
 
       const mergedData = Object.values(dateMap).sort(
-        (a: any, b: any) => new Date(a.name).getTime() - new Date(b.name).getTime()
+        (a: any, b: any) =>
+          new Date(a.name).getTime() - new Date(b.name).getTime()
       );
 
       setChartData(mergedData);
       setTimestamp(apiData.timestamp);
       setError(null);
     } catch (err: any) {
-      console.error("❌ Error loading ranking data:", err.response?.data || err.message || err);
+      console.error(
+        "❌ Error loading ranking data:",
+        err.response?.data || err.message || err
+      );
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
     } finally {
       setIsLoading(false);
     }
   };
 
-
-
   useEffect(() => {
     if (!branchId || !date || branchId === "all") return;
     fetchData();
   }, [branchId, date]);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "ranking-by-period-asset-type",
+    "อันดับประเภททรัพย์สินรายช่วงเวลา",
+    "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
+    chartData.length > 0
+      ? {
+          branchId: parseInt(branchId),
+          periodData: chartData,
+          assetTypes: Object.keys(chartConfig),
+          dateRange: {
+            start: chartData[0]?.date,
+            end: chartData[chartData.length - 1]?.date,
+          },
+          totalDataPoints: chartData.length,
+          topPerformingAsset: Object.keys(chartConfig)[0], // สมมติว่าเรียงตาม ranking
+          lastUpdated: timestamp,
+        }
+      : null
+  );
 
   return (
     <Card className="mb-6">
@@ -125,17 +158,20 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : error
-                  ? error
-                  : timestamp
-                    ? `อัปเดตล่าสุดเมื่อ ${new Date(timestamp).toLocaleString("th-TH", {
+                ? error
+                : timestamp
+                ? `อัปเดตล่าสุดเมื่อ ${new Date(timestamp).toLocaleString(
+                    "th-TH",
+                    {
                       timeZone: "Asia/Bangkok",
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}`
-                    : "ไม่พบข้อมูล"}
+                    }
+                  )}`
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -167,7 +203,9 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
                   <XAxis dataKey="name" className="text-xs" />
                   <YAxis className="text-xs" />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  {(Object.keys(chartConfig) as (keyof typeof chartConfig)[]).map((key) => (
+                  {(
+                    Object.keys(chartConfig) as (keyof typeof chartConfig)[]
+                  ).map((key) => (
                     <Area
                       key={key}
                       type="monotone"
@@ -181,20 +219,23 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
               </ResponsiveContainer>
             </ChartContainer>
             <div className="flex flex-wrap gap-4 mt-2 items-center justify-center">
-              {(Object.keys(chartConfig) as (keyof typeof chartConfig)[]).map((key) => (
-                <div key={key} className="flex items-center space-x-2">
-                  <span
-                    className="inline-block w-3 h-3 rounded-full"
-                    style={{ backgroundColor: chartConfig[key].color }}
-                  ></span>
-                  <span className="text-xs text-gray-600">{chartConfig[key].label}</span>
-                </div>
-              ))}
+              {(Object.keys(chartConfig) as (keyof typeof chartConfig)[]).map(
+                (key) => (
+                  <div key={key} className="flex items-center space-x-2">
+                    <span
+                      className="inline-block w-3 h-3 rounded-full"
+                      style={{ backgroundColor: chartConfig[key].color }}
+                    ></span>
+                    <span className="text-xs text-gray-600">
+                      {chartConfig[key].label}
+                    </span>
+                  </div>
+                )
+              )}
             </div>
           </div>
         )}
       </CardContent>
-
     </Card>
   );
 };

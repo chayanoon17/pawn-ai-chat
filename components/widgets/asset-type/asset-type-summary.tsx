@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 type AssetTypeSummary = {
   assetType: string;
@@ -24,7 +25,6 @@ type ApiResponse = {
   timestamp: string;
 };
 
-
 interface Props {
   branchId: string;
   date: string;
@@ -32,16 +32,34 @@ interface Props {
 }
 
 const COLORS = [
-  "#10b981", "#06b6d4", "#8b5cf6", "#ef4444", "#ec4899",
-  "#f59e0b", "#f97316", "#3b82f6", "#14b8a6", "#a855f7",
-  "#6366f1", "#eab308", "#f43f5e", "#0ea5e9", "#22c55e"
+  "#10b981",
+  "#06b6d4",
+  "#8b5cf6",
+  "#ef4444",
+  "#ec4899",
+  "#f59e0b",
+  "#f97316",
+  "#3b82f6",
+  "#14b8a6",
+  "#a855f7",
+  "#6366f1",
+  "#eab308",
+  "#f43f5e",
+  "#0ea5e9",
+  "#22c55e",
 ];
 
-const formatNumber = (num: number): string =>
-  num.toLocaleString("th-TH");
+const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
 const renderCustomLabel = ({
-  cx, cy, midAngle, outerRadius, name, value, percent, index,
+  cx,
+  cy,
+  midAngle,
+  outerRadius,
+  name,
+  value,
+  percent,
+  index,
 }: any) => {
   const RADIAN = Math.PI / 180;
   const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
@@ -54,17 +72,35 @@ const renderCustomLabel = ({
   return (
     <g>
       <path d={`M${sx},${sy} L${ex},${ey}`} stroke={color} fill="none" />
-      <text x={ex} y={ey - 10} textAnchor={textAnchor} fill="#1f2937" fontSize={13} fontWeight="bold">
+      <text
+        x={ex}
+        y={ey - 10}
+        textAnchor={textAnchor}
+        fill="#1f2937"
+        fontSize={13}
+        fontWeight="bold"
+      >
         {name}
       </text>
-      <text x={ex} y={ey + 5} textAnchor={textAnchor} fill={color} fontSize={13} fontWeight={500}>
+      <text
+        x={ex}
+        y={ey + 5}
+        textAnchor={textAnchor}
+        fill={color}
+        fontSize={13}
+        fontWeight={500}
+      >
         {`${formatNumber(value)} ชิ้น (${(percent * 100).toFixed(2)}%)`}
       </text>
     </g>
   );
 };
 
-export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: Props) => {
+export const AssetTypesSummary = ({
+  branchId,
+  date,
+  isLoading: parentLoading,
+}: Props) => {
   const [data, setData] = useState<any[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,8 +129,6 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
         return;
       }
 
-
-
       const formatted = apiData.assetTypeSummaries.map((item, i) => ({
         name: item.assetType,
         value: item.count,
@@ -105,7 +139,6 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
       setData(formatted);
       setTimestamp(apiData.timestamp ?? null);
       setError(null);
-
     } catch (err) {
       console.error("❌ Error fetching asset type summary:", err);
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -117,6 +150,30 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
   useEffect(() => {
     fetchData();
   }, [branchId, date, parentLoading]);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "asset-type-summary",
+    "สรุปประเภททรัพย์สิน",
+    "ข้อมูลสรุปประเภททรัพย์สินที่รับจำนำ พร้อมจำนวนและเปอร์เซ็นต์",
+    data.length > 0
+      ? {
+          branchId: parseInt(branchId),
+          totalAssetTypes: data.length,
+          totalItems: data.reduce((sum, item) => sum + item.value, 0),
+          assetTypes: data.map((item) => ({
+            name: item.name,
+            count: item.value,
+            percentage: item.percentage,
+          })),
+          topAssetType: data.reduce(
+            (max, item) => (item.value > max.value ? item : max),
+            data[0]
+          )?.name,
+          lastUpdated: timestamp,
+        }
+      : null
+  );
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString("th-TH", {
@@ -138,10 +195,10 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
           {isLoading
             ? "กำลังโหลดข้อมูล..."
             : error
-              ? "เกิดข้อผิดพลาดในการโหลดข้อมูล"
-              : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                : "ไม่พบข้อมูล"}
+            ? "เกิดข้อผิดพลาดในการโหลดข้อมูล"
+            : timestamp
+            ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+            : "ไม่พบข้อมูล"}
         </p>
       </CardHeader>
       <CardContent>
@@ -168,14 +225,17 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
               <ChartContainer
                 config={{
                   value: { label: "จำนวน (ชิ้น)" },
-                  ...Object.fromEntries(data.map(d => [d.name, { label: d.name, color: d.color }])),
+                  ...Object.fromEntries(
+                    data.map((d) => [d.name, { label: d.name, color: d.color }])
+                  ),
                 }}
               >
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={data}
-                      cx="50%" cy="50%"
+                      cx="50%"
+                      cy="50%"
                       outerRadius={120}
                       paddingAngle={2}
                       dataKey="value"
@@ -195,7 +255,10 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
             <div className="flex flex-wrap gap-4 justify-center mt-4">
               {data.map((item) => (
                 <div key={item.name} className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
                   <span className="text-sm">{item.name}</span>
                 </div>
               ))}
@@ -203,7 +266,6 @@ export const AssetTypesSummary = ({ branchId, date, isLoading: parentLoading }: 
           </>
         )}
       </CardContent>
-
     </Card>
   );
 };

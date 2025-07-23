@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 interface AssetRanking {
   rank: number;
@@ -28,7 +34,10 @@ interface TopRankingAssetTypeProps {
   date: string;
 }
 
-export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps) => {
+export const TopRankingAssetType = ({
+  branchId,
+  date,
+}: TopRankingAssetTypeProps) => {
   const [rankings, setRankings] = useState<AssetRanking[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +60,10 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
       setRankings(res.data.rankings || []);
       setTimestamp(res.data.timestamp ?? null);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "เกิดข้อผิดพลาดในการโหลดข้อมูล";
       setError(msg);
       setRankings([]);
     } finally {
@@ -63,14 +75,40 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
     fetchTopRanking();
   }, [branchId, date]);
 
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "top-ranking-asset-type",
+    "อันดับประเภททรัพย์สิน",
+    "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
+    rankings.length > 0
+      ? {
+          branchId: parseInt(branchId),
+          totalRankings: rankings.length,
+          rankings: rankings.map((r) => ({
+            rank: r.rank,
+            assetType: r.assetType,
+            count: r.count,
+            totalValue: r.totalValue,
+            averageValue: r.totalValue / r.count,
+          })),
+          topAssetType: rankings[0]?.assetType,
+          highestValueType: rankings.reduce(
+            (max, r) => (r.totalValue > max.totalValue ? r : max),
+            rankings[0]
+          )?.assetType,
+          lastUpdated: timestamp,
+        }
+      : null
+  );
+
   const formattedDate = timestamp
     ? new Date(timestamp).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : null;
 
   return (
@@ -78,13 +116,15 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
       <CardContent>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center my-1 space-y-4 lg:space-y-0">
           <div>
-            <h2 className="text-[24px] font-semibold mb-1">10 อันดับ รายการประเภททรัพย์และราคา</h2>
+            <h2 className="text-[24px] font-semibold mb-1">
+              10 อันดับ รายการประเภททรัพย์และราคา
+            </h2>
             <p className="text-sm text-[#36B8EE]">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : formattedDate
-                  ? `อัปเดตล่าสุดเมื่อ ${formattedDate}`
-                  : "ไม่พบข้อมูล"}
+                ? `อัปเดตล่าสุดเมื่อ ${formattedDate}`
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -118,7 +158,9 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
                   <TableHead className="min-w-[80px]">อันดับ</TableHead>
                   <TableHead className="min-w-[300px]">ประเภททรัพย์</TableHead>
                   <TableHead className="min-w-[120px]">จำนวนรายการ</TableHead>
-                  <TableHead className="min-w-[160px] text-center">มูลค่ารวมทั้งหมด (บาท)</TableHead>
+                  <TableHead className="min-w-[160px] text-center">
+                    มูลค่ารวมทั้งหมด (บาท)
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,7 +169,9 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
                     <TableCell>{row.rank}</TableCell>
                     <TableCell>{row.assetType}</TableCell>
                     <TableCell>{row.count.toLocaleString()} รายการ</TableCell>
-                    <TableCell className="text-center">{row.totalValue.toLocaleString()}</TableCell>
+                    <TableCell className="text-center">
+                      {row.totalValue.toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -135,7 +179,6 @@ export const TopRankingAssetType = ({ branchId, date }: TopRankingAssetTypeProps
           </div>
         )}
       </CardContent>
-
     </Card>
   );
 };

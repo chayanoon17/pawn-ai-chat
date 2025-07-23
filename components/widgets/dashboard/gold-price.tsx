@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 type GoldPrice = {
   id: number;
@@ -55,6 +56,25 @@ export const GoldPriceCard = () => {
 
     fetchGoldPrice();
   }, []);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "gold-price",
+    "ราคาทองคำอ้างอิง",
+    "ข้อมูลราคาทองคำซื้อ-ขาย ทั้งทองแท่งและทองรูปพรรณ พร้อมวันที่อัปเดตล่าสุด",
+    latestPrice
+      ? {
+          goldBarBuy: latestPrice.goldBarBuy,
+          goldBarSell: latestPrice.goldBarSell,
+          goldJewelryBuy: latestPrice.goldJewelryBuy,
+          goldJewelrySell: latestPrice.goldJewelrySell,
+          lastUpdated: latestPrice.updatedAt,
+          priceSpreadBar: latestPrice.goldBarSell - latestPrice.goldBarBuy,
+          priceSpreadJewelry:
+            latestPrice.goldJewelrySell - latestPrice.goldJewelryBuy,
+        }
+      : null
+  );
 
   const formatPrice = (value: number) =>
     value.toLocaleString("th-TH", {

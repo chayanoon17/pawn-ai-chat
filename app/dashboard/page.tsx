@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ContractTransactionSummary } from "@/components/widgets/dashboards/contract-transaction-summary";
-import { DailyOperationSummary } from "@/components/widgets/dashboards/daily-operation-summary";
-import { GoldPriceCard } from "@/components/widgets/dashboards/gold-price";
-import { WeeklyOperationSummary } from "@/components/widgets/dashboards/weekly-operation-summary";
-import ContractTransactionDetails from "@/components/widgets/dashboards/contract-transaction-details";
+import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-summary";
+import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-operation-summary";
+import { GoldPriceCard } from "@/components/widgets/dashboard/gold-price";
+import { WeeklyOperationSummary } from "@/components/widgets/dashboard/weekly-operation-summary";
+import ContractTransactionDetails from "@/components/widgets/dashboard/contract-transaction-details";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { WidgetFilterData } from "@/components/widget-filter";
 import { ChatSidebar } from "@/components/layouts/ChatSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { WidgetProvider } from "@/context/widget-context";
 
 export default function DashboardPage() {
   const isMobile = useIsMobile();
@@ -61,64 +62,66 @@ export default function DashboardPage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full">
-        {/* Sidebar ฝั่งซ้าย fixed width */}
-        <div className="w-64 border-r bg-white">
-          <AppSidebar />
-        </div>
+    <WidgetProvider>
+      <SidebarProvider>
+        <div className="flex h-screen w-full">
+          {/* Sidebar ฝั่งซ้าย fixed width */}
+          <div className="w-64 border-r bg-white">
+            <AppSidebar />
+          </div>
 
-        {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        <div className="relative flex-1 flex flex-col">
-          <Header
-            selectedPage={currentPage}
-            onChatToggle={onChatToggle}
-            onMenuToggle={onMenuToggle}
-            isChatOpen={isChatOpen}
-            onFilterChange={handleFilterChange}
-          />
-          <main className="flex-1 p-4 overflow-auto bg-gray-50">
-            <GoldPriceCard />
+          {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
+          {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
+          <div className="relative flex-1 flex flex-col">
+            <Header
+              selectedPage={currentPage}
+              onChatToggle={onChatToggle}
+              onMenuToggle={onMenuToggle}
+              isChatOpen={isChatOpen}
+              onFilterChange={handleFilterChange}
+            />
+            <main className="flex-1 p-4 overflow-auto bg-gray-50">
+              <GoldPriceCard />
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-              <DailyOperationSummary
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                <DailyOperationSummary
+                  branchId={filterData.branchId}
+                  date={filterData.date}
+                  isLoading={filterData.isLoading}
+                />
+                <ContractTransactionSummary
+                  branchId={filterData.branchId}
+                  date={filterData.date}
+                  isLoading={filterData.isLoading}
+                />
+              </div>
+
+              <WeeklyOperationSummary
                 branchId={filterData.branchId}
                 date={filterData.date}
                 isLoading={filterData.isLoading}
               />
-              <ContractTransactionSummary
+
+              <ContractTransactionDetails
                 branchId={filterData.branchId}
                 date={filterData.date}
                 isLoading={filterData.isLoading}
               />
-            </div>
+            </main>
 
-            <WeeklyOperationSummary
-              branchId={filterData.branchId}
-              date={filterData.date}
-              isLoading={filterData.isLoading}
-            />
-
-            <ContractTransactionDetails
-              branchId={filterData.branchId}
-              date={filterData.date}
-              isLoading={filterData.isLoading}
-            />
-          </main>
-
-          {/*Chat Sidebar*/}
-          {!isMobile && isChatOpen && (
-            <ChatSidebar
-              isOpen={isChatOpen}
-              onClose={() => setIsChatOpen(false)}
-              className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${isChatOpen ? "translate-x-0" : "translate-x-full"
+            {/*Chat Sidebar*/}
+            {!isMobile && isChatOpen && (
+              <ChatSidebar
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+                  isChatOpen ? "translate-x-0" : "translate-x-full"
                 }`}
-            />
-          )}
+              />
+            )}
+          </div>
         </div>
-
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </WidgetProvider>
   );
 }
