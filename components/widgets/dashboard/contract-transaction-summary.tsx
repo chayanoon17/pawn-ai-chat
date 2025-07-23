@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [
   "#10b981", // green-500
@@ -110,6 +111,29 @@ export const ContractTransactionSummary = ({
   useEffect(() => {
     fetchTransactionSummary();
   }, [branchId, date, parentLoading]);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "contract-transaction-summary",
+    "สรุปสถานะตั๋วจำนำ",
+    "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
+    data.length > 0
+      ? {
+          branchId: parseInt(branchId),
+          summaries: data.map((item) => ({
+            type: item.name,
+            count: item.value,
+            color: item.color,
+          })),
+          totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
+          lastUpdated: timestamp,
+          topTransactionType: data.reduce(
+            (max, item) => (item.value > max.value ? item : max),
+            data[0]
+          )?.name,
+        }
+      : null
+  );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย
   const formatDate = (iso: string) => {

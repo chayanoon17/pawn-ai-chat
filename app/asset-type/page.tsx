@@ -11,6 +11,7 @@ import { WidgetFilterData } from "@/components/widget-filter";
 import { AssetTypesSummary } from "@/components/widgets/asset-type/asset-type-summary";
 import { RankingByPeriodAssetType } from "@/components/widgets/asset-type/ranking-by-period-asset-type";
 import { TopRankingAssetType } from "@/components/widgets/asset-type/top-ranking-asset-type";
+import { WidgetProvider } from "@/context/widget-context";
 
 export default function AssetTypePage() {
   const isMobile = useIsMobile();
@@ -44,7 +45,6 @@ export default function AssetTypePage() {
     }
   };
 
-
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {
     return (
@@ -59,55 +59,58 @@ export default function AssetTypePage() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
-        {/* Sidebar ฝั่งซ้าย fixed width */}
-        <div className="w-64 border-r bg-white">
-          <AppSidebar />
-        </div>
+      <WidgetProvider>
+        <div className="flex h-screen w-full">
+          {/* Sidebar ฝั่งซ้าย fixed width */}
+          <div className="w-64 border-r bg-white">
+            <AppSidebar />
+          </div>
 
-        {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
-        <div className="relative flex-1 flex flex-col"> {/* ✅ เพิ่ม relative */}
-          <Header
-            selectedPage={currentPage}
-            onChatToggle={onChatToggle}
-            onMenuToggle={onMenuToggle}
-            isChatOpen={isChatOpen}
-            onFilterChange={handleFilterChange}
-          />
-
-          <main className="flex-1 p-4 overflow-auto bg-gray-50">
-
-            <div className="flex-1  overflow-y-auto">
+          {/* ส่วนเนื้อหาหลัก ขวา flex-grow */}
+          <div className="relative flex-1 flex flex-col">
+            {" "}
+            {/* ✅ เพิ่ม relative */}
+            <Header
+              selectedPage={currentPage}
+              onChatToggle={onChatToggle}
+              onMenuToggle={onMenuToggle}
+              isChatOpen={isChatOpen}
+              onFilterChange={handleFilterChange}
+            />
+            <main className="flex-1 p-4 overflow-auto bg-gray-50">
               <div className="flex-1  overflow-y-auto">
-                <TopRankingAssetType
-                  branchId={filterData.branchId}
-                  date={filterData.date}
-                />
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                  <AssetTypesSummary
-                    branchId={filterData.branchId}
-                    date={filterData.date}
-                    isLoading={filterData.isLoading} />
-                  <RankingByPeriodAssetType
+                <div className="flex-1  overflow-y-auto">
+                  <TopRankingAssetType
                     branchId={filterData.branchId}
                     date={filterData.date}
                   />
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <AssetTypesSummary
+                      branchId={filterData.branchId}
+                      date={filterData.date}
+                      isLoading={filterData.isLoading}
+                    />
+                    <RankingByPeriodAssetType
+                      branchId={filterData.branchId}
+                      date={filterData.date}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </main>
-          {/*Chat Sidebar*/}
-          {!isMobile && isChatOpen && (
-            <ChatSidebar
-              isOpen={isChatOpen}
-              onClose={() => setIsChatOpen(false)}
-              className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${isChatOpen ? "translate-x-0" : "translate-x-full"
+            </main>
+            {/*Chat Sidebar*/}
+            {!isMobile && isChatOpen && (
+              <ChatSidebar
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                className={`fixed top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+                  isChatOpen ? "translate-x-0" : "translate-x-full"
                 }`}
-            />
-          )}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      </WidgetProvider>
     </SidebarProvider>
   );
-
 }

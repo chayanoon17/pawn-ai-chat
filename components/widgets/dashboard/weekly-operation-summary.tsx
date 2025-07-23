@@ -14,6 +14,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
+import { useWidgetRegistration } from "@/context/widget-context";
 
 interface WeeklyOperationData {
   total: number;
@@ -255,6 +256,47 @@ export const WeeklyOperationSummary = ({
   const cashOutChange = data
     ? formatPercentChange(data.cashOut.percentChange)
     : null;
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "weekly-operation-summary",
+    "ยอดรับจำนำและรายละเอียด",
+    "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
+    data
+      ? {
+          branchId: data.branchId,
+          cashIn: {
+            thisWeek: data.cashIn.thisWeek,
+            lastWeek: data.cashIn.lastWeek,
+            totalThisWeek: data.cashIn.totalThisWeek,
+            totalLastWeek: data.cashIn.totalLastWeek,
+            percentChange: data.cashIn.percentChange,
+          },
+          cashOut: {
+            thisWeek: data.cashOut.thisWeek,
+            lastWeek: data.cashOut.lastWeek,
+            totalThisWeek: data.cashOut.totalThisWeek,
+            totalLastWeek: data.cashOut.totalLastWeek,
+            percentChange: data.cashOut.percentChange,
+          },
+          timestamp: data.timestamp,
+          // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
+          analysis: {
+            chartDataLeft: leftChartData,
+            chartDataRight: rightChartData,
+            summary: {
+              cashInThisWeek: data.cashIn.totalThisWeek,
+              cashInLastWeek: data.cashIn.totalLastWeek,
+              cashInChange: data.cashIn.percentChange,
+              cashOutThisWeek: data.cashOut.totalThisWeek,
+              cashOutLastWeek: data.cashOut.totalLastWeek,
+              cashOutChange: data.cashOut.percentChange,
+            },
+          },
+        }
+      : null,
+    [data]
+  );
 
   return (
     <Card className="mb-6">
