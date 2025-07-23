@@ -4,6 +4,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -131,6 +132,12 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Cookie Consent Popup */}
+      <CookieConsent
+        onAccept={() => console.log("🍪 Cookies accepted")}
+        onDecline={() => console.log("🚫 Cookies declined")}
+      />
     </div>
   );
 }
