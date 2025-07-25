@@ -30,13 +30,6 @@ interface ActiveContext {
   addedAt: Date;
 }
 
-// Mock data ราคาทอง (สามารถปรับเปลี่ยนได้)
-const goldPrice = {
-  buy: 30000, // ราคาซื้อ
-  sell: 30500, // ราคาขาย
-  source: "สมาคมค้าทองคำ",
-};
-
 // 🤖 AI Thinking Animation Component
 const ThinkingAnimation = () => (
   <div className="flex items-center space-x-1">

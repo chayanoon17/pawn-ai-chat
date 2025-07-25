@@ -57,7 +57,7 @@ export function useApiQuery<T>(
       });
 
       if (!controller.signal.aborted) {
-        setData(response.data);
+        setData(response.data as T);
         setLastFetch(new Date());
         retryCountRef.current = 0;
       }

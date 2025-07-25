@@ -8,11 +8,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Download, Upload } from "lucide-react";
 import { useWidgetData } from "@/hooks/use-api";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -75,7 +71,7 @@ export const WeeklyOperationSummary = ({
   // 🎣 ใช้ custom hook แทน manual API call - เรียกก่อนเสมอ
   const { data, loading, error, refetch } =
     useWidgetData<WeeklyOperationResponse>(
-      "/api/v1/operations/weekly",
+      "/api/v1/branches/weekly-operation/summary",
       branchId,
       date
     );
@@ -245,7 +241,25 @@ export const WeeklyOperationSummary = ({
   }
 
   // 🎯 Custom Tooltip Component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      color: string;
+      name: string;
+      value: number;
+      payload: {
+        fullDate?: string;
+        lastWeekDate?: string;
+        thisWeek?: number;
+        lastWeek?: number;
+      };
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -261,7 +275,7 @@ export const WeeklyOperationSummary = ({
               อาทิตย์ที่แล้ว: {data.lastWeekDate}
             </p>
           )}
-          {payload.map((entry: any, index: number) => (
+          {payload?.map((entry, index: number) => (
             <div key={index} className="flex items-center gap-2 mb-1">
               <div
                 className="w-3 h-3 rounded-full"

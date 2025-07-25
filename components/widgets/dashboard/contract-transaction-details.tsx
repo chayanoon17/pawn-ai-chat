@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -193,6 +192,7 @@ export default function ContractTransactionDetails({
   // 🎯 เรียก API เมื่อ filter เปลี่ยน
   useEffect(() => {
     fetchTransactionDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
   // 🔄 Reset pagination when search or filter changes
@@ -461,15 +461,16 @@ export default function ContractTransactionDetails({
                   {searchTerm && (
                     <span>
                       {" "}
-                      จากการค้นหา "
-                      <span className="font-semibold">{searchTerm}</span>"
+                      จากการค้นหา &ldquo;
+                      <span className="font-semibold">{searchTerm}</span>&rdquo;
                     </span>
                   )}
                   {selectedType !== "all" && (
                     <span>
                       {" "}
-                      ในประเภท "
-                      <span className="font-semibold">{selectedType}</span>"
+                      ในประเภท &ldquo;
+                      <span className="font-semibold">{selectedType}</span>
+                      &rdquo;
                     </span>
                   )}
                   {data && (

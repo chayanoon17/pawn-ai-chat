@@ -3,7 +3,7 @@
  * ใช้ Zod สำหรับ type-safe validation ทั่วแอพ
  */
 
-import { z } from "zod";
+import { z, ZodType } from "zod";
 
 // ===== COMMON VALIDATION SCHEMAS =====
 
@@ -311,9 +311,15 @@ export function useValidation<T>(schema: z.ZodSchema<T>) {
         schema.shape &&
         typeof schema.shape === "object"
       ) {
-        const fieldSchema = (schema.shape as any)[field];
-        if (fieldSchema) {
-          return ValidationHelpers.validateField(fieldSchema, value);
+        const fieldSchema = (schema.shape as Record<string, unknown>)[
+          field as string
+        ];
+        if (
+          fieldSchema &&
+          typeof fieldSchema === "object" &&
+          "parse" in fieldSchema
+        ) {
+          return ValidationHelpers.validateField(fieldSchema as ZodType, value);
         }
       }
       return null;

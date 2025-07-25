@@ -627,7 +627,7 @@ export default function LogPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("log-management");
+  const [currentPage] = useState("log-management");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({

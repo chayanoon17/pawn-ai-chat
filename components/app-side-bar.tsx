@@ -18,11 +18,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
 
-interface AppSidebarProps {
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
-}
-
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();

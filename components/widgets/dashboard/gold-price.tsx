@@ -38,10 +38,14 @@ export const GoldPriceCard = () => {
         if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
           console.log("✨ Gold price loaded:", response.data);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
+          error.response?.data?.message ||
+          error.message ||
           "ไม่สามารถโหลดราคาทองได้";
         setError(errorMessage);
 

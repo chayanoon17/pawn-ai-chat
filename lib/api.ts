@@ -248,7 +248,7 @@ class ApiClient {
   /**
    * GET Request
    */
-  async get<T = any>(
+  async get<T = unknown>(
     url: string,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
@@ -259,9 +259,9 @@ class ApiClient {
   /**
    * POST Request
    */
-  async post<T = any>(
+  async post<T = unknown>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await this.api.post<ApiResponse<T>>(url, data, config);
@@ -271,9 +271,9 @@ class ApiClient {
   /**
    * PUT Request
    */
-  async put<T = any>(
+  async put<T = unknown>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
     const response = await this.api.put<ApiResponse<T>>(url, data, config);
@@ -283,7 +283,7 @@ class ApiClient {
   /**
    * DELETE Request
    */
-  async delete<T = any>(
+  async delete<T = unknown>(
     url: string,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {

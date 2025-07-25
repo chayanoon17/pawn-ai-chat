@@ -29,33 +29,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search } from "lucide-react";
-import EditProfileDialog from "./buttonadduser";
+import AddUserDialog from "./buttonadduser";
 import EditUserDialog from "./edit-user-dialog";
 import { getAllUsers, deleteUser } from "@/lib/auth-service";
-import { useAuth } from "@/context/auth-context";
+import type { User } from "@/types";
 
-interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  phoneNumber?: string;
-  profileUrl?: string;
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
-  lastLoginAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  roleId: number;
-  role: {
-    id: number;
-    name: string;
-  };
-  branchId?: number;
-  branch?: {
-    id: number;
-    name: string;
-  };
-}
-
+// 📝 API Response Interface
 interface UsersResponse {
   users: User[];
   stats: {
@@ -67,15 +46,26 @@ interface UsersResponse {
   };
 }
 
+/**
+ * UserTable Component
+ *
+ * แสดงตารางรายการผู้ใช้พร้อมฟีเจอร์:
+ * - ค้นหาผู้ใช้
+ * - แก้ไขข้อมูลผู้ใช้
+ * - ลบผู้ใช้ (พร้อม confirmation)
+ * - Pagination
+ * - แสดงสถานะผู้ใช้แบบ Badge
+ *
+ * @returns JSX.Element - ตารางผู้ใช้พร้อมฟีเจอร์ต่างๆ
+ */
 export function UserTable() {
-  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages] = useState(1);
+  const [totalItems] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const limit = 10;
@@ -85,11 +75,11 @@ export function UserTable() {
       setLoading(true);
       setError(null);
 
-      const response: UsersResponse = await getAllUsers({
+      const response = (await getAllUsers({
         page,
         limit,
         search: search || undefined,
-      });
+      })) as UsersResponse;
 
       // if (response.success) {
       setUsers(response.users);
@@ -99,8 +89,9 @@ export function UserTable() {
       // } else {
       //   setError("Failed to load users");
       // }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load users");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Failed to load users");
       console.error("Error fetching users:", err);
     } finally {
       setLoading(false);
@@ -109,7 +100,7 @@ export function UserTable() {
 
   useEffect(() => {
     fetchUsers(currentPage, searchTerm);
-  }, [currentPage]);
+  }, [currentPage, searchTerm]);
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -122,14 +113,15 @@ export function UserTable() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
+  const handleDeleteUser = async (userId: number, userName: string) => {
     try {
-      await deleteUser(userId);
+      await deleteUser(userId.toString());
       // Refresh the user list
       fetchUsers(currentPage, searchTerm);
       console.log(`User ${userName} deleted successfully`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to delete user");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Failed to delete user");
       console.error("Error deleting user:", err);
     }
   };
@@ -187,7 +179,7 @@ export function UserTable() {
           </Button>
         </div>
         <div className="flex">
-          <EditProfileDialog onUserCreated={handleUserUpdated} />
+          <AddUserDialog onUserCreated={handleUserUpdated} />
         </div>
       </div>
 

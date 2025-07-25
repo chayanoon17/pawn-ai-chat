@@ -7,7 +7,7 @@ import { useAuth } from "@/context/auth-context";
 import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading, clearRememberMe } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");

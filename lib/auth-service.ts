@@ -5,7 +5,7 @@
 
 import apiClient from "./api";
 import { User } from "@/types/auth";
-import { ApiResponse, LoginResponse } from "@/types/api";
+import { LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";
 
 /**

@@ -15,7 +15,7 @@ export default function UserPage() {
   const isMobile = useIsMobile();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("user-management");
+  const [currentPage] = useState("user-management");
 
   function onChatToggle() {
     setIsChatOpen((prev) => !prev);

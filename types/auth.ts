@@ -27,6 +27,27 @@ export interface MenuPermission {
 }
 
 /**
+ * Role Interface - บทบาทของผู้ใช้ในระบบ
+ */
+export interface Role {
+  id: number;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+  menuPermissions: MenuPermission[];
+}
+
+/**
+ * Branch Interface - ข้อมูลสาขา
+ */
+export interface Branch {
+  id: number;
+  name: string;
+  shortName: string;
+  location: string;
+}
+
+/**
  * User Interface - ข้อมูลผู้ใช้ในระบบ
  */
 export interface User {
@@ -38,16 +59,8 @@ export interface User {
   status: UserStatus;
   branchId: number;
   roleId: number;
-  role: {
-    id: number;
-    name: string;
-    permissions: Permission[];
-    menuPermissions: MenuPermission[];
-  };
-  branch: {
-    id: number;
-    name: string;
-  };
+  role: Role;
+  branch: Branch;
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;

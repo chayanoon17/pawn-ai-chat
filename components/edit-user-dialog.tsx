@@ -3,29 +3,10 @@
 import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 import { updateUser } from "@/lib/auth-service";
+import type { User, UserStatus } from "@/types";
+import { BRANCHES, ROLES } from "@/lib/constants";
 
-interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  phoneNumber?: string;
-  profileUrl?: string;
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
-  lastLoginAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  roleId: number;
-  role: {
-    id: number;
-    name: string;
-  };
-  branchId?: number;
-  branch?: {
-    id: number;
-    name: string;
-  };
-}
-
+// 📝 Component Props Interface
 interface EditUserDialogProps {
   user: User | null;
   open: boolean;
@@ -33,63 +14,48 @@ interface EditUserDialogProps {
   onUserUpdated: () => void;
 }
 
-const BRANCHES = [
-  { id: 1, name: "สะพานขาว" },
-  { id: 2, name: "หนองจอก" },
-  { id: 3, name: "บางซื่อ" },
-  { id: 4, name: "บางแค" },
-  { id: 5, name: "สาธุประดิษฐ์" },
-  { id: 6, name: "บางขุนเทียน" },
-  { id: 7, name: "หลักสี่" },
-  { id: 8, name: "ม.เกษตร" },
-  { id: 9, name: "ธนบุรี-ปากท่อ" },
-  { id: 10, name: "ห้วยขวาง" },
-  { id: 11, name: "บางกะปิ" },
-  { id: 12, name: "สะพานพุทธ" },
-  { id: 13, name: "อุดมสุข" },
-  { id: 14, name: "ดอนเมือง" },
-  { id: 15, name: "สุวินทวงศ์" },
-  { id: 16, name: "ปากเกร็ด" },
-  { id: 17, name: "บางบอน" },
-  { id: 18, name: "หนองแขม" },
-  { id: 19, name: "ทุ่งสองห้อง" },
-  { id: 20, name: "รามอินทรา" },
-  { id: 21, name: "ระยอง" },
-  { id: 22, name: "พัฒนาการ" },
-  { id: 23, name: "ลาดกระบัง" },
-  { id: 24, name: "สายไหม" },
-  { id: 25, name: "ทุ่งครุ" },
-  { id: 26, name: "สมุทรปราการ" },
-  { id: 27, name: "นนทบุรี" },
-  { id: 28, name: "ประตูน้ำ" },
-];
+// 📝 Form State Interface
+interface EditUserFormData {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  branchId: string;
+  roleId: string;
+  status: UserStatus;
+}
 
-const ROLES = [
-  { id: 1, name: "User" },
-  { id: 2, name: "Admin" },
-  { id: 3, name: "Manager" },
-  { id: 4, name: "Full admin" },
-];
-
+// 📝 Status Options
 const STATUSES = [
   { value: "ACTIVE", label: "Active" },
   { value: "INACTIVE", label: "Inactive" },
-];
+] as const;
 
+/**
+ * EditUserDialog Component
+ *
+ * แสดง Dialog สำหรับแก้ไขข้อมูลผู้ใช้
+ * รองรับการแก้ไขข้อมูลทั่วไป, เปลี่ยนรหัสผ่าน, สาขา, ตำแหน่ง และสถานะ
+ *
+ * @param user - ข้อมูลผู้ใช้ที่ต้องการแก้ไข
+ * @param open - สถานะการเปิด/ปิด dialog
+ * @param onOpenChange - Function สำหรับเปลี่ยนสถานะ dialog
+ * @param onUserUpdated - Callback function ที่จะเรียกเมื่ออัพเดทผู้ใช้สำเร็จ
+ */
 export default function EditUserDialog({
   user,
   open,
   onOpenChange,
   onUserUpdated,
 }: EditUserDialogProps) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<EditUserFormData>({
     fullName: "",
     email: "",
     phoneNumber: "",
     password: "",
-    branchId: null,
+    branchId: "",
     roleId: "",
-    status: "",
+    status: "ACTIVE",
   });
 
   const [loading, setLoading] = useState(false);
@@ -102,7 +68,7 @@ export default function EditUserDialog({
         email: user.email,
         phoneNumber: user.phoneNumber || "",
         password: "", // Don't populate password
-        branchId: user.branch?.id ?? null,
+        branchId: user.branch?.id?.toString() ?? "",
         roleId: user.role.id.toString(),
         status: user.status,
       });
@@ -128,7 +94,14 @@ export default function EditUserDialog({
     setMessage("");
 
     try {
-      const payload: any = {
+      const payload: {
+        fullName: string;
+        phoneNumber?: string;
+        branchId: number;
+        roleId: number;
+        status: "ACTIVE" | "INACTIVE";
+        password?: string;
+      } = {
         fullName: form.fullName,
         phoneNumber: form.phoneNumber || undefined,
         branchId: Number(form.branchId),
@@ -141,7 +114,7 @@ export default function EditUserDialog({
         payload.password = form.password;
       }
 
-      await updateUser(user.id, payload);
+      await updateUser(user.id.toString(), payload);
       setMessage("อัปเดตข้อมูลผู้ใช้สำเร็จ");
 
       // Close dialog and refresh data
@@ -150,8 +123,9 @@ export default function EditUserDialog({
         onOpenChange(false);
         onUserUpdated();
       }, 1500);
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message || "เกิดข้อผิดพลาด");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setMessage(err?.response?.data?.message || "เกิดข้อผิดพลาด");
     } finally {
       setLoading(false);
     }

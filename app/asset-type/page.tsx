@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-side-bar";
 import Header from "@/components/header";
@@ -19,7 +19,7 @@ export default function AssetTypePage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("asset-types");
+  const [currentPage] = useState("asset-types");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({
@@ -36,14 +36,14 @@ export default function AssetTypePage() {
     console.log("Menu toggled");
   }
 
-  const handleFilterChange = (data: WidgetFilterData) => {
+  const handleFilterChange = useCallback((data: WidgetFilterData) => {
     setFilterData(data);
 
     // Log การเปลี่ยนแปลง
     if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.log("🎯 Dashboard filter changed:", data);
+      console.log("🎯 Asset Type filter changed:", data);
     }
-  };
+  }, []);
 
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {

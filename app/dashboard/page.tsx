@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-summary";
 import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-operation-summary";
@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("pawn-tickets");
+  const [currentPage] = useState("pawn-tickets");
 
   // 🎯 Filter state สำหรับส่งต่อไป widgets
   const [filterData, setFilterData] = useState<WidgetFilterData>({
@@ -39,15 +39,15 @@ export default function DashboardPage() {
     console.log("Menu toggled");
   }
 
-  // 🎯 Handle เมื่อ filter เปลี่ยน
-  const handleFilterChange = (data: WidgetFilterData) => {
+  // 🎯 Handle เมื่อ filter เปลี่ยน - use useCallback to prevent unnecessary re-renders
+  const handleFilterChange = useCallback((data: WidgetFilterData) => {
     setFilterData(data);
 
     // Log การเปลี่ยนแปลง
     if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
       console.log("🎯 Dashboard filter changed:", data);
     }
-  };
+  }, []);
 
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {

@@ -62,10 +62,14 @@ export const DailyOperationSummary = ({
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("✨ Daily operation summary loaded:", response.data);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
+        error.response?.data?.message ||
+        error.message ||
         "ไม่สามารถโหลดข้อมูลรายงานได้";
       setError(errorMessage);
 
@@ -82,6 +86,7 @@ export const DailyOperationSummary = ({
 
   useEffect(() => {
     fetchSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
@@ -129,10 +134,10 @@ export const DailyOperationSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
-                  : branchId === "all"
-                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                    : "ไม่พบข้อมูล"}
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -220,10 +225,11 @@ export const DailyOperationSummary = ({
                       </div>
                       {summary.countChange !== 0 && (
                         <div
-                          className={`flex items-center ${summary.countChange > 0
+                          className={`flex items-center ${
+                            summary.countChange > 0
                               ? "text-green-600"
                               : "text-red-600"
-                            }`}
+                          }`}
                         >
                           {summary.countChange > 0 ? (
                             <TrendingUp className="w-4 h-4 mr-1" />
@@ -249,10 +255,11 @@ export const DailyOperationSummary = ({
                       </div>
                       {summary.amountChange !== 0 && (
                         <div
-                          className={`flex items-center ${summary.amountChange > 0
+                          className={`flex items-center ${
+                            summary.amountChange > 0
                               ? "text-green-600"
                               : "text-red-600"
-                            }`}
+                          }`}
                         >
                           {summary.amountChange > 0 ? (
                             <TrendingUp className="w-4 h-4 mr-1" />
@@ -283,25 +290,30 @@ export const DailyOperationSummary = ({
                   ทรัพย์จำนำ{" "}
                   <span
                     className={
-                      summary.endingBalance.count > summary.beginningBalance.count
+                      summary.endingBalance.count >
+                      summary.beginningBalance.count
                         ? "text-green-600"
-                        : summary.endingBalance.count < summary.beginningBalance.count
-                          ? "text-red-600"
-                          : "text-gray-600"
+                        : summary.endingBalance.count <
+                          summary.beginningBalance.count
+                        ? "text-red-600"
+                        : "text-gray-600"
                     }
                   >
-                    {summary.endingBalance.count > summary.beginningBalance.count
+                    {summary.endingBalance.count >
+                    summary.beginningBalance.count
                       ? "เพิ่มขึ้น"
-                      : summary.endingBalance.count < summary.beginningBalance.count
-                        ? "ลดลง"
-                        : "ไม่มีการเปลี่ยนแปลง"}
+                      : summary.endingBalance.count <
+                        summary.beginningBalance.count
+                      ? "ลดลง"
+                      : "ไม่มีการเปลี่ยนแปลง"}
                   </span>
                 </p>
 
                 {/* Line 2: จำนวนเงิน */}
                 <p>
                   {Math.abs(
-                    summary.endingBalance.amount - summary.beginningBalance.amount
+                    summary.endingBalance.amount -
+                      summary.beginningBalance.amount
                   ).toLocaleString("th-TH", { minimumFractionDigits: 2 })}{" "}
                   บาท{" "}
                   <span
@@ -309,15 +321,15 @@ export const DailyOperationSummary = ({
                       summary.amountChange > 0
                         ? "text-green-600"
                         : summary.amountChange < 0
-                          ? "text-red-600"
-                          : "text-gray-600"
+                        ? "text-red-600"
+                        : "text-gray-600"
                     }
                   >
                     {summary.amountChange > 0
                       ? `เพิ่มขึ้น ${summary.amountChange.toFixed(2)}%`
                       : summary.amountChange < 0
-                        ? `ลดลง ${Math.abs(summary.amountChange).toFixed(2)}%`
-                        : "ไม่เปลี่ยนแปลง"}
+                      ? `ลดลง ${Math.abs(summary.amountChange).toFixed(2)}%`
+                      : "ไม่เปลี่ยนแปลง"}
                   </span>
                 </p>
 
@@ -332,20 +344,19 @@ export const DailyOperationSummary = ({
                       summary.countChange > 0
                         ? "text-green-600"
                         : summary.countChange < 0
-                          ? "text-red-600"
-                          : "text-gray-600"
+                        ? "text-red-600"
+                        : "text-gray-600"
                     }
                   >
                     {summary.countChange > 0
                       ? `เพิ่มขึ้น ${summary.countChange.toFixed(2)}%`
                       : summary.countChange < 0
-                        ? `ลดลง ${Math.abs(summary.countChange).toFixed(2)}%`
-                        : "ไม่เปลี่ยนแปลง"}
+                      ? `ลดลง ${Math.abs(summary.countChange).toFixed(2)}%`
+                      : "ไม่เปลี่ยนแปลง"}
                   </span>
                 </p>
               </div>
             </div>
-
           </>
         )}
       </CardContent>

@@ -2,39 +2,53 @@
 
 import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/auth-context";
 import { createUser, getRoles, getBranches } from "@/lib/auth-service";
+import type { Branch, Role } from "@/types";
 
-interface EditProfileDialogProps {
+// 📝 Component Props Interface
+interface AddUserDialogProps {
   onUserCreated?: () => void;
 }
 
-interface Role {
-  id: number;
-  name: string;
-  description?: string;
+// 📝 Form State Interface
+interface CreateUserFormData {
+  fullName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  branchId: string;
+  roleId: string;
 }
 
-interface Branch {
-  id: number;
-  name: string;
-  shortName: string;
-  location: string;
+// 📝 Create User Payload Interface
+interface CreateUserPayload {
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber?: string;
+  branchId: number;
+  roleId: number;
+  status: "ACTIVE" | "INACTIVE";
 }
 
-export default function EditProfileDialog({
-  onUserCreated,
-}: EditProfileDialogProps) {
+/**
+ * AddUserDialog Component
+ *
+ * แสดง Dialog สำหรับเพิ่มผู้ใช้ใหม่ในระบบ
+ * รองรับการเลือกสาขาและตำแหน่งจาก API
+ *
+ * @param onUserCreated - Callback function ที่จะเรียกเมื่อสร้างผู้ใช้สำเร็จ
+ */
+export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<CreateUserFormData>({
     fullName: "",
     email: "",
     password: "",
     phoneNumber: "",
-    branch: "",
-    role: "",
+    branchId: "",
+    roleId: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -44,18 +58,15 @@ export default function EditProfileDialog({
   // Load branches and roles when component mounts
   useEffect(() => {
     const loadData = async () => {
-      setLoadingData(true);
       try {
         const [branchesResponse, rolesResponse] = await Promise.all([
           getBranches(),
           getRoles(),
         ]);
-        setBranches(branchesResponse || []);
-        setRoles(rolesResponse || []);
+        setBranches((branchesResponse as Branch[]) || []);
+        setRoles((rolesResponse as Role[]) || []);
       } catch (error) {
         console.error("Error loading branches and roles:", error);
-      } finally {
-        setLoadingData(false);
       }
     };
 
@@ -75,8 +86,8 @@ export default function EditProfileDialog({
       email: "",
       password: "",
       phoneNumber: "",
-      branch: "",
-      role: "",
+      branchId: "",
+      roleId: "",
     });
     setMessage("");
   };
@@ -87,17 +98,17 @@ export default function EditProfileDialog({
     setMessage("");
 
     try {
-      const payload = {
+      const payload: CreateUserPayload = {
         email: form.email,
         password: form.password,
         fullName: form.fullName,
         phoneNumber: form.phoneNumber || undefined,
-        branchId: Number(form.branch),
-        roleId: Number(form.role),
-        status: "ACTIVE" as "ACTIVE", // Always set to ACTIVE for new users
+        branchId: Number(form.branchId),
+        roleId: Number(form.roleId),
+        status: "ACTIVE", // Always set to ACTIVE for new users
       };
 
-      const response = await createUser(payload);
+      await createUser(payload);
       setMessage("เพิ่มผู้ใช้สำเร็จ");
 
       // Reset form and close dialog
@@ -108,8 +119,10 @@ export default function EditProfileDialog({
           onUserCreated();
         }
       }, 1500);
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message || "เกิดข้อผิดพลาด");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -188,18 +201,18 @@ export default function EditProfileDialog({
                 เลือกสาขา
               </Text>
               <select
-                name="branch"
-                value={form.branch}
+                name="branchId"
+                value={form.branchId}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
                 <option value="">เลือกสาขา</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id.toString()}>
-                    {b.location}{" "}
-                    {b.shortName !== null && b.shortName !== ""
-                      ? `(${b.shortName})`
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id.toString()}>
+                    {branch.location}{" "}
+                    {branch.shortName !== null && branch.shortName !== ""
+                      ? `(${branch.shortName})`
                       : ""}
                   </option>
                 ))}
@@ -211,16 +224,16 @@ export default function EditProfileDialog({
                 ตำแหน่ง
               </Text>
               <select
-                name="role"
-                value={form.role}
+                name="roleId"
+                value={form.roleId}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
                 <option value="">เลือกตำแหน่ง</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id.toString()}>
-                    {r.name}
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id.toString()}>
+                    {role.name}
                   </option>
                 ))}
               </select>
