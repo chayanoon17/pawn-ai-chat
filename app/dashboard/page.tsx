@@ -6,7 +6,7 @@ import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-oper
 import { GoldPriceCard } from "@/components/widgets/dashboard/gold-price";
 import { WeeklyOperationSummary } from "@/components/widgets/dashboard/weekly-operation-summary";
 import ContractTransactionDetails from "@/components/widgets/dashboard/contract-transaction-details";
-import { WidgetFilterData } from "@/components/widget-filter";
+import { WidgetFilterData } from "@/components/features/filters";
 
 export default function DashboardPage() {
   return (

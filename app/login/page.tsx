@@ -4,7 +4,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import CookieConsent from "@/components/cookie-consent";
+import { CookieConsent } from "@/components/features/auth";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();

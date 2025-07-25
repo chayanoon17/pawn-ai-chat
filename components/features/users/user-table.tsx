@@ -29,7 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search } from "lucide-react";
-import AddUserDialog from "./buttonadduser";
+import AddUserDialog from "./add-user-button";
 import EditUserDialog from "./edit-user-dialog";
 import { getAllUsers, deleteUser } from "@/lib/auth-service";
 import type { User } from "@/types";

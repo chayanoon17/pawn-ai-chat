@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-side-bar";
-import Header from "@/components/header";
+import { AppSidebar } from "@/components/core";
+import Header from "@/components/core/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
-import { WidgetFilterData } from "@/components/widget-filter";
+import { WidgetFilterData } from "@/components/features/filters";
 
 type Tab = "login" | "export" | "view" | "chat";
 

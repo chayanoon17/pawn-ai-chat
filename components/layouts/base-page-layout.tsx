@@ -3,12 +3,12 @@
 
 import { useState, useCallback, ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-side-bar";
-import Header from "@/components/header";
+import { AppSidebar } from "@/components/core";
+import Header from "@/components/core/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatSidebar } from "@/components/chat-side-bar";
-import { WidgetFilterData } from "@/components/widget-filter";
+import { ChatSidebar } from "@/components/core";
+import { WidgetFilterData } from "@/components/features/filters";
 import { WidgetProvider } from "@/context/widget-context";
 
 interface BasePageLayoutProps {

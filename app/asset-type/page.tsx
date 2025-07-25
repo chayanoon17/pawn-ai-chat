@@ -4,7 +4,7 @@ import BasePageLayout from "@/components/layouts/base-page-layout";
 import { AssetTypesSummary } from "@/components/widgets/asset-type/asset-type-summary";
 import { RankingByPeriodAssetType } from "@/components/widgets/asset-type/ranking-by-period-asset-type";
 import { TopRankingAssetType } from "@/components/widgets/asset-type/top-ranking-asset-type";
-import { WidgetFilterData } from "@/components/widget-filter";
+import { WidgetFilterData } from "@/components/features/filters";
 
 export default function AssetTypePage() {
   return (

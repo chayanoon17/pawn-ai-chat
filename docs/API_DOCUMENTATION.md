@@ -1055,7 +1055,7 @@ enum MenuNames {
 
 ---
 
-_Last Updated: January 22, 2025_  
+_Last Updated: July 23, 2025_  
 _API Version: 1.0.0_
 
 ```bash
@@ -1779,8 +1779,31 @@ search?: string
   "data": [
     {
       "id": 1,
-      "name": "User Management",
-      "description": "Access user management module"
+      "name": "CREATE:User",
+      "description": "Create new users"
+    }
+  ]
+}
+```
+
+### GET /api/v1/menu/menu-permissions
+
+ดึงรายการ menu permissions สำหรับ dropdown/menu
+
+**Access**: Private (Authenticated)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Menu menu permissions retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "dashboard_view",
+      "description": "View dashboard",
+      "menu": "Dashboard"
     }
   ]
 }
@@ -1886,9 +1909,57 @@ date?: string (YYYY-MM-DD)
 
 ### GET /api/v1/branches/weekly-operation/summary
 
-ดึงสรุปการดำเนินงานรายสัปดาห์ของทุกสาขา
+ดึงสรุปการดำเนินงานรายสัปดาห์ของสาขา โดยเปรียบเทียบสัปดาห์นี้กับสัปดาห์ที่แล้ว (จันทร์-อาทิตย์)
 
 **Access**: Private (REPORTS menu + READ_REPORT permission)
+
+#### Query Parameters
+
+```
+branchId: number (required)
+date: string (YYYY-MM-DD) (required) - วันที่อ้างอิงสำหรับคำนวณสัปดาห์
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Branch weekly summary retrieved successfully",
+  "data": {
+    "branchId": 1,
+    "cashIn": {
+      "data": [...], // รวมทั้งสองสัปดาห์ (backward compatibility)
+      "thisWeek": [ // ข้อมูลสัปดาห์นี้
+        {
+          "total": 100000,
+          "date": "2025-01-21T10:00:00.000Z"
+        }
+      ],
+      "lastWeek": [ // ข้อมูลสัปดาห์ที่แล้ว
+        {
+          "total": 80000,
+          "date": "2025-01-14T10:00:00.000Z"
+        }
+      ],
+      "total": 180000, // รวมทั้งสองสัปดาห์
+      "last7Days": 100000, // ยอดรวมสัปดาห์นี้
+      "prev7Days": 80000, // ยอดรวมสัปดาห์ที่แล้ว
+      "percentChange": 25.0 // เปอร์เซ็นต์การเปลี่ยนแปลง
+    },
+    "cashOut": {
+      "data": [...], // รวมทั้งสองสัปดาห์ (backward compatibility)
+      "thisWeek": [...], // ข้อมูลสัปดาห์นี้
+      "lastWeek": [...], // ข้อมูลสัปดาห์ที่แล้ว
+      "total": 150000,
+      "last7Days": 85000,
+      "prev7Days": 65000,
+      "percentChange": 30.77
+    },
+    "timestamp": "2025-01-21T10:00:00.000Z"
+  }
+}
+```
 
 ### GET /api/v1/contracts/transactions/details
 
@@ -1908,7 +1979,7 @@ date?: string (YYYY-MM-DD)
 
 ### GET /api/v1/asset-types/summary
 
-ดึงสรุปประเภททรัพย์สำหรับสาขาและวันที่ที่ระบุ
+ดึงสรุปประเภททรัพย์สำหรับสาขาและวันที่ที่ระบุ พร้อมรองรับการแสดงผล Top N + อื่นๆ
 
 **Access**: Private (REPORTS menu + READ_REPORT permission)
 
@@ -1917,23 +1988,82 @@ date?: string (YYYY-MM-DD)
 ```
 branchId: number (required)
 date: string (YYYY-MM-DD) (required)
+top?: number (optional) - หากระบุจะแสดง Top N + "อื่นๆ"
 ```
 
-#### Response
+#### Response (ไม่มี top parameter)
 
 ```json
 {
   "success": true,
   "message": "Asset type summary retrieved successfully",
-  "data": [
-    {
-      "assetTypeId": 1,
-      "assetTypeName": "ทองคำ",
-      "contractCount": 15,
-      "totalValue": 300000.0,
-      "averageValue": 20000.0
-    }
-  ]
+  "data": {
+    "branchId": 1,
+    "totalTransactions": 50,
+    "totalAssetTypes": 8,
+    "assetTypeSummaries": [
+      {
+        "assetType": "ทองคำ",
+        "count": 15,
+        "percentage": 30.0
+      },
+      {
+        "assetType": "เครื่องประดับ",
+        "count": 12,
+        "percentage": 24.0
+      }
+      // ... รายการทั้งหมด
+    ],
+    "timestamp": "2025-01-21T10:00:00.000Z"
+  }
+}
+```
+
+#### Response (มี top parameter = 5)
+
+```json
+{
+  "success": true,
+  "message": "Asset type summary retrieved successfully",
+  "data": {
+    "branchId": 1,
+    "totalTransactions": 50,
+    "totalAssetTypes": 8,
+    "top": 5,
+    "assetTypeSummaries": [
+      {
+        "assetType": "ทองคำ",
+        "count": 15,
+        "percentage": 30.0
+      },
+      {
+        "assetType": "เครื่องประดับ",
+        "count": 12,
+        "percentage": 24.0
+      },
+      {
+        "assetType": "นาฬิกา",
+        "count": 8,
+        "percentage": 16.0
+      },
+      {
+        "assetType": "แหวน",
+        "count": 6,
+        "percentage": 12.0
+      },
+      {
+        "assetType": "สร้อยคอ",
+        "count": 4,
+        "percentage": 8.0
+      },
+      {
+        "assetType": "อื่นๆ",
+        "count": 5,
+        "percentage": 10.0
+      }
+    ],
+    "timestamp": "2025-01-21T10:00:00.000Z"
+  }
 }
 ```
 

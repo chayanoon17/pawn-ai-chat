@@ -1,7 +1,7 @@
 import { MessageCircle, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { WidgetFilter, WidgetFilterData } from "@/components/widget-filter";
+import { WidgetFilter, WidgetFilterData } from "@/components/features/filters";
 import { usePathname } from "next/navigation";
 import { PAGE_LABELS } from "@/lib/constants";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import BasePageLayout from "@/components/layouts/base-page-layout";
-import { UserTable } from "@/components/usertable";
+import { UserTable } from "@/components/features/users";
 
 export default function UserPage() {
   return (
