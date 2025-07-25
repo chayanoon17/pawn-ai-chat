@@ -4,6 +4,7 @@ import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 
 import AuthProvider from "../context/auth-context";
+import ErrorBoundary from "../components/error-boundary";
 import "./globals.css";
 
 const prompt = Prompt({
@@ -30,9 +31,11 @@ export default function RootLayout({
   return (
     <html lang="th" className={prompt.variable}>
       <body className="antialiased">
-        <AuthProvider>
-          <Theme>{children}</Theme>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <Theme>{children}</Theme>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import {
   XAxis,
   YAxis,
@@ -13,9 +13,11 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
 import { Download, Upload } from "lucide-react";
+import { useWidgetData } from "@/hooks/use-api";
 import { useWidgetRegistration } from "@/context/widget-context";
+import { ErrorFallback } from "@/components/error-boundary";
+import { WidgetLoading } from "@/components/loading-states";
 
 interface WeeklyOperationData {
   total: number;
@@ -70,153 +72,178 @@ export const WeeklyOperationSummary = ({
   date,
   isLoading = false,
 }: WeeklyOperationSummaryProps) => {
-  // 📊 State สำหรับข้อมูล
-  const [data, setData] = useState<WeeklyOperationResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // 🎣 ใช้ custom hook แทน manual API call - เรียกก่อนเสมอ
+  const { data, loading, error, refetch } =
+    useWidgetData<WeeklyOperationResponse>(
+      "/api/v1/operations/weekly",
+      branchId,
+      date
+    );
 
-  // 🎯 Helper functions สำหรับแปลงข้อมูล
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("th-TH").format(amount);
-  };
+  // 🎯 Helper functions สำหรับแปลงข้อมูล - ใช้ useMemo
+  const formatCurrency = useMemo(
+    () => (amount: number) => {
+      return new Intl.NumberFormat("th-TH").format(amount);
+    },
+    []
+  );
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("th-TH", {
-      day: "numeric",
-      month: "short",
-    }).format(date);
-  };
-
-  const formatPercentChange = (percent: number) => {
-    const isPositive = percent >= 0;
-    const icon = isPositive ? "/icons/up.png" : "/icons/down.png"; // 👈 ใช้ path public/
-    const text = isPositive ? "เพิ่มขึ้น" : "ลดลง";
-    const color = isPositive ? "text-[#02B670]" : "text-red-600";
-
-    return {
-      icon, // 👈 เปลี่ยนจาก emoji
-      text: `${text} ${Math.abs(percent).toFixed(2)}%`,
-      color,
-    };
-  };
-
-
-  // 🔄 ดึงข้อมูลจาก API
-  const fetchWeeklyOperationSummary = async () => {
-    if (!branchId || isLoading) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // เรียก API ดึงข้อมูลสรุปการดำเนินงานรายสัปดาห์
-      const response = await apiClient.get<WeeklyOperationResponse>(
-        `/api/v1/branches/weekly-operation/summary?branchId=${branchId}&date=${date}`
-      );
-
-      setData(response.data);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Weekly operation summary loaded:", response.data);
-      }
-    } catch (err) {
-      console.error("❌ Error fetching weekly operation summary:", err);
-      setError("ไม่สามารถดึงข้อมูลได้");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🎯 เรียก API เมื่อ filter เปลี่ยน
-  useEffect(() => {
-    fetchWeeklyOperationSummary();
-  }, [branchId, date]);
-
-  // 📊 แปลงข้อมูลสำหรับกราห - รวมข้อมูล thisWeek และ lastWeek
-  const prepareChartData = (
-    thisWeekData: WeeklyOperationData[],
-    lastWeekData: WeeklyOperationData[],
-    dataKey: string
-  ) => {
-    // สร้าง Map สำหรับเก็บข้อมูลตามวันในสัปดาห์
-    const chartDataMap = new Map();
-
-    // เพิ่มข้อมูลอาทิตย์นี้
-    thisWeekData.forEach((item) => {
-      const date = new Date(item.date);
-      const dayName = date.toLocaleDateString("th-TH", { weekday: "long" }); // เปลี่ยนเป็น "long" เพื่อให้ได้ชื่อเต็ม
-      const dateStr = formatDate(item.date);
-      const fullDate = date.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
+  const formatDate = useMemo(
+    () => (dateStr: string) => {
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat("th-TH", {
         day: "numeric",
-      });
+        month: "short",
+      }).format(date);
+    },
+    []
+  );
 
-      chartDataMap.set(dayName, {
-        name: dayName, // แสดงเฉพาะชื่อวันบนแกน X
-        fullDate: fullDate, // เก็บวันที่เต็มสำหรับ tooltip
-        dateStr: dateStr,
-        [`${dataKey}อาทิตย์นี้`]: item.total / 1_000_000,
-        [`${dataKey}อาทิตย์ที่แล้ว`]: 0,
-      });
-    });
+  const formatPercentChange = useMemo(
+    () => (percent: number) => {
+      const isPositive = percent >= 0;
+      const icon = isPositive ? "/icons/up.png" : "/icons/down.png";
+      const text = isPositive ? "เพิ่มขึ้น" : "ลดลง";
+      const color = isPositive ? "text-[#02B670]" : "text-red-600";
 
-    // เพิ่มข้อมูลอาทิตย์ที่แล้ว
-    lastWeekData.forEach((item) => {
-      const date = new Date(item.date);
-      const dayName = date.toLocaleDateString("th-TH", { weekday: "long" });
-      const dateStr = formatDate(item.date);
-      const fullDate = date.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      return {
+        icon,
+        text: `${text} ${Math.abs(percent).toFixed(2)}%`,
+        color,
+      };
+    },
+    []
+  );
 
-      if (chartDataMap.has(dayName)) {
-        const existing = chartDataMap.get(dayName);
-        existing[`${dataKey}อาทิตย์ที่แล้ว`] = item.total / 1_000_000;
-        // เก็บวันที่ของอาทิตย์ที่แล้วด้วย
-        existing.lastWeekDate = fullDate;
-      } else {
+  // 📊 แปลงข้อมูลสำหรับกราห - ต้องอยู่ก่อน early returns
+  const prepareChartData = useMemo(() => {
+    return (
+      thisWeekData: WeeklyOperationData[],
+      lastWeekData: WeeklyOperationData[],
+      dataKey: string
+    ) => {
+      // สร้าง Map สำหรับเก็บข้อมูลตามวันในสัปดาห์
+      const chartDataMap = new Map();
+
+      // เพิ่มข้อมูลอาทิตย์นี้
+      thisWeekData.forEach((item) => {
+        const date = new Date(item.date);
+        const dayName = date.toLocaleDateString("th-TH", { weekday: "long" });
+        const dateStr = formatDate(item.date);
+        const fullDate = date.toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
         chartDataMap.set(dayName, {
           name: dayName,
           fullDate: fullDate,
           dateStr: dateStr,
-          [`${dataKey}อาทิตย์นี้`]: 0,
-          [`${dataKey}อาทิตย์ที่แล้ว`]: item.total / 1_000_000,
-          lastWeekDate: fullDate,
+          [`${dataKey}อาทิตย์นี้`]: item.total / 1_000_000,
+          [`${dataKey}อาทิตย์ที่แล้ว`]: 0,
         });
-      }
-    });
+      });
 
-    // แปลงเป็น Array และเรียงตามวันในสัปดาห์
-    const weekOrder = [
-      "วันจันทร์",
-      "วันอังคาร",
-      "วันพุธ",
-      "วันพฤหัสบดี",
-      "วันศุกร์",
-      "วันเสาร์",
-      "วันอาทิตย์",
-    ];
-    return Array.from(chartDataMap.values()).sort(
-      (a, b) => weekOrder.indexOf(a.name) - weekOrder.indexOf(b.name)
+      // เพิ่มข้อมูลอาทิตย์ที่แล้ว
+      lastWeekData.forEach((item) => {
+        const date = new Date(item.date);
+        const dayName = date.toLocaleDateString("th-TH", { weekday: "long" });
+        const dateStr = formatDate(item.date);
+        const fullDate = date.toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        if (chartDataMap.has(dayName)) {
+          const existing = chartDataMap.get(dayName);
+          existing[`${dataKey}อาทิตย์ที่แล้ว`] = item.total / 1_000_000;
+          existing.lastWeekDate = fullDate;
+        } else {
+          chartDataMap.set(dayName, {
+            name: dayName,
+            fullDate: fullDate,
+            dateStr: dateStr,
+            [`${dataKey}อาทิตย์นี้`]: 0,
+            [`${dataKey}อาทิตย์ที่แล้ว`]: item.total / 1_000_000,
+            lastWeekDate: fullDate,
+          });
+        }
+      });
+
+      // แปลงเป็น Array และเรียงตามวันในสัปดาห์
+      const weekOrder = [
+        "วันจันทร์",
+        "วันอังคาร",
+        "วันพุธ",
+        "วันพฤหัสบดี",
+        "วันศุกร์",
+        "วันเสาร์",
+        "วันอาทิตย์",
+      ];
+
+      return Array.from(chartDataMap.values()).sort(
+        (a, b) => weekOrder.indexOf(a.name) - weekOrder.indexOf(b.name)
+      );
+    };
+  }, [formatDate]); // dependency array
+
+  // Data processing - compute ก่อน early returns
+  const leftChartData = useMemo(() => {
+    return data && data.cashIn
+      ? prepareChartData(
+          data.cashIn.thisWeek,
+          data.cashIn.lastWeek,
+          "เงินสดรับ"
+        )
+      : [];
+  }, [data, prepareChartData]);
+
+  const rightChartData = useMemo(() => {
+    return data && data.cashOut
+      ? prepareChartData(
+          data.cashOut.thisWeek,
+          data.cashOut.lastWeek,
+          "เงินสดจ่าย"
+        )
+      : [];
+  }, [data, prepareChartData]);
+
+  const cashInChange = useMemo(() => {
+    return data ? formatPercentChange(data.cashIn.percentChange) : null;
+  }, [data, formatPercentChange]);
+
+  const cashOutChange = useMemo(() => {
+    return data ? formatPercentChange(data.cashOut.percentChange) : null;
+  }, [data, formatPercentChange]);
+
+  // Register widget for context - เรียกหลัง hooks อื่นแล้ว
+  useWidgetRegistration(
+    "weekly-operation-summary",
+    "Weekly Operation Summary",
+    "สรุปการดำเนินงานรายสัปดาห์",
+    data,
+    [branchId, date]
+  );
+
+  // Loading และ Error states - ตรวจสอบหลัง hooks ทั้งหมดแล้ว
+  const isWidgetLoading = loading || isLoading;
+
+  if (isWidgetLoading) {
+    return (
+      <WidgetLoading
+        title="กำลังโหลดข้อมูลสรุปการดำเนินงานรายสัปดาห์..."
+        type="chart"
+      />
     );
-  };
+  }
 
-  const leftChartData = data
-    ? prepareChartData(data.cashIn.thisWeek, data.cashIn.lastWeek, "เงินสดรับ")
-    : [];
+  // Error state
+  if (error) {
+    return <ErrorFallback error={new Error(error)} resetError={refetch} />;
+  }
 
-  const rightChartData = data
-    ? prepareChartData(
-      data.cashOut.thisWeek,
-      data.cashOut.lastWeek,
-      "เงินสดจ่าย"
-    )
-    : [];
   // 🎯 Custom Tooltip Component
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -252,54 +279,6 @@ export const WeeklyOperationSummary = ({
     return null;
   };
 
-  const cashInChange = data
-    ? formatPercentChange(data.cashIn.percentChange)
-    : null;
-  const cashOutChange = data
-    ? formatPercentChange(data.cashOut.percentChange)
-    : null;
-
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
-    "weekly-operation-summary",
-    "ยอดรับจำนำและรายละเอียด",
-    "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
-    data
-      ? {
-        branchId: data.branchId,
-        cashIn: {
-          thisWeek: data.cashIn.thisWeek,
-          lastWeek: data.cashIn.lastWeek,
-          totalThisWeek: data.cashIn.totalThisWeek,
-          totalLastWeek: data.cashIn.totalLastWeek,
-          percentChange: data.cashIn.percentChange,
-        },
-        cashOut: {
-          thisWeek: data.cashOut.thisWeek,
-          lastWeek: data.cashOut.lastWeek,
-          totalThisWeek: data.cashOut.totalThisWeek,
-          totalLastWeek: data.cashOut.totalLastWeek,
-          percentChange: data.cashOut.percentChange,
-        },
-        timestamp: data.timestamp,
-        // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
-        analysis: {
-          chartDataLeft: leftChartData,
-          chartDataRight: rightChartData,
-          summary: {
-            cashInThisWeek: data.cashIn.totalThisWeek,
-            cashInLastWeek: data.cashIn.totalLastWeek,
-            cashInChange: data.cashIn.percentChange,
-            cashOutThisWeek: data.cashOut.totalThisWeek,
-            cashOutLastWeek: data.cashOut.totalLastWeek,
-            cashOutChange: data.cashOut.percentChange,
-          },
-        },
-      }
-      : null,
-    [data]
-  );
-
   return (
     <Card className="mb-6">
       <CardHeader className="pb-4">
@@ -311,12 +290,12 @@ export const WeeklyOperationSummary = ({
             <p className="text-sm text-blue-500">
               {data
                 ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(data.timestamp))} น.`
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(data.timestamp))} น.`
                 : "กำลังโหลดข้อมูล..."}
             </p>
           </div>
@@ -474,7 +453,9 @@ export const WeeklyOperationSummary = ({
               <div className="flex items-center text-sm">
                 {cashOutChange && (
                   <>
-                    <span className={`${cashOutChange.color} flex items-center`}>
+                    <span
+                      className={`${cashOutChange.color} flex items-center`}
+                    >
                       <img
                         src={cashOutChange.icon}
                         alt="trend"
