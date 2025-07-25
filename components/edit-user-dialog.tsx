@@ -206,9 +206,9 @@ export default function EditUserDialog({
                 required
               >
                 <option value="">เลือกสาขา</option>
-                {BRANCHES.map((b) => (
-                  <option key={b.id} value={b.id.toString()}>
-                    {b.name}
+                {BRANCHES.map((branch) => (
+                  <option key={branch.id} value={branch.id.toString()}>
+                    {branch.name}
                   </option>
                 ))}
               </select>
@@ -226,9 +226,9 @@ export default function EditUserDialog({
                 required
               >
                 <option value="">เลือก Role</option>
-                {ROLES.map((r) => (
-                  <option key={r.id} value={r.id.toString()}>
-                    {r.name}
+                {ROLES.map((role) => (
+                  <option key={role.id} value={role.id.toString()}>
+                    {role.name}
                   </option>
                 ))}
               </select>

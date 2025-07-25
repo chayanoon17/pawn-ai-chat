@@ -3,6 +3,20 @@
  * รวม constants ที่ใช้ทั่วทั้งแอพ
  */
 
+// 🎨 Chart Colors - ใช้สีเดียวกันทุกที่
+export const CHART_COLORS = [
+  "#FF6B6B", // Red
+  "#4ECDC4", // Teal
+  "#45B7D1", // Blue
+  "#96CEB4", // Green
+  "#FFEAA7", // Yellow
+  "#DDA0DD", // Plum
+  "#98D8C8", // Mint
+  "#F7DC6F", // Light Yellow
+  "#BB8FCE", // Light Purple
+  "#85C1E9", // Light Blue
+] as const;
+
 // 📄 Page Configuration
 export const PAGE_LABELS: Record<string, string> = {
   dashboard: "Dashboard Overview",
@@ -18,69 +32,64 @@ export const BRANCHES = [
   { id: 1, name: "สะพานขาว", shortName: "", location: "สะพานขาว" },
   { id: 2, name: "หนองจอก", shortName: "", location: "หนองจอก" },
   { id: 3, name: "บางซื่อ", shortName: "", location: "บางซื่อ" },
-  { id: 4, name: "บางแค", shortName: "", location: "บางแค" },
-  { id: 5, name: "สาธุประดิษฐ์", shortName: "", location: "สาธุประดิษฐ์" },
-  { id: 6, name: "บางขุนเทียน", shortName: "", location: "บางขุนเทียน" },
-  { id: 7, name: "หลักสี่", shortName: "", location: "หลักสี่" },
-  { id: 8, name: "ม.เกษตร", shortName: "", location: "ม.เกษตร" },
-  { id: 9, name: "ธนบุรี-ปากท่อ", shortName: "", location: "ธนบุรี-ปากท่อ" },
-  { id: 10, name: "ห้วยขวาง", shortName: "", location: "ห้วยขวาง" },
-  { id: 11, name: "บางกะปิ", shortName: "", location: "บางกะปิ" },
-  { id: 12, name: "สะพานพุทธ", shortName: "", location: "สะพานพุทธ" },
-  { id: 13, name: "อุดมสุข", shortName: "", location: "อุดมสุข" },
-  { id: 14, name: "ดอนเมือง", shortName: "", location: "ดอนเมือง" },
-  { id: 15, name: "สุวินทวงศ์", shortName: "", location: "สุวินทวงศ์" },
-  { id: 16, name: "ปากเกร็ด", shortName: "", location: "ปากเกร็ด" },
-  { id: 17, name: "บางบอน", shortName: "", location: "บางบอน" },
-  { id: 18, name: "หนองแขม", shortName: "", location: "หนองแขม" },
-  { id: 19, name: "ทุ่งสองห้อง", shortName: "", location: "ทุ่งสองห้อง" },
-  { id: 20, name: "รามอินทรา", shortName: "", location: "รามอินทรา" },
-  { id: 21, name: "ระยอง", shortName: "", location: "ระยอง" },
-  { id: 22, name: "พัฒนาการ", shortName: "", location: "พัฒนาการ" },
-  { id: 23, name: "ลาดกระบัง", shortName: "", location: "ลาดกระบัง" },
-  { id: 24, name: "สายไหม", shortName: "", location: "สายไหม" },
-  { id: 25, name: "ทุ่งครุ", shortName: "", location: "ทุ่งครุ" },
-  { id: 26, name: "สมุทรปราการ", shortName: "", location: "สมุทรปราการ" },
-  { id: 27, name: "นนทบุรี", shortName: "", location: "นนทบุรี" },
-  { id: 28, name: "ประตูน้ำ", shortName: "", location: "ประตูน้ำ" },
+  { id: 4, name: "ลาดพร้าว", shortName: "", location: "ลาดพร้าว" },
+  { id: 5, name: "วงศ์สว่าง", shortName: "", location: "วงศ์สว่าง" },
+  { id: 6, name: "ช่องนนทรี", shortName: "", location: "ช่องนนทรี" },
+  { id: 7, name: "ราชเทวี", shortName: "", location: "ราชเทวี" },
+  { id: 8, name: "พระราม 2", shortName: "", location: "พระราม 2" },
+  { id: 9, name: "บางแค", shortName: "", location: "บางแค" },
+  { id: 10, name: "ธนบุรี-ปากท่อ", shortName: "", location: "ธนบุรี-ปากท่อ" },
+  { id: 11, name: "ห้วยขวาง", shortName: "", location: "ห้วยขวาง" },
+  { id: 12, name: "บางกะปิ", shortName: "", location: "บางกะปิ" },
+  { id: 13, name: "สะพานพุทธ", shortName: "", location: "สะพานพุทธ" },
+  { id: 14, name: "อุดมสุข", shortName: "", location: "อุดมสุข" },
+  { id: 15, name: "ดอนเมือง", shortName: "", location: "ดอนเมือง" },
+  { id: 16, name: "สุวินทวงศ์", shortName: "", location: "สุวินทวงศ์" },
+  { id: 17, name: "ปากเกร็ด", shortName: "", location: "ปากเกร็ด" },
+  { id: 18, name: "บางบอน", shortName: "", location: "บางบอน" },
+  { id: 19, name: "หนองแขม", shortName: "", location: "หนองแขม" },
+  { id: 20, name: "ทุ่งสองห้อง", shortName: "", location: "ทุ่งสองห้อง" },
+  { id: 21, name: "ศรีนครินทร์", shortName: "", location: "ศรีนครินทร์" },
 ] as const;
 
-// 👤 Role Data (ใช้ชั่วคราวจนกว่าจะ integrate กับ API)
+// 👥 User Roles Configuration
 export const ROLES = [
-  { id: 1, name: "User", description: "ผู้ใช้ทั่วไป" },
-  { id: 2, name: "Admin", description: "ผู้ดูแลระบบ" },
-  { id: 3, name: "Manager", description: "ผู้จัดการ" },
+  { id: 1, name: "Super Admin", shortName: "SA", description: "สิทธิ์เต็ม" },
+  { id: 2, name: "Admin", shortName: "AD", description: "ผู้ดูแลระบบ" },
+  { id: 3, name: "Manager", shortName: "MG", description: "ผู้จัดการ" },
+  { id: 4, name: "Staff", shortName: "ST", description: "พนักงาน" },
+  { id: 5, name: "Viewer", shortName: "VW", description: "ดูข้อมูลอย่างเดียว" },
 ] as const;
 
-// 🎨 Status Badge Configuration
-export const STATUS_BADGE_CONFIG = {
+// 👤 User Status Configuration
+export const USER_STATUS = {
   ACTIVE: {
-    variant: "default" as const,
+    value: "active" as const,
     label: "ใช้งาน",
     className: "bg-green-100 text-green-800 border-green-200",
   },
   INACTIVE: {
-    variant: "secondary" as const,
-    label: "ไม่ใช้งาน",
-    className: "bg-gray-100 text-gray-800 border-gray-200",
-  },
-  SUSPENDED: {
-    variant: "destructive" as const,
+    value: "inactive" as const,
     label: "ระงับ",
     className: "bg-red-100 text-red-800 border-red-200",
   },
 } as const;
 
-// 📊 Chart Colors
-export const CHART_COLORS = {
-  PRIMARY: "#3B82F6", // blue-500
-  SECONDARY: "#10B981", // emerald-500
-  SUCCESS: "#22C55E", // green-500
-  WARNING: "#F59E0B", // amber-500
-  DANGER: "#EF4444", // red-500
-  INFO: "#6366F1", // indigo-500
-  LIGHT: "#94A3B8", // slate-400
-  DARK: "#1E293B", // slate-800
+// ⏱️ Animation Durations
+export const ANIMATIONS = {
+  fast: 200,
+  normal: 300,
+  slow: 500,
+  chart: 800,
+} as const;
+
+// 🎨 Common CSS Classes
+export const COMMON_CLASSES = {
+  card: "p-4 rounded-lg shadow bg-white",
+  flexCenter: "flex items-center justify-center",
+  textError: "text-red-600",
+  textSuccess: "text-green-600",
+  textMuted: "text-gray-600",
 } as const;
 
 // 🔧 API Configuration
@@ -97,4 +106,11 @@ export const BREAKPOINTS = {
   LG: 1024,
   XL: 1280,
   "2XL": 1536,
+} as const;
+
+// 📊 Chart Configuration
+export const CHART_CONFIG = {
+  DEFAULT_HEIGHT: 300,
+  DEFAULT_MARGIN: { top: 20, right: 30, left: 20, bottom: 5 },
+  ANIMATION_DURATION: 800,
 } as const;
