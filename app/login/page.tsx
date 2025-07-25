@@ -1,12 +1,13 @@
 "use client";
 
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, EyeOff, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import CookieConsent from "@/components/cookie-consent";
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isAuthenticated, isLoading, clearRememberMe } = useAuth();
   const router = useRouter();
 
@@ -37,15 +38,24 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
+    if (!email && !password) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      return;
+    }
+
+    if (!email) {
+      setError("กรุณากรอกอีเมล");
+      return;
+    }
+
+    if (!password) {
+      setError("กรุณากรอกรหัสผ่าน");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
-      // บันทึกหรือลบข้อมูล remember me
       if (rememberMe) {
         localStorage.setItem("rememberMe_email", email);
         localStorage.setItem("rememberMe_enabled", "true");
@@ -55,14 +65,22 @@ export default function LoginPage() {
       }
 
       await login(email, password);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
-      setError(errorMessage);
+      localStorage.setItem("loginSuccess", "true"); // ✅ เตรียม toast flag
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      } else if (error.response?.status === 429) {
+        setError("คุณพยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง");
+      } else {
+        const errorMessage =
+          error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   if (isLoading) {
     return (
@@ -118,14 +136,23 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
+
 
             <button
               type="submit"

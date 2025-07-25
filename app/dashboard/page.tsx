@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-summary";
 import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-operation-summary";
@@ -14,6 +14,7 @@ import { WidgetFilterData } from "@/components/widget-filter";
 import { ChatSidebar } from "@/components/chat-side-bar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WidgetProvider } from "@/context/widget-context";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const isMobile = useIsMobile();
@@ -48,6 +49,16 @@ export default function DashboardPage() {
       console.log("🎯 Dashboard filter changed:", data);
     }
   };
+
+
+  useEffect(() => {
+  const isLoginSuccess = localStorage.getItem("loginSuccess");
+  if (isLoginSuccess === "true") {
+    toast.success("🎉 เข้าสู่ระบบสำเร็จ");
+    localStorage.removeItem("loginSuccess"); // ลบเพื่อไม่ให้ขึ้นซ้ำ
+  }
+}, []);
+
 
   // 🔐 Guard - ถ้าไม่ควร render ให้แสดง loading/redirect message
   if (!shouldRender) {

@@ -25,6 +25,11 @@ export async function getAllUsers() {
   return res;
 }
 
+export async function getAllRoles() {
+  return apiClient.get("/api/v1/roles"); // ใช้ endpoint ที่ให้ role list มา
+}
+
+
 
 
 /**

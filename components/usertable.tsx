@@ -45,12 +45,25 @@ export function UserTable() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [branchFilter, setBranchFilter] = useState<string>("");
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+
+  const roleMap: Record<number, string> = {
+    1: "Admin",
+    2: "Manager",
+    3: "Officer",
+  };
 
   useEffect(() => {
     async function fetchUsers() {
       try {
         const response = await getAllUsers();
-        setUsers(response.data); // ตามโครงสร้าง response ของ backend
+        setUsers(response.data);
       } catch (err) {
         setError("Failed to load users");
       } finally {
@@ -61,110 +74,207 @@ export function UserTable() {
     fetchUsers();
   }, []);
 
-  if (loading) return <div>Loading users...</div>;
-  if (error) return <div>{error}</div>;
+  useEffect(() => {
+    const term = searchTerm.toLowerCase();
+    const filtered = users.filter((user) => {
+      const roleLabel = roleMap[Number(user.roleId)] ?? "-";
+      const branch = user.branchId ?? "-";
+
+      return (
+        user.fullName.toLowerCase().includes(term) ||
+        roleLabel.toLowerCase().includes(term) ||
+        branch.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term)
+      );
+    });
+
+    setFilteredUsers(filtered);
+  }, [searchTerm, users]);
+
+  useEffect(() => {
+    const term = searchTerm.toLowerCase();
+    const filtered = users.filter((user) => {
+      const roleLabel = roleMap[Number(user.roleId)] ?? "-";
+      const branch = user.branchId ?? "-";
+
+      const matchesSearch =
+        user.fullName.toLowerCase().includes(term) ||
+        roleLabel.toLowerCase().includes(term) ||
+        branch.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term);
+
+      const matchesRole = roleFilter ? roleLabel === roleFilter : true;
+      const matchesBranch = branchFilter ? branch === branchFilter : true;
+
+      return matchesSearch && matchesRole && matchesBranch;
+    });
+
+    setFilteredUsers(filtered);
+    setCurrentPage(1); // รีเซ็ตหน้าเมื่อ filter เปลี่ยน
+  }, [searchTerm, users, roleFilter, branchFilter]);
+
+
+  if (loading) return <div className="p-6">Loading users...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
 
   return (
-    <div className="px-4 py-3">
-      <div className="flex justify-between w-full">
-        <label
-          htmlFor="search"
-          className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
-        >
-          Search
-        </label>
-        <div className="relative w-96 ">
-          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-            <svg
-              className="w-4 h-4 text-gray-500 dark:text-gray-400"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-              />
-            </svg>
-          </div>
+    <div className="px-6 py-5 space-y-6 bg-white rounded-xl shadow-md">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1">
           <input
             type="search"
-            id="search"
-            className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Search"
-            required
+            placeholder="ค้นหาชื่อ บทบาท สาขา หรืออีเมล"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="px-3 py-2 text-sm border rounded-lg"
+          >
+            <option value="">บทบาททั้งหมด</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Officer">Officer</option>
+          </select>
+
+          <select
+            value={branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value)}
+            className="px-3 py-2 text-sm border rounded-lg"
+          >
+            <option value="">สาขาทั้งหมด</option>
+            {[...new Set(users.map((u) => u.branchId))].map((branchId) => (
+              <option key={branchId} value={branchId}>
+                {branchId}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="flex ">
+
+        <div>
           <EditProfileDialog />
         </div>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ชื่อ</TableHead>
-            <TableHead>บทบาท</TableHead>
-            <TableHead>สาขา</TableHead>
-            <TableHead>อีเมล</TableHead>
-            <TableHead>สถานะ</TableHead>
-            <TableHead className="text-right">ดำเนินการ</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.fullName}</TableCell>
-              <TableCell>{user.roleId}</TableCell>
-              <TableCell>{user.branchId}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                {user.status === "ACTIVE" ? "ใช้งาน" : "ปิดใช้งาน"}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          คุณต้องการที่จะลบผู้ใช้หรือไม่ ?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          การกระทำนี้ไม่สามารถย้อนกลับได้ จะลบผู้ใช้{" "}
-                          <strong>{user.fullName}</strong> อย่างถาวร
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                        <AlertDialogAction>ลบ</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ชื่อ</TableHead>
+              <TableHead>บทบาท</TableHead>
+              <TableHead>สาขา</TableHead>
+              <TableHead>อีเมล</TableHead>
+              <TableHead>สถานะ</TableHead>
+              <TableHead className="text-right">ดำเนินการ</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.fullName}</TableCell>
+                <TableCell>{roleMap[Number(user.roleId)] ?? user.roleId}</TableCell>
+                <TableCell>{user.branchId ?? "-"}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Badge variant={user.status === "ACTIVE" ? "default" : "destructive"}>
+                    {user.status === "ACTIVE" ? "ใช้งาน" : "ปิดใช้งาน"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            คุณต้องการที่จะลบผู้ใช้หรือไม่ ?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            การกระทำนี้ไม่สามารถย้อนกลับได้ จะลบผู้ใช้{" "}
+                            <strong>{user.fullName}</strong> อย่างถาวร
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                          <AlertDialogAction>ลบ</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Pagination */}
-
-      <div className="flex items-center justify-between px-6 py-4 border-t">
+      {/* Pagination Placeholder */}
+      <div className="flex items-center justify-between pt-4 border-t">
         <Pagination>
-          <PaginationContent></PaginationContent>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage - 1);
+                }}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={currentPage === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(currentPage + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
         </Pagination>
+
       </div>
     </div>
   );
