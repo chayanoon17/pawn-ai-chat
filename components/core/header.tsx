@@ -1,5 +1,6 @@
 import { MessageCircle, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WidgetFilter, WidgetFilterData } from "@/components/features/filters";
 import { usePathname } from "next/navigation";
@@ -9,7 +10,6 @@ import { PAGE_LABELS } from "@/lib/constants";
 interface HeaderProps {
   selectedPage: string;
   onChatToggle: () => void;
-  onMenuToggle: () => void;
   isChatOpen: boolean;
   onFilterChange?: (data: WidgetFilterData) => void;
 }
@@ -20,19 +20,17 @@ interface HeaderProps {
  * แสดง header bar พร้อมฟีเจอร์:
  * - แสดงชื่อหน้าปัจจุบัน
  * - ปุ่มเปิด/ปิด chat sidebar
- * - ปุ่มเปิด/ปิด main menu (mobile)
+ * - ปุ่ม sidebar trigger สำหรับ mobile
  * - Widget filter (สำหรับหน้าที่มี widgets)
  *
  * @param selectedPage - ชื่อหน้าปัจจุบัน
  * @param onChatToggle - Function สำหรับเปิด/ปิด chat sidebar
- * @param onMenuToggle - Function สำหรับเปิด/ปิด main menu
  * @param isChatOpen - สถานะการเปิด/ปิดของ chat sidebar
  * @param onFilterChange - Function สำหรับจัดการการเปลี่ยนแปลง widget filter
  */
 export default function Header({
   selectedPage,
   onChatToggle,
-  onMenuToggle,
   isChatOpen,
   onFilterChange,
 }: HeaderProps) {
@@ -52,14 +50,9 @@ export default function Header({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onMenuToggle}
-              className="p-2"
-            >
+            <SidebarTrigger className="p-2">
               <Menu className="w-5 h-5" />
-            </Button>
+            </SidebarTrigger>
           )}
 
           <div>

@@ -14,23 +14,23 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
 
 export function LogTabs({ activeTab, onTabChange }: LogTabsProps) {
   return (
-    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
+    <div className="flex flex-wrap gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`
-            flex items-center space-x-2 px-4 py-2 rounded-md font-medium text-sm transition-colors
+            flex items-center space-x-3 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200
             ${
               activeTab === tab.id
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                ? "bg-white text-blue-600 shadow-md border border-blue-200 scale-105"
+                : "text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-sm"
             }
           `}
           aria-pressed={activeTab === tab.id}
         >
-          <span>{tab.icon}</span>
-          <span>{tab.label}</span>
+          <span className="text-base">{tab.icon}</span>
+          <span className="font-semibold">{tab.label}</span>
         </button>
       ))}
     </div>

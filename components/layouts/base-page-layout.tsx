@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, ReactNode, useEffect } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/core";
 import Header from "@/components/core/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
@@ -42,7 +42,6 @@ export default function BasePageLayout({
   const { shouldRender, message, isLoading: authLoading } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(isMobile);
 
   // 🎯 Default filter state
   const [filterData, setFilterData] = useState<WidgetFilterData>({
@@ -51,17 +50,8 @@ export default function BasePageLayout({
     isLoading: true,
   });
 
-  // 🔄 Auto-collapse sidebar on mobile
-  useEffect(() => {
-    setSidebarCollapsed(isMobile);
-  }, [isMobile]);
-
   const onChatToggle = useCallback(() => {
     setIsChatOpen((prev) => !prev);
-  }, []);
-
-  const onMenuToggle = useCallback(() => {
-    console.log("Menu toggled");
   }, []);
 
   // 🎯 Handle filter changes
@@ -81,11 +71,13 @@ export default function BasePageLayout({
   // 🔐 Guard - แสดง loading state with better UX
   if (!shouldRender) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="lg" />
-        <div className="ml-4">
-          <p className="text-gray-600">{message}</p>
-          <p className="text-sm text-gray-400 mt-1">กรุณารอสักครู่...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <div className="mt-6 space-y-2">
+            <p className="text-lg font-medium text-gray-700">{message}</p>
+            <p className="text-sm text-gray-500">กรุณารอสักครู่...</p>
+          </div>
         </div>
       </div>
     );
@@ -94,53 +86,30 @@ export default function BasePageLayout({
   return (
     <SidebarProvider>
       <WidgetProvider>
-        <div
-          className={`flex h-screen w-full ${className}`}
-          role="application"
-          aria-label={ariaLabel || `${pageTitle || page} application`}
-        >
-          {/* Sidebar - Responsive */}
-          <div
-            className={`
-              ${isMobile ? "fixed z-40 inset-y-0 left-0" : "relative"} 
-              ${
-                sidebarCollapsed && isMobile
-                  ? "-translate-x-full"
-                  : "translate-x-0"
-              }
-              w-64 border-r bg-white transition-transform duration-300 ease-in-out
-            `}
-            aria-hidden={sidebarCollapsed && isMobile}
-          >
-            <AppSidebar />
-          </div>
+        <div className="flex min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100">
+          {/* ✅ ใช้ AppSidebar แบบ built-in */}
+          <AppSidebar />
 
-          {/* Mobile Sidebar Overlay */}
-          {isMobile && !sidebarCollapsed && (
-            <div
-              className="fixed inset-0 z-30 bg-black/20"
-              onClick={() => setSidebarCollapsed(true)}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* Main Content */}
-          <div className="relative flex-1 flex flex-col overflow-hidden">
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-w-0">
             <Header
               selectedPage={page}
               onChatToggle={onChatToggle}
-              onMenuToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
               isChatOpen={isChatOpen}
               onFilterChange={showFilter ? handleFilterChange : undefined}
             />
 
             <main
-              className="flex-1 p-4 overflow-auto bg-gray-50"
+              className="flex-1 p-6 lg:p-8 overflow-auto min-h-0"
               role="main"
               aria-label={`${pageTitle || page} content`}
             >
-              {/* ส่งค่า filterData ไปให้ children */}
-              {typeof children === "function" ? children(filterData) : children}
+              <div className="max-w-7xl mx-auto">
+                {/* ส่งค่า filterData ไปให้ children */}
+                {typeof children === "function"
+                  ? children(filterData)
+                  : children}
+              </div>
             </main>
 
             {/* Chat Sidebar - Responsive */}
