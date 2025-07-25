@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Sarabun } from "next/font/google";
+import { Prompt } from "next/font/google";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 
 import AuthProvider from "../context/auth-context";
 import "./globals.css";
 
-const sarabun = Sarabun({
-  subsets: ["thai", "latin"],
+const prompt = Prompt({
+  subsets: ["thai"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-sarabun",
+  variable: "--font-prompt",
 });
 
 export const metadata: Metadata = {
@@ -28,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th">
-      <body className={`${sarabun.variable} antialiased`}>
+    <html lang="th" className={prompt.variable}>
+      <body className="antialiased">
         <AuthProvider>
           <Theme>{children}</Theme>
         </AuthProvider>
