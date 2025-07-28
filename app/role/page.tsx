@@ -50,39 +50,12 @@ import {
   showNetworkError,
   showWarning,
 } from "@/lib/sweetalert";
-
-// 🎯 Types for Role Management
-interface Permission {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface MenuPermission {
-  id: number;
-  name: string;
-  description: string;
-  menu?: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  userCount: number;
-  permissions: Permission[];
-  menuPermissions: MenuPermission[];
-  status: "ACTIVE" | "INACTIVE";
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateRoleData {
-  name: string;
-  description: string;
-  permissionIds: number[];
-  menuPermissionIds: number[];
-}
+import type {
+  Permission,
+  MenuPermission,
+  Role,
+  CreateRoleData,
+} from "@/types/role-management";
 
 export default function RoleManagementPage() {
   // 🎯 State Management

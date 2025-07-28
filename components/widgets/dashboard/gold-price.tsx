@@ -4,16 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
-
-type GoldPrice = {
-  id: number;
-  goldBarBuy: number;
-  goldBarSell: number;
-  goldJewelryBuy: number;
-  goldJewelrySell: number;
-  createdAt: string;
-  updatedAt: string;
-};
+import type { GoldPrice } from "@/types/dashboard";
 
 export const GoldPriceCard = () => {
   const [latestPrice, setLatestPrice] = useState<GoldPrice | null>(null);

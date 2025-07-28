@@ -5,27 +5,10 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
-
-type BranchDailySummary = {
-  branchId: number;
-  beginningBalance: {
-    count: number;
-    amount: number;
-  };
-  endingBalance: {
-    count: number;
-    amount: number;
-  };
-  countChange: number;
-  amountChange: number;
-  timestamp: string;
-};
-
-interface DailyOperationProps {
-  branchId: string;
-  date: string;
-  isLoading?: boolean;
-}
+import type {
+  BranchDailySummary,
+  DailyOperationProps,
+} from "@/types/dashboard";
 
 export const DailyOperationSummary = ({
   branchId,

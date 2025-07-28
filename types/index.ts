@@ -19,3 +19,12 @@ export type * from "./api";
 
 // Common types & constants
 export * from "./common";
+
+// Dashboard widgets types
+export type * from "./dashboard";
+
+// Asset type widgets types
+export type * from "./asset-type";
+
+// Role management types
+export type * from "./role-management";
