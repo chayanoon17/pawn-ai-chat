@@ -25,7 +25,7 @@ export function LoadingSpinner({
         <Loader2
           className={cn("animate-spin text-blue-500", sizeClasses[size])}
         />
-        {text && <span className="text-gray-600 text-sm">{text}</span>}
+        {text && <span className="text-gray-600 text-lg">{text}</span>}
       </div>
     </div>
   );

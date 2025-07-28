@@ -14,7 +14,7 @@ export default function DashboardPage() {
       {(filterData: WidgetFilterData) => (
         <div className="space-y-8">
           {/* Page Header */}
-          <div className="mb-8">
+          <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               📊 แดชบอร์ดภาพรวม
             </h1>
@@ -24,47 +24,35 @@ export default function DashboardPage() {
           </div>
 
           {/* Gold Price Section */}
-          <div className="mb-8">
-            <GoldPriceCard />
-          </div>
+          <GoldPriceCard />
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <DailyOperationSummary
-                branchId={filterData.branchId}
-                date={filterData.date}
-                isLoading={filterData.isLoading}
-              />
-            </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <ContractTransactionSummary
-                branchId={filterData.branchId}
-                date={filterData.date}
-                isLoading={filterData.isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Weekly Summary */}
-          <div className="mb-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <WeeklyOperationSummary
-                branchId={filterData.branchId}
-                date={filterData.date}
-                isLoading={filterData.isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Transaction Details */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <ContractTransactionDetails
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <DailyOperationSummary
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+            <ContractTransactionSummary
               branchId={filterData.branchId}
               date={filterData.date}
               isLoading={filterData.isLoading}
             />
           </div>
+
+          {/* Weekly Summary */}
+          <WeeklyOperationSummary
+            branchId={filterData.branchId}
+            date={filterData.date}
+            isLoading={filterData.isLoading}
+          />
+
+          {/* Transaction Details */}
+          <ContractTransactionDetails
+            branchId={filterData.branchId}
+            date={filterData.date}
+            isLoading={filterData.isLoading}
+          />
         </div>
       )}
     </BasePageLayout>

@@ -18,7 +18,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
@@ -116,8 +115,8 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.id}>
                     <Link href={item.id}>
-                      <SidebarMenuButton
-                        className={`w-full justify-start space-x-4 px-4 py-5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
+                      <button
+                        className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
                           isActive
                             ? "text-white hover:text-white"
                             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -126,7 +125,7 @@ export function AppSidebar() {
                       >
                         <Icon className="h-5 w-5" />
                         <span>{item.label}</span>
-                      </SidebarMenuButton>
+                      </button>
                     </Link>
                   </SidebarMenuItem>
                 );
@@ -142,52 +141,50 @@ export function AppSidebar() {
 
                 return (
                   <SidebarMenuItem key={item.id}>
-                    <div>
-                      <button
-                        onClick={() => toggleGroup(item.id)}
-                        className={`w-full justify-start space-x-4 px-4 py-5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
-                          hasActiveChild && !isExpanded
-                            ? "font-semibold !text-[#3F99D8] !bg-gray-100"
-                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </button>
-
-                      {isExpanded && item.children && (
-                        <div className="ml-5 mt-2 space-y-1 border-l border-gray-200 pl-4">
-                          {item.children.map((child) => {
-                            const isChildActive = pathname === child.id;
-                            const ChildIcon = child.icon;
-                            return (
-                              <Link key={child.id} href={child.id}>
-                                <SidebarMenuButton
-                                  className={`w-full justify-start space-x-3 px-3 py-5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
-                                    isChildActive
-                                      ? "text-white hover:text-white"
-                                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                                  }`}
-                                  style={
-                                    isChildActive
-                                      ? { backgroundColor: "#3F99D8" }
-                                      : {}
-                                  }
-                                >
-                                  <ChildIcon className="h-4 w-4" />
-                                  <span>{child.label}</span>
-                                </SidebarMenuButton>
-                              </Link>
-                            );
-                          })}
-                        </div>
+                    <button
+                      onClick={() => toggleGroup(item.id)}
+                      className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
+                        hasActiveChild && !isExpanded
+                          ? "font-semibold !text-[#3F99D8] !bg-gray-100"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
                       )}
-                    </div>
+                    </button>
+
+                    {isExpanded && item.children && (
+                      <div className="ml-5 mt-2 space-y-1 border-l border-gray-200 pl-4">
+                        {item.children.map((child) => {
+                          const isChildActive = pathname === child.id;
+                          const ChildIcon = child.icon;
+                          return (
+                            <Link key={child.id} href={child.id}>
+                              <button
+                                className={`w-full justify-start space-x-3 px-3 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
+                                  isChildActive
+                                    ? "text-white hover:text-white"
+                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                }`}
+                                style={
+                                  isChildActive
+                                    ? { backgroundColor: "#3F99D8" }
+                                    : {}
+                                }
+                              >
+                                <ChildIcon className="h-4 w-4" />
+                                <span>{child.label}</span>
+                              </button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
                   </SidebarMenuItem>
                 );
               }
@@ -200,46 +197,44 @@ export function AppSidebar() {
 
       {/* Footer */}
       <SidebarFooter>
-        <div className="p-3">
-          {user && (
-            <div className="flex items-center p-2.5 space-x-3 bg-white rounded-lg border border-gray-200 shadow-sm">
-              {/* Avatar with gradient background */}
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-sm font-semibold text-white">
-                    {user.fullName?.charAt(0) || user.email?.charAt(0) || "U"}
-                  </span>
-                </div>
-                {/* Online indicator */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+        {user && (
+          <div className="flex items-center p-2.5 space-x-3">
+            {/* Avatar with gradient background */}
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-sm font-semibold text-white">
+                  {user.fullName?.charAt(0) || user.email?.charAt(0) || "U"}
+                </span>
               </div>
-
-              {/* User Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">
-                  {user.fullName || "ผู้ใช้งาน"}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user.role.name || "ตำแหน่งผู้ใช้"}
-                </p>
-              </div>
-
-              {/* Logout Icon Button */}
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex-shrink-0"
-                aria-label="Logout"
-              >
-                {isLoggingOut ? (
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
-                ) : (
-                  <LogOut className="w-4 h-4 text-gray-500 transition-colors duration-200" />
-                )}
-              </button>
+              {/* Online indicator */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
             </div>
-          )}
-        </div>
+
+            {/* User Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {user.fullName || "ผู้ใช้งาน"}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {user.role.name || "ตำแหน่งผู้ใช้"}
+              </p>
+            </div>
+
+            {/* Logout Icon Button */}
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex-shrink-0"
+              aria-label="Logout"
+            >
+              {isLoggingOut ? (
+                <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+              ) : (
+                <LogOut className="w-4 h-4 text-gray-500 transition-colors duration-200" />
+              )}
+            </button>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

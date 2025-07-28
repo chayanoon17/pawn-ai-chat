@@ -12,7 +12,7 @@ export default function UserPage() {
     >
       <div className="space-y-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
             👥 จัดการข้อมูลผู้ใช้
           </h1>

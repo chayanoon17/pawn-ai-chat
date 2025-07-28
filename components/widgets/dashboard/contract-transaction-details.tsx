@@ -381,7 +381,7 @@ export default function ContractTransactionDetails({
                 })}
             </div>
 
-            <div className="flex justify-center gap-4 flex-wrap mb-8">
+            <div className="flex justify-center gap-4 flex-wrap">
               {data?.summaries
                 .slice(4, 6)
                 .map((item: TransactionSummaryItem, index: number) => {

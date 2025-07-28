@@ -130,7 +130,7 @@ export default function LogPage() {
       <div className="space-y-8">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <div className="mb-8">
+          <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               📋 ประวัติการใช้งาน
             </h1>
@@ -140,7 +140,7 @@ export default function LogPage() {
           </div>
 
           {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
               <div className="text-blue-700 text-sm font-semibold mb-2">
                 Total Logs

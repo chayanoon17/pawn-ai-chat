@@ -104,7 +104,7 @@ export default function BasePageLayout({
               role="main"
               aria-label={`${pageTitle || page} content`}
             >
-              <div className="max-w-7xl mx-auto">
+              <div className="w-full">
                 {/* ส่งค่า filterData ไปให้ children */}
                 {typeof children === "function"
                   ? children(filterData)

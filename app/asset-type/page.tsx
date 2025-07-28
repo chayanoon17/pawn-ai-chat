@@ -12,7 +12,7 @@ export default function AssetTypePage() {
       {(filterData: WidgetFilterData) => (
         <div className="space-y-8">
           {/* Page Header */}
-          <div className="mb-8">
+          <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               💎 ประเภททรัพย์และราคา
             </h1>
@@ -22,15 +22,11 @@ export default function AssetTypePage() {
           </div>
 
           {/* Summary Card */}
-          <div className="mb-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <AssetTypesSummary
-                branchId={filterData.branchId}
-                date={filterData.date}
-                isLoading={filterData.isLoading}
-              />
-            </div>
-          </div>
+          <AssetTypesSummary
+            branchId={filterData.branchId}
+            date={filterData.date}
+            isLoading={filterData.isLoading}
+          />
 
           {/* Analysis Cards */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
