@@ -41,6 +41,15 @@ import {
   Eye,
 } from "lucide-react";
 import { getPermissions, getMenuPermissions } from "@/lib/api";
+import {
+  showDeleteConfirmation,
+  showDeleteSuccess,
+  showCreateSuccess,
+  showUpdateSuccess,
+  showError,
+  showNetworkError,
+  showWarning,
+} from "@/lib/sweetalert";
 
 // 🎯 Types for Role Management
 interface Permission {
@@ -154,6 +163,7 @@ export default function RoleManagementPage() {
         setIsLoading(false);
       } catch (error) {
         console.error("Error loading data:", error);
+        showNetworkError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
         setIsLoading(false);
       }
     };
@@ -170,6 +180,17 @@ export default function RoleManagementPage() {
 
   // 🎯 Handle form submission
   const handleCreateRole = async () => {
+    // Validation
+    if (!newRole.name.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกชื่อตำแหน่ง");
+      return;
+    }
+
+    if (!newRole.description.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกคำอธิบายตำแหน่ง");
+      return;
+    }
+
     try {
       // Simulate API call
       const newRoleData: Role = {
@@ -196,14 +217,35 @@ export default function RoleManagementPage() {
         permissionIds: [],
         menuPermissionIds: [],
       });
+
+      // แสดง SweetAlert2 success
+      showCreateSuccess(
+        "สร้างตำแหน่งสำเร็จ!",
+        `ตำแหน่ง "${newRole.name}" ถูกสร้างเรียบร้อยแล้ว`
+      );
     } catch (error) {
       console.error("Error creating role:", error);
+      showError(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถสร้างตำแหน่งได้ กรุณาลองใหม่อีกครั้ง"
+      );
     }
   };
 
   // 🎯 Handle edit role submission
   const handleEditRole = async () => {
     if (!selectedRole) return;
+
+    // Validation
+    if (!newRole.name.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกชื่อตำแหน่ง");
+      return;
+    }
+
+    if (!newRole.description.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกคำอธิบายตำแหน่ง");
+      return;
+    }
 
     try {
       // Simulate API call
@@ -233,19 +275,44 @@ export default function RoleManagementPage() {
         permissionIds: [],
         menuPermissionIds: [],
       });
+
+      // แสดง SweetAlert2 success
+      showUpdateSuccess(
+        "อัปเดตตำแหน่งสำเร็จ!",
+        `ตำแหน่ง "${newRole.name}" ถูกอัปเดตเรียบร้อยแล้ว`
+      );
     } catch (error) {
       console.error("Error updating role:", error);
+      showError(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถอัปเดตตำแหน่งได้ กรุณาลองใหม่อีกครั้ง"
+      );
     }
   };
 
   // 🎯 Handle delete role
-  const handleDeleteRole = async (roleId: number) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบตำแหน่งนี้?")) {
+  const handleDeleteRole = async (roleId: number, roleName: string) => {
+    const result = await showDeleteConfirmation(
+      "ลบตำแหน่งนี้?",
+      `คุณแน่ใจหรือไม่ที่จะลบตำแหน่ง "${roleName}"?`,
+      "ใช่, ลบเลย!",
+      "ยกเลิก"
+    );
+
+    if (result.isConfirmed) {
       try {
         // Simulate API call
         setRoles((prev) => prev.filter((role) => role.id !== roleId));
+        showDeleteSuccess(
+          "ลบตำแหน่งสำเร็จ!",
+          `ตำแหน่ง "${roleName}" ถูกลบเรียบร้อยแล้ว`
+        );
       } catch (error) {
         console.error("Error deleting role:", error);
+        showError(
+          "เกิดข้อผิดพลาด",
+          "ไม่สามารถลบตำแหน่งได้ กรุณาลองใหม่อีกครั้ง"
+        );
       }
     }
   };
@@ -438,7 +505,7 @@ export default function RoleManagementPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteRole(role.id)}
+                          onClick={() => handleDeleteRole(role.id, role.name)}
                           className="text-red-600 hover:text-red-800 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />

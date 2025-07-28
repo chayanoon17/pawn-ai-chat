@@ -23,6 +23,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
+import { showConfirmation } from "@/lib/sweetalert";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -41,15 +42,24 @@ export function AppSidebar() {
   };
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      // ระบบจะ redirect ไป login อัตโนมัติผ่าน useProtectedRoute
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // แม้ logout API fail ระบบก็จะ clear state และ redirect อยู่แล้ว
-    } finally {
-      setIsLoggingOut(false);
+    const result = await showConfirmation(
+      "ยืนยันการออกจากระบบ?",
+      "คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?",
+      "ออกจากระบบ",
+      "ยกเลิก"
+    );
+
+    if (result.isConfirmed) {
+      setIsLoggingOut(true);
+      try {
+        await logout();
+        // ระบบจะ redirect ไป login อัตโนมัติผ่าน useProtectedRoute
+      } catch (error) {
+        console.error("Logout failed:", error);
+        // แม้ logout API fail ระบบก็จะ clear state และ redirect อยู่แล้ว
+      } finally {
+        setIsLoggingOut(false);
+      }
     }
   };
 

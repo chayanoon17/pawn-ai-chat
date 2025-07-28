@@ -4,6 +4,12 @@ import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 import { createUser, getRoles, getBranches } from "@/lib/auth-service";
 import type { Branch, Role, CreateUserPayload } from "@/types";
+import {
+  showCreateSuccess,
+  showError,
+  showNetworkError,
+  showWarning,
+} from "@/lib/sweetalert";
 
 // 📝 Component Props Interface
 interface AddUserDialogProps {
@@ -56,6 +62,7 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
         setRoles((rolesResponse as Role[]) || []);
       } catch (error) {
         console.error("Error loading branches and roles:", error);
+        showNetworkError("ไม่สามารถโหลดข้อมูลสาขาและตำแหน่งได้");
       }
     };
 
@@ -83,6 +90,13 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (!form.fullName || !form.email || !form.password || !form.roleId) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
@@ -98,20 +112,25 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
       };
 
       await createUser(payload);
-      setMessage("เพิ่มผู้ใช้สำเร็จ");
+
+      // แสดง SweetAlert2 success
+      showCreateSuccess(
+        "สร้างผู้ใช้สำเร็จ!",
+        `ผู้ใช้ "${form.fullName}" ถูกสร้างเรียบร้อยแล้ว`
+      );
 
       // Reset form and close dialog
-      setTimeout(() => {
-        resetForm();
-        setOpen(false);
-        if (onUserCreated) {
-          onUserCreated();
-        }
-      }, 1500);
+      resetForm();
+      setOpen(false);
+      if (onUserCreated) {
+        onUserCreated();
+      }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "เกิดข้อผิดพลาด";
-      setMessage(errorMessage);
+        error instanceof Error
+          ? error.message
+          : "เกิดข้อผิดพลาดในการสร้างผู้ใช้";
+      showError("เกิดข้อผิดพลาด", errorMessage);
     } finally {
       setLoading(false);
     }

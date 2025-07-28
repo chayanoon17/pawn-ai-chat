@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import apiClient, { getApiUrl } from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
+import { showWarning } from "@/lib/sweetalert";
 
 // 📊 Types สำหรับ API Response
 interface TransactionSummaryItem {
@@ -203,7 +204,10 @@ export default function ContractTransactionDetails({
   // 📥 Export CSV Function
   const handleExportCSV = () => {
     if (!branchId || !date) {
-      alert("ไม่สามารถ export ได้ กรุณาเลือกสาขาและวันที่");
+      showWarning(
+        "ไม่สามารถ Export ได้",
+        "กรุณาเลือกสาขาและวันที่ก่อนทำการ Export"
+      );
       return;
     }
 

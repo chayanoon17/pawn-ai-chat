@@ -40,6 +40,12 @@ import AddUserDialog from "./add-user-button";
 import EditUserDialog from "./edit-user-dialog";
 import { getAllUsers, deleteUser } from "@/lib/auth-service";
 import type { User } from "@/types";
+import {
+  showDeleteConfirmation,
+  showDeleteSuccess,
+  showError,
+  showNetworkError,
+} from "@/lib/sweetalert";
 
 // 📝 API Response Interface
 interface UsersResponse {
@@ -99,7 +105,10 @@ export function UserTable() {
       // }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || "Failed to load users");
+      const errorMessage =
+        error.response?.data?.message || "ไม่สามารถโหลดข้อมูลผู้ใช้ได้";
+      setError(errorMessage);
+      showNetworkError(errorMessage);
       console.error("Error fetching users:", err);
     } finally {
       setLoading(false);
@@ -122,15 +131,29 @@ export function UserTable() {
   };
 
   const handleDeleteUser = async (userId: number, userName: string) => {
-    try {
-      await deleteUser(userId.toString());
-      // Refresh the user list
-      fetchUsers(currentPage, searchTerm);
-      console.log(`User ${userName} deleted successfully`);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || "Failed to delete user");
-      console.error("Error deleting user:", err);
+    const result = await showDeleteConfirmation(
+      "ลบผู้ใช้นี้?",
+      `คุณแน่ใจหรือไม่ที่จะลบผู้ใช้ "${userName}"?`,
+      "ใช่, ลบเลย!",
+      "ยกเลิก"
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await deleteUser(userId.toString());
+        // Refresh the user list
+        fetchUsers(currentPage, searchTerm);
+        showDeleteSuccess(
+          "ลบผู้ใช้สำเร็จ!",
+          `ผู้ใช้ "${userName}" ถูกลบเรียบร้อยแล้ว`
+        );
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } };
+        const errorMessage =
+          error.response?.data?.message || "ไม่สามารถลบผู้ใช้ได้";
+        showError("เกิดข้อผิดพลาด", errorMessage);
+        console.error("Error deleting user:", err);
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { CookieConsent } from "@/components/features/auth";
+import { showLoginError, showSuccess, showError } from "@/lib/sweetalert";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -45,7 +46,7 @@ export default function LoginPage() {
     setError("");
 
     if (!email || !password) {
-      setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      showError("ข้อมูลไม่ครบถ้วน", "กรุณากรอกอีเมลและรหัสผ่าน", false);
       return;
     }
 
@@ -63,11 +64,14 @@ export default function LoginPage() {
 
       await login(email, password);
       // หลัง login สำเร็จ ให้แสดง loading state
+      showSuccess("เข้าสู่ระบบสำเร็จ!", "กำลังนำทางไปยังหน้าหลัก...", 2000);
       setIsRedirecting(true);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
-      setError(errorMessage);
+
+      // ใช้ SweetAlert2 แทน state error
+      showLoginError(errorMessage);
       setIsRedirecting(false); // รีเซ็ต redirecting state เมื่อเกิด error
     } finally {
       setIsSubmitting(false);

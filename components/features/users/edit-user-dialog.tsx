@@ -4,6 +4,12 @@ import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 import { updateUser, getRoles, getBranches } from "@/lib/auth-service";
 import type { User, UserStatus } from "@/types";
+import {
+  showUpdateSuccess,
+  showError,
+  showNetworkError,
+  showWarning,
+} from "@/lib/sweetalert";
 
 // 📝 Component Props Interface
 interface EditUserDialogProps {
@@ -82,6 +88,7 @@ export default function EditUserDialog({
           setRoles(rolesData as { id: number; name: string }[]);
         } catch (error) {
           console.error("Error loading branches and roles:", error);
+          showNetworkError("ไม่สามารถโหลดข้อมูลสาขาและตำแหน่งได้");
         }
       };
       loadData();
@@ -102,6 +109,12 @@ export default function EditUserDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Validation
+    if (!form.fullName || !form.roleId) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกชื่อและเลือกตำแหน่งให้ครบถ้วน");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
@@ -132,17 +145,23 @@ export default function EditUserDialog({
       }
 
       await updateUser(user.id.toString(), payload);
-      setMessage("อัปเดตข้อมูลผู้ใช้สำเร็จ");
+
+      // แสดง SweetAlert2 success
+      showUpdateSuccess(
+        "อัปเดตข้อมูลสำเร็จ!",
+        `ข้อมูลผู้ใช้ "${form.fullName}" ถูกอัปเดตเรียบร้อยแล้ว`
+      );
 
       // Close dialog and refresh data
-      setTimeout(() => {
-        onOpenChange(false);
-        onUserUpdated();
-        resetForm();
-      }, 1500);
+      onOpenChange(false);
+      onUserUpdated();
+      resetForm();
     } catch (error) {
       console.error("Update user error:", error);
-      setMessage("เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้");
+      showError(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง"
+      );
     } finally {
       setLoading(false);
     }
