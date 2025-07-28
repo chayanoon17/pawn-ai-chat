@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import apiClient from "@/lib/api";
+import apiClient, { getApiUrl } from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 // 📊 Types สำหรับ API Response
@@ -208,7 +208,9 @@ export default function ContractTransactionDetails({
     }
 
     // สร้าง URL และเปิดในหน้าต่างใหม่เพื่อให้ browser จัดการการดาวน์โหลด
-    const exportUrl = `http://localhost:3000/api/v1/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`;
+    const exportUrl = getApiUrl(
+      `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
+    );
 
     // เปิดลิงค์ในหน้าต่างใหม่
     window.open(exportUrl, "_blank");

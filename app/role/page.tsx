@@ -27,13 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,21 +40,20 @@ import {
   Settings,
   Eye,
 } from "lucide-react";
+import { getPermissions, getMenuPermissions } from "@/lib/api";
 
 // 🎯 Types for Role Management
 interface Permission {
   id: number;
   name: string;
-  action: string;
-  resource: string;
   description: string;
 }
 
 interface MenuPermission {
   id: number;
   name: string;
-  path: string;
   description: string;
+  menu?: string;
 }
 
 interface Role {
@@ -107,126 +99,66 @@ export default function RoleManagementPage() {
     menuPermissionIds: [],
   });
 
-  // 🎯 Mock Data
+  // 🎯 Load data from API
   useEffect(() => {
-    // Simulate API loading
-    setTimeout(() => {
-      setRoles([
-        {
-          id: 1,
-          name: "ผู้ดูแลระบบ",
-          description: "มีสิทธิ์เข้าถึงทุกฟังก์ชันในระบบ",
-          userCount: 2,
-          permissions: [],
-          menuPermissions: [],
-          status: "ACTIVE",
-          createdAt: "2025-01-20T10:00:00Z",
-          updatedAt: "2025-01-20T10:00:00Z",
-        },
-        {
-          id: 2,
-          name: "ผู้จัดการ",
-          description: "สามารถจัดการข้อมูลและดูรายงานได้",
-          userCount: 5,
-          permissions: [],
-          menuPermissions: [],
-          status: "ACTIVE",
-          createdAt: "2025-01-20T10:00:00Z",
-          updatedAt: "2025-01-20T10:00:00Z",
-        },
-        {
-          id: 3,
-          name: "พนักงาน",
-          description: "สามารถดูข้อมูลพื้นฐานได้เท่านั้น",
-          userCount: 12,
-          permissions: [],
-          menuPermissions: [],
-          status: "ACTIVE",
-          createdAt: "2025-01-20T10:00:00Z",
-          updatedAt: "2025-01-20T10:00:00Z",
-        },
-      ]);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
 
-      setAvailablePermissions([
-        {
-          id: 1,
-          name: "สร้างผู้ใช้",
-          action: "CREATE",
-          resource: "User",
-          description: "สร้างผู้ใช้ใหม่",
-        },
-        {
-          id: 2,
-          name: "ดูข้อมูลผู้ใช้",
-          action: "READ",
-          resource: "User",
-          description: "ดูข้อมูลผู้ใช้",
-        },
-        {
-          id: 3,
-          name: "แก้ไขผู้ใช้",
-          action: "UPDATE",
-          resource: "User",
-          description: "แก้ไขข้อมูลผู้ใช้",
-        },
-        {
-          id: 4,
-          name: "ลบผู้ใช้",
-          action: "DELETE",
-          resource: "User",
-          description: "ลบผู้ใช้",
-        },
-        {
-          id: 5,
-          name: "ดูรายงาน",
-          action: "READ",
-          resource: "Report",
-          description: "ดูรายงานต่างๆ",
-        },
-        {
-          id: 6,
-          name: "ส่งออกรายงาน",
-          action: "EXPORT",
-          resource: "Report",
-          description: "ส่งออกรายงาน",
-        },
-      ]);
+        // Load permissions and menu permissions from API
+        const [permissionsData, menuPermissionsData] = await Promise.all([
+          getPermissions(),
+          getMenuPermissions(),
+        ]);
 
-      setAvailableMenuPermissions([
-        {
-          id: 1,
-          name: "Dashboard",
-          path: "/dashboard",
-          description: "เข้าถึงหน้าแดชบอร์ด",
-        },
-        {
-          id: 2,
-          name: "จัดการผู้ใช้",
-          path: "/user",
-          description: "เข้าถึงหน้าจัดการผู้ใช้",
-        },
-        {
-          id: 3,
-          name: "จัดการตำแหน่ง",
-          path: "/role",
-          description: "เข้าถึงหน้าจัดการตำแหน่ง",
-        },
-        {
-          id: 4,
-          name: "รายงาน",
-          path: "/asset-type",
-          description: "เข้าถึงหน้ารายงาน",
-        },
-        {
-          id: 5,
-          name: "ประวัติการใช้งาน",
-          path: "/log",
-          description: "เข้าถึงหน้าประวัติการใช้งาน",
-        },
-      ]);
+        setAvailablePermissions(permissionsData);
+        setAvailableMenuPermissions(menuPermissionsData);
 
-      setIsLoading(false);
-    }, 1000);
+        // Mock roles data (will be replaced with API later)
+        setRoles([
+          {
+            id: 1,
+            name: "ผู้ดูแลระบบ",
+            description: "มีสิทธิ์เข้าถึงทุกฟังก์ชันในระบบ",
+            userCount: 2,
+            permissions: [],
+            menuPermissions: [],
+            status: "ACTIVE",
+            createdAt: "2025-01-20T10:00:00Z",
+            updatedAt: "2025-01-20T10:00:00Z",
+          },
+          {
+            id: 2,
+            name: "ผู้จัดการ",
+            description: "สามารถจัดการข้อมูลและดูรายงานได้",
+            userCount: 5,
+            permissions: [],
+            menuPermissions: [],
+            status: "ACTIVE",
+            createdAt: "2025-01-20T10:00:00Z",
+            updatedAt: "2025-01-20T10:00:00Z",
+          },
+          {
+            id: 3,
+            name: "พนักงาน",
+            description: "สามารถดูข้อมูลพื้นฐานได้เท่านั้น",
+            userCount: 12,
+            permissions: [],
+            menuPermissions: [],
+            status: "ACTIVE",
+            createdAt: "2025-01-20T10:00:00Z",
+            updatedAt: "2025-01-20T10:00:00Z",
+          },
+        ]);
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   // 🎯 Filter roles based on search term
@@ -266,6 +198,55 @@ export default function RoleManagementPage() {
       });
     } catch (error) {
       console.error("Error creating role:", error);
+    }
+  };
+
+  // 🎯 Handle edit role submission
+  const handleEditRole = async () => {
+    if (!selectedRole) return;
+
+    try {
+      // Simulate API call
+      const updatedRoleData: Role = {
+        ...selectedRole,
+        name: newRole.name,
+        description: newRole.description,
+        permissions: availablePermissions.filter((p) =>
+          newRole.permissionIds.includes(p.id)
+        ),
+        menuPermissions: availableMenuPermissions.filter((mp) =>
+          newRole.menuPermissionIds.includes(mp.id)
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setRoles((prev) =>
+        prev.map((role) =>
+          role.id === selectedRole.id ? updatedRoleData : role
+        )
+      );
+      setIsEditDialogOpen(false);
+      setSelectedRole(null);
+      setNewRole({
+        name: "",
+        description: "",
+        permissionIds: [],
+        menuPermissionIds: [],
+      });
+    } catch (error) {
+      console.error("Error updating role:", error);
+    }
+  };
+
+  // 🎯 Handle delete role
+  const handleDeleteRole = async (roleId: number) => {
+    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบตำแหน่งนี้?")) {
+      try {
+        // Simulate API call
+        setRoles((prev) => prev.filter((role) => role.id !== roleId));
+      } catch (error) {
+        console.error("Error deleting role:", error);
+      }
     }
   };
 
@@ -457,6 +438,7 @@ export default function RoleManagementPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => handleDeleteRole(role.id)}
                           className="text-red-600 hover:text-red-800 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -691,6 +673,7 @@ export default function RoleManagementPage() {
                           className="border-green-200 text-green-800"
                         >
                           {menuPermission.name}
+                          {menuPermission.menu && ` (${menuPermission.menu})`}
                         </Badge>
                       </div>
                     ))
@@ -707,6 +690,176 @@ export default function RoleManagementPage() {
               onClick={() => setIsViewDialogOpen(false)}
             >
               ปิด
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ✏️ Edit Role Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>แก้ไขตำแหน่ง: {selectedRole?.name}</DialogTitle>
+            <DialogDescription>
+              แก้ไขข้อมูลตำแหน่งและสิทธิ์การใช้งาน
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">ชื่อตำแหน่ง</Label>
+                <Input
+                  id="edit-name"
+                  value={newRole.name}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="เช่น ผู้ดูแลระบบ"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description">คำอธิบาย</Label>
+                <Textarea
+                  id="edit-description"
+                  value={newRole.description}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  placeholder="อธิบายหน้าที่และความรับผิดชอบ"
+                />
+              </div>
+            </div>
+
+            {/* Permissions */}
+            <div>
+              <Label className="text-base font-semibold">สิทธิ์การใช้งาน</Label>
+              <p className="text-sm text-gray-600 mb-3">
+                เลือกสิทธิ์ที่ตำแหน่งนี้จะมี
+              </p>
+              <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto border rounded-lg p-3">
+                {availablePermissions.map((permission) => (
+                  <div
+                    key={permission.id}
+                    className="flex items-start space-x-3"
+                  >
+                    <Checkbox
+                      id={`edit-permission-${permission.id}`}
+                      checked={newRole.permissionIds.includes(permission.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setNewRole((prev) => ({
+                            ...prev,
+                            permissionIds: [
+                              ...prev.permissionIds,
+                              permission.id,
+                            ],
+                          }));
+                        } else {
+                          setNewRole((prev) => ({
+                            ...prev,
+                            permissionIds: prev.permissionIds.filter(
+                              (id) => id !== permission.id
+                            ),
+                          }));
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`edit-permission-${permission.id}`}
+                        className="font-medium"
+                      >
+                        {permission.name}
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        {permission.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Menu Permissions */}
+            <div>
+              <Label className="text-base font-semibold">
+                สิทธิ์การเข้าถึงเมนู
+              </Label>
+              <p className="text-sm text-gray-600 mb-3">
+                เลือกเมนูที่ตำแหน่งนี้สามารถเข้าถึงได้
+              </p>
+              <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto border rounded-lg p-3">
+                {availableMenuPermissions.map((menuPermission) => (
+                  <div
+                    key={menuPermission.id}
+                    className="flex items-start space-x-3"
+                  >
+                    <Checkbox
+                      id={`edit-menu-${menuPermission.id}`}
+                      checked={newRole.menuPermissionIds.includes(
+                        menuPermission.id
+                      )}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setNewRole((prev) => ({
+                            ...prev,
+                            menuPermissionIds: [
+                              ...prev.menuPermissionIds,
+                              menuPermission.id,
+                            ],
+                          }));
+                        } else {
+                          setNewRole((prev) => ({
+                            ...prev,
+                            menuPermissionIds: prev.menuPermissionIds.filter(
+                              (id) => id !== menuPermission.id
+                            ),
+                          }));
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`edit-menu-${menuPermission.id}`}
+                        className="font-medium"
+                      >
+                        {menuPermission.name}
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        {menuPermission.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setSelectedRole(null);
+                setNewRole({
+                  name: "",
+                  description: "",
+                  permissionIds: [],
+                  menuPermissionIds: [],
+                });
+              }}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleEditRole}
+              disabled={!newRole.name.trim()}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              บันทึกการแก้ไข
             </Button>
           </DialogFooter>
         </DialogContent>

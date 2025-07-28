@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
   YAxis,
@@ -8,11 +8,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
 import { Download, Upload } from "lucide-react";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -102,7 +98,7 @@ export const WeeklyOperationSummary = ({
   };
 
   // 🔄 ดึงข้อมูลจาก API
-  const fetchWeeklyOperationSummary = async () => {
+  const fetchWeeklyOperationSummary = useCallback(async () => {
     if (!branchId || isLoading) return;
 
     try {
@@ -126,12 +122,12 @@ export const WeeklyOperationSummary = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [branchId, date, isLoading]);
 
   // 🎯 เรียก API เมื่อ filter เปลี่ยน
   useEffect(() => {
     fetchWeeklyOperationSummary();
-  }, [branchId, date]);
+  }, [branchId, date, fetchWeeklyOperationSummary]);
 
   // 📊 แปลงข้อมูลสำหรับกราห - รวมข้อมูล thisWeek และ lastWeek
   const prepareChartData = (
@@ -217,7 +213,23 @@ export const WeeklyOperationSummary = ({
       )
     : [];
   // 🎯 Custom Tooltip Component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        fullDate?: string;
+        lastWeekDate?: string;
+      };
+      name: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -233,18 +245,27 @@ export const WeeklyOperationSummary = ({
               อาทิตย์ที่แล้ว: {data.lastWeekDate}
             </p>
           )}
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 mb-1">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm font-medium">{entry.name}:</span>
-              <span className="text-sm font-bold">
-                {entry.value.toFixed(2)} ล้านบาท
-              </span>
-            </div>
-          ))}
+          {payload.map(
+            (
+              entry: {
+                name: string;
+                value: number;
+                color: string;
+              },
+              index: number
+            ) => (
+              <div key={index} className="flex items-center gap-2 mb-1">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-sm font-medium">{entry.name}:</span>
+                <span className="text-sm font-bold">
+                  {entry.value.toFixed(2)} ล้านบาท
+                </span>
+              </div>
+            )
+          )}
         </div>
       );
     }

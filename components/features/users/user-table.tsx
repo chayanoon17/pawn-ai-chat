@@ -28,7 +28,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Search } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Edit, Trash2, Search, Eye } from "lucide-react";
 import AddUserDialog from "./add-user-button";
 import EditUserDialog from "./edit-user-dialog";
 import { getAllUsers, deleteUser } from "@/lib/auth-service";
@@ -68,6 +75,7 @@ export function UserTable() {
   const [totalItems] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const limit = 10;
 
   const fetchUsers = async (page = 1, search = "") => {
@@ -183,24 +191,41 @@ export function UserTable() {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-lg border border-gray-200 overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead>ชื่อผู้ใช้</TableHead>
-              <TableHead>อีเมล</TableHead>
-              <TableHead>เบอร์โทรศัพท์</TableHead>
-              <TableHead>บทบาท</TableHead>
-              <TableHead>สาขา</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead className="text-right">ดำเนินการ</TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                ชื่อผู้ใช้
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                อีเมล
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                เบอร์โทรศัพท์
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                บทบาท
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                สาขา
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                สถานะ
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900">
+                วันที่อัปเดต
+              </TableHead>
+              <TableHead className="font-semibold text-gray-900 text-center">
+                การจัดการ
+              </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="divide-y divide-gray-100">
             {users.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center py-8 text-gray-500"
                 >
                   {loading ? "กำลังโหลด..." : "ไม่พบข้อมูลผู้ใช้"}
@@ -208,39 +233,84 @@ export function UserTable() {
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.fullName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phoneNumber || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{user.role.name}</Badge>
+                <TableRow key={user.id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium text-gray-900">
+                    {user.fullName}
+                  </TableCell>
+                  <TableCell className="text-gray-600">{user.email}</TableCell>
+                  <TableCell className="text-gray-600">
+                    {user.phoneNumber || "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{user.branch?.name}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800"
+                    >
+                      {user.role.name}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.branch ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-800"
+                      >
+                        {user.branch.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        user.status === "ACTIVE" ? "default" : "destructive"
+                        user.status === "ACTIVE" ? "default" : "secondary"
+                      }
+                      className={
+                        user.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                       }
                     >
-                      {user.status === "ACTIVE" ? "ใช้งาน" : "ปิดใช้งาน"}
+                      {user.status === "ACTIVE" ? "ใช้งาน" : "ไม่ใช้งาน"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="text-gray-600">
+                    {new Date(user.updatedAt || Date.now()).toLocaleDateString(
+                      "th-TH"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center space-x-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setViewDialogOpen(true);
+                        }}
+                        className="text-green-600 hover:text-green-800 hover:bg-green-50"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleEditUser(user)}
+                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="w-4 h-4" />
                       </Button>
 
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -330,6 +400,139 @@ export function UserTable() {
           </Pagination>
         </div>
       )}
+
+      {/* View User Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>รายละเอียดผู้ใช้</DialogTitle>
+            <DialogDescription>ข้อมูลผู้ใช้ในระบบ</DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    ชื่อ-นามสกุล
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedUser.fullName}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    อีเมล
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedUser.email}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    เบอร์โทรศัพท์
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedUser.phoneNumber || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    บทบาท
+                  </label>
+                  <div className="mt-1">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800"
+                    >
+                      {selectedUser.role.name}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    สาขา
+                  </label>
+                  <div className="mt-1">
+                    {selectedUser.branch ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-800"
+                      >
+                        {selectedUser.branch.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-sm text-gray-400">-</span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    สถานะ
+                  </label>
+                  <div className="mt-1">
+                    <Badge
+                      variant={
+                        selectedUser.status === "ACTIVE"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className={
+                        selectedUser.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }
+                    >
+                      {selectedUser.status === "ACTIVE"
+                        ? "ใช้งาน"
+                        : "ไม่ใช้งาน"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  วันที่สร้าง
+                </label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {new Date(
+                    selectedUser.createdAt || Date.now()
+                  ).toLocaleDateString("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  วันที่อัปเดตล่าสุด
+                </label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {new Date(
+                    selectedUser.updatedAt || Date.now()
+                  ).toLocaleDateString("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Dialog */}
       <EditUserDialog

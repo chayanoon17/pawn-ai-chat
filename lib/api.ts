@@ -3,18 +3,28 @@
  * จัดการการเชื่อมต่อกับ Backend API พร้อม httpOnly Cookies และ Security Features
  */
 
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
 import { ApiResponse, ApiErrorResponse } from "@/types/api";
+
+/**
+ * Get base URL from environment variable
+ */
+export const getBaseUrl = (): string => {
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+};
+
+/**
+ * Get full API URL with /api/v1 path
+ */
+export const getApiUrl = (path: string = ""): string => {
+  const baseUrl = getBaseUrl();
+  const apiPath = `/api/v1${path}`;
+  return `${baseUrl}${apiPath}`;
+};
 
 export async function sendChatMessage(message: string): Promise<string> {
   const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
 
-  const response = await fetch("http://localhost:3000/api/v1/chat", {
+  const response = await fetch(getApiUrl("/chat"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,17 +64,14 @@ export async function sendChatMessageStream(
   onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
 ): Promise<void> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
-        credentials: "include",
-      }
-    );
+    const response = await fetch(getApiUrl("/chat"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+      credentials: "include",
+    });
 
     if (!response.ok || !response.body) {
       throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
@@ -112,133 +119,151 @@ export async function sendChatMessageStream(
   }
 }
 
+// Types สำหรับ fetch API
+interface FetchConfig extends RequestInit {
+  timeout?: number;
+}
+
+interface FetchError extends Error {
+  status?: number;
+  response?: ApiErrorResponse;
+}
+
 /**
  * API Client Class - Singleton pattern สำหรับการจัดการ HTTP requests
  */
 class ApiClient {
-  private api: AxiosInstance;
   private readonly baseURL: string;
+  private readonly timeout: number;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    this.api = this.createAxiosInstance();
-    this.setupInterceptors();
+    this.baseURL = getBaseUrl();
+    this.timeout = 10000; // 10 วินาที timeout
   }
 
   /**
-   * สร้าง Axios instance พร้อม configuration สำหรับ httpOnly cookies
+   * สร้าง default headers พร้อม configuration สำหรับ httpOnly cookies
    */
-  private createAxiosInstance(): AxiosInstance {
-    return axios.create({
-      baseURL: this.baseURL,
-      withCredentials: true, // 🍪 สำคัญ! ส่ง httpOnly cookies ไปกับทุก request
-      timeout: 10000, // 10 วินาที timeout
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        // "User-Agent": "Pawn-Shop-Frontend/1.0",
-        // "X-API-Key": "your-api-key-here", // ถ้า Backend ต้องการ
-      },
-    });
+  private getDefaultHeaders(): Record<string, string> {
+    return {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
   }
 
   /**
-   * ติดตั้ง Request และ Response Interceptors
+   * สร้าง default config สำหรับ fetch
    */
-  private setupInterceptors(): void {
-    // Request Interceptor - ปรับแต่งก่อนส่ง request
-    this.api.interceptors.request.use(
-      (config) => {
-        // Log request ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("🚀 API Request:", {
-            method: config.method?.toUpperCase(),
-            url: config.url,
-            data: config.data,
-          });
-        }
+  private getDefaultConfig(): RequestInit {
+    return {
+      credentials: "include", // 🍪 สำคัญ! ส่ง httpOnly cookies ไปกับทุก request
+      headers: this.getDefaultHeaders(),
+    };
+  }
 
-        return config;
-      },
-      (error) => {
-        console.error("❌ Request Error:", error);
-        return Promise.reject(error);
-      }
-    );
+  /**
+   * จัดการ timeout สำหรับ fetch request
+   */
+  private async fetchWithTimeout(
+    url: string,
+    config: RequestInit & { timeout?: number }
+  ): Promise<Response> {
+    const { timeout = this.timeout, ...fetchConfig } = config;
 
-    // Response Interceptor - จัดการ response และ errors
-    this.api.interceptors.response.use(
-      (response: AxiosResponse<ApiResponse>) => {
-        // Log response ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("✅ API Response:", {
-            status: response.status,
-            data: response.data,
-          });
-        }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        return response;
-      },
-      (error: AxiosError<ApiErrorResponse>) => {
-        return this.handleResponseError(error);
-      }
-    );
+    try {
+      const response = await fetch(url, {
+        ...fetchConfig,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
   }
 
   /**
    * จัดการ Response Errors อย่างเป็นระบบ
    */
-  private handleResponseError(
-    error: AxiosError<ApiErrorResponse>
-  ): Promise<never> {
-    const { response } = error;
-
-    // Log error ใน development mode
+  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    // Log response ใน development mode
     if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.error("❌ API Error:", {
-        status: response?.status,
-        message: response?.data?.message,
-        url: error.config?.url,
+      console.log("✅ API Response:", {
+        status: response.status,
+        url: response.url,
       });
     }
 
-    if (response) {
+    if (!response.ok) {
+      let errorData: ApiErrorResponse | null = null;
+
+      try {
+        errorData = await response.json();
+      } catch {
+        // ถ้า parse JSON ไม่ได้
+      }
+
+      // Log error ใน development mode
+      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+        console.error("❌ API Error:", {
+          status: response.status,
+          message: errorData?.message,
+          url: response.url,
+        });
+      }
+
+      // จัดการ error ตาม status code
       switch (response.status) {
         case 401:
-          // Unauthorized - อาจต้อง redirect ไป login
           console.warn("🔐 Unauthorized: Token may be expired");
-          // สามารถเพิ่ม logic ลบ user state หรือ redirect
           break;
-
         case 403:
-          // Forbidden - ไม่มีสิทธิ์
           console.warn("🚫 Forbidden: Insufficient permissions");
           break;
-
         case 404:
-          // Not Found
           console.warn("🔍 Not Found: Resource not found");
           break;
-
         case 429:
-          // Too Many Requests
           console.warn("⏳ Rate Limited: Too many requests");
           break;
-
         case 500:
-          // Internal Server Error
           console.error("🔥 Server Error: Internal server error");
           break;
-
         default:
           console.error("❓ Unknown Error:", response.status);
       }
-    } else {
-      // Network Error
-      console.error("🌐 Network Error: No response from server");
+
+      const error: FetchError = new Error(
+        errorData?.message || `HTTP Error ${response.status}`
+      );
+      error.status = response.status;
+      error.response = errorData || undefined;
+      throw error;
     }
 
-    return Promise.reject(error);
+    try {
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error("Failed to parse response JSON");
+    }
+  }
+
+  /**
+   * Log request ใน development mode
+   */
+  private logRequest(method: string, url: string, data?: unknown): void {
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      console.log("🚀 API Request:", {
+        method: method.toUpperCase(),
+        url,
+        data,
+      });
+    }
   }
 
   /**
@@ -250,10 +275,18 @@ class ApiClient {
    */
   async get<T = unknown>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: FetchConfig
   ): Promise<ApiResponse<T>> {
-    const response = await this.api.get<ApiResponse<T>>(url, config);
-    return response.data;
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("GET", fullUrl);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "GET",
+    });
+
+    return this.handleResponse<T>(response);
   }
 
   /**
@@ -262,10 +295,19 @@ class ApiClient {
   async post<T = unknown>(
     url: string,
     data?: unknown,
-    config?: AxiosRequestConfig
+    config?: FetchConfig
   ): Promise<ApiResponse<T>> {
-    const response = await this.api.post<ApiResponse<T>>(url, data, config);
-    return response.data;
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("POST", fullUrl, data);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
   }
 
   /**
@@ -274,10 +316,19 @@ class ApiClient {
   async put<T = unknown>(
     url: string,
     data?: unknown,
-    config?: AxiosRequestConfig
+    config?: FetchConfig
   ): Promise<ApiResponse<T>> {
-    const response = await this.api.put<ApiResponse<T>>(url, data, config);
-    return response.data;
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("PUT", fullUrl, data);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
   }
 
   /**
@@ -285,17 +336,18 @@ class ApiClient {
    */
   async delete<T = unknown>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: FetchConfig
   ): Promise<ApiResponse<T>> {
-    const response = await this.api.delete<ApiResponse<T>>(url, config);
-    return response.data;
-  }
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("DELETE", fullUrl);
 
-  /**
-   * ดึง Axios instance สำหรับการใช้งานพิเศษ
-   */
-  getAxiosInstance(): AxiosInstance {
-    return this.api;
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "DELETE",
+    });
+
+    return this.handleResponse<T>(response);
   }
 }
 
@@ -305,3 +357,69 @@ class ApiClient {
 const apiClient = new ApiClient();
 
 export default apiClient;
+
+/**
+ * Get permissions for dropdown/menu
+ */
+export async function getPermissions(): Promise<Permission[]> {
+  try {
+    const response = await fetch(getApiUrl("/menu/permissions"), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch permissions: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data || [];
+  } catch (error) {
+    console.error("Error fetching permissions:", error);
+    return [];
+  }
+}
+
+/**
+ * Get menu permissions for dropdown/menu
+ */
+export async function getMenuPermissions(): Promise<MenuPermission[]> {
+  try {
+    const response = await fetch(getApiUrl("/menu/menu-permissions"), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch menu permissions: ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    return result.data || [];
+  } catch (error) {
+    console.error("Error fetching menu permissions:", error);
+    return [];
+  }
+}
+
+// Types for API functions
+interface Permission {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface MenuPermission {
+  id: number;
+  name: string;
+  description: string;
+  menu?: string;
+}

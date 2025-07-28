@@ -85,3 +85,17 @@ export interface AuthContextType {
   hasPermission: (action: string) => boolean;
   hasMenuAccess: (menuName: string) => boolean;
 }
+
+/**
+ * Create User Payload Interface
+ */
+export interface CreateUserPayload {
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber?: string;
+  profileUrl?: string;
+  branchId?: number;
+  roleId: number;
+  status: "ACTIVE" | "INACTIVE";
+}

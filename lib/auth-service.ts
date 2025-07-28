@@ -18,7 +18,7 @@ export async function createUser(data: {
   fullName: string;
   phoneNumber?: string;
   profileUrl?: string;
-  branchId: number;
+  branchId?: number;
   roleId: number;
   status: "ACTIVE" | "INACTIVE";
 }) {

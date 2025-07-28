@@ -2,9 +2,8 @@
 
 import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
-import { updateUser } from "@/lib/auth-service";
+import { updateUser, getRoles, getBranches } from "@/lib/auth-service";
 import type { User, UserStatus } from "@/types";
-import { BRANCHES, ROLES } from "@/lib/constants";
 
 // 📝 Component Props Interface
 interface EditUserDialogProps {
@@ -14,7 +13,7 @@ interface EditUserDialogProps {
   onUserUpdated: () => void;
 }
 
-// 📝 Form State Interface
+// 📝 Form Data Interface
 interface EditUserFormData {
   fullName: string;
   email: string;
@@ -25,17 +24,10 @@ interface EditUserFormData {
   status: UserStatus;
 }
 
-// 📝 Status Options
-const STATUSES = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-] as const;
-
 /**
- * EditUserDialog Component
+ * 🎯 EditUserDialog Component
  *
- * แสดง Dialog สำหรับแก้ไขข้อมูลผู้ใช้
- * รองรับการแก้ไขข้อมูลทั่วไป, เปลี่ยนรหัสผ่าน, สาขา, ตำแหน่ง และสถานะ
+ * Component สำหรับแก้ไขข้อมูลผู้ใช้งาน
  *
  * @param user - ข้อมูลผู้ใช้ที่ต้องการแก้ไข
  * @param open - สถานะการเปิด/ปิด dialog
@@ -60,6 +52,8 @@ export default function EditUserDialog({
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -74,6 +68,25 @@ export default function EditUserDialog({
       });
     }
   }, [user]);
+
+  // Load branches and roles when dialog opens
+  useEffect(() => {
+    if (open) {
+      const loadData = async () => {
+        try {
+          const [branchesData, rolesData] = await Promise.all([
+            getBranches(),
+            getRoles(),
+          ]);
+          setBranches(branchesData as { id: number; name: string }[]);
+          setRoles(rolesData as { id: number; name: string }[]);
+        } catch (error) {
+          console.error("Error loading branches and roles:", error);
+        }
+      };
+      loadData();
+    }
+  }, [open]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -97,17 +110,21 @@ export default function EditUserDialog({
       const payload: {
         fullName: string;
         phoneNumber?: string;
-        branchId: number;
+        branchId?: number;
         roleId: number;
         status: "ACTIVE" | "INACTIVE";
         password?: string;
       } = {
         fullName: form.fullName,
         phoneNumber: form.phoneNumber || undefined,
-        branchId: Number(form.branchId),
         roleId: Number(form.roleId),
         status: form.status as "ACTIVE" | "INACTIVE",
       };
+
+      // Only include branchId if it's provided (since it's optional)
+      if (form.branchId) {
+        payload.branchId = Number(form.branchId);
+      }
 
       // Only include password if it's provided
       if (form.password.trim()) {
@@ -119,13 +136,13 @@ export default function EditUserDialog({
 
       // Close dialog and refresh data
       setTimeout(() => {
-        resetForm();
         onOpenChange(false);
         onUserUpdated();
+        resetForm();
       }, 1500);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setMessage(err?.response?.data?.message || "เกิดข้อผิดพลาด");
+    } catch (error) {
+      console.error("Update user error:", error);
+      setMessage("เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้");
     } finally {
       setLoading(false);
     }
@@ -133,14 +150,17 @@ export default function EditUserDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="500px" className="p-6 bg-white rounded shadow">
+      <Dialog.Content maxWidth="450px">
         <Dialog.Title>แก้ไขข้อมูลผู้ใช้</Dialog.Title>
+        <Dialog.Description size="2" mb="4">
+          แก้ไขข้อมูลผู้ใช้ในระบบ
+        </Dialog.Description>
 
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="3" className="mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Flex direction="column" gap="3">
             <label>
               <Text as="div" size="2" mb="1" weight="bold">
-                ชื่อผู้ใช้งาน
+                ชื่อ-นามสกุล
               </Text>
               <input
                 type="text"
@@ -154,29 +174,16 @@ export default function EditUserDialog({
 
             <label>
               <Text as="div" size="2" mb="1" weight="bold">
-                Email (ไม่สามารถแก้ไขได้)
+                อีเมล
               </Text>
               <input
                 type="email"
                 name="email"
                 value={form.email}
-                className="w-full p-2 border rounded bg-gray-100"
-                disabled
-              />
-            </label>
-
-            <label>
-              <Text as="div" size="2" mb="1" weight="bold">
-                รหัสผ่านใหม่ (ไม่บังคับ)
-              </Text>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="ใส่เฉพาะเมื่อต้องการเปลี่ยนรหัสผ่าน"
-                minLength={6}
+                required
+                disabled
               />
             </label>
 
@@ -190,23 +197,35 @@ export default function EditUserDialog({
                 value={form.phoneNumber}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="081-234-5678"
               />
             </label>
 
             <label>
               <Text as="div" size="2" mb="1" weight="bold">
-                เลือกสาขา
+                รหัสผ่านใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)
+              </Text>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="รหัสผ่านใหม่"
+              />
+            </label>
+
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                สาขา (ไม่บังคับ)
               </Text>
               <select
                 name="branchId"
                 value={form.branchId}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
               >
-                <option value="">เลือกสาขา</option>
-                {BRANCHES.map((branch) => (
+                <option value="">เลือกสาขา (ไม่บังคับ)</option>
+                {branches.map((branch) => (
                   <option key={branch.id} value={branch.id.toString()}>
                     {branch.name}
                   </option>
@@ -216,7 +235,7 @@ export default function EditUserDialog({
 
             <label>
               <Text as="div" size="2" mb="1" weight="bold">
-                Role
+                ตำแหน่ง
               </Text>
               <select
                 name="roleId"
@@ -225,8 +244,8 @@ export default function EditUserDialog({
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
-                <option value="">เลือก Role</option>
-                {ROLES.map((role) => (
+                <option value="">เลือกตำแหน่ง</option>
+                {roles.map((role) => (
                   <option key={role.id} value={role.id.toString()}>
                     {role.name}
                   </option>
@@ -245,22 +264,18 @@ export default function EditUserDialog({
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
-                <option value="">เลือกสถานะ</option>
-                {STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
+                <option value="ACTIVE">ใช้งาน</option>
+                <option value="INACTIVE">ไม่ใช้งาน</option>
               </select>
             </label>
           </Flex>
 
           {message && (
             <div
-              className={`mt-3 p-2 rounded text-sm ${
+              className={`p-3 rounded text-center ${
                 message.includes("สำเร็จ")
-                  ? "bg-green-50 text-green-600 border border-green-200"
-                  : "bg-red-50 text-red-600 border border-red-200"
+                  ? "bg-green-100 text-green-700 border border-green-300"
+                  : "bg-red-100 text-red-700 border border-red-300"
               }`}
             >
               {message}
@@ -269,17 +284,12 @@ export default function EditUserDialog({
 
           <Flex gap="3" mt="4" justify="end">
             <Dialog.Close>
-              <Button
-                variant="soft"
-                color="gray"
-                type="button"
-                onClick={resetForm}
-              >
+              <Button variant="soft" color="gray">
                 ยกเลิก
               </Button>
             </Dialog.Close>
             <Button type="submit" disabled={loading}>
-              {loading ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+              {loading ? "กำลังอัปเดต..." : "อัปเดตข้อมูล"}
             </Button>
           </Flex>
         </form>

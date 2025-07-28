@@ -3,7 +3,7 @@
 import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 import { createUser, getRoles, getBranches } from "@/lib/auth-service";
-import type { Branch, Role } from "@/types";
+import type { Branch, Role, CreateUserPayload } from "@/types";
 
 // 📝 Component Props Interface
 interface AddUserDialogProps {
@@ -18,17 +18,6 @@ interface CreateUserFormData {
   phoneNumber: string;
   branchId: string;
   roleId: string;
-}
-
-// 📝 Create User Payload Interface
-interface CreateUserPayload {
-  email: string;
-  password: string;
-  fullName: string;
-  phoneNumber?: string;
-  branchId: number;
-  roleId: number;
-  status: "ACTIVE" | "INACTIVE";
 }
 
 /**
@@ -103,7 +92,7 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
         password: form.password,
         fullName: form.fullName,
         phoneNumber: form.phoneNumber || undefined,
-        branchId: Number(form.branchId),
+        branchId: form.branchId ? Number(form.branchId) : undefined,
         roleId: Number(form.roleId),
         status: "ACTIVE", // Always set to ACTIVE for new users
       };
@@ -198,16 +187,15 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
 
             <label>
               <Text as="div" size="2" mb="1" weight="bold">
-                เลือกสาขา
+                เลือกสาขา (ไม่บังคับ)
               </Text>
               <select
                 name="branchId"
                 value={form.branchId}
                 onChange={handleChange}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
               >
-                <option value="">เลือกสาขา</option>
+                <option value="">เลือกสาขา (ไม่บังคับ)</option>
                 {branches.map((branch) => (
                   <option key={branch.id} value={branch.id.toString()}>
                     {branch.location}{" "}

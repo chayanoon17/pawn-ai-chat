@@ -3,6 +3,8 @@
  * รวม constants ที่ใช้ทั่วทั้งแอพ
  */
 
+import { getBaseUrl, getApiUrl } from "./api";
+
 // 🎨 Chart Colors - ใช้สีเดียวกันทุกที่
 export const CHART_COLORS = [
   "#FF6B6B", // Red
@@ -94,7 +96,12 @@ export const COMMON_CLASSES = {
 
 // 🔧 API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1",
+  get BASE_URL() {
+    return getApiUrl();
+  },
+  get ROOT_URL() {
+    return getBaseUrl();
+  },
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,
 } as const;
