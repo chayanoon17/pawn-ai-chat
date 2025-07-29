@@ -3,20 +3,10 @@
  * รวม interfaces และ types ที่ใช้ในระบบจัดการบทบาทและสิทธิ์
  */
 
+// Import shared types
+import { Permission, MenuPermission, Branch } from "./auth";
+
 // ===== ROLE MANAGEMENT SPECIFIC TYPES =====
-export interface Permission {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface MenuPermission {
-  id: number;
-  name: string;
-  description: string;
-  menu?: string;
-}
-
 export interface Role {
   id: number;
   name: string;
@@ -32,8 +22,9 @@ export interface Role {
 export interface CreateRoleData {
   name: string;
   description: string;
-  permissionIds: number[];
-  menuPermissionIds: number[];
+  permissions: number[]; // Array of permission IDs
+  menuPermissions: number[]; // Array of menu permission IDs
+  branches: number[]; // Array of branch IDs
 }
 
 export interface UpdateRoleData extends CreateRoleData {
@@ -45,6 +36,7 @@ export interface RoleFormData {
   description: string;
   selectedPermissions: number[];
   selectedMenuPermissions: number[];
+  selectedBranches: number[];
 }
 
 // ===== PERMISSION MANAGEMENT TYPES =====

@@ -30,6 +30,7 @@ export const PAGE_LABELS: Record<string, string> = {
 } as const;
 
 // 🏢 Branch Data (ใช้ชั่วคราวจนกว่าจะ integrate กับ API)
+// DEPRECATED: ใช้ API /api/v1/menu/branches แทน
 export const BRANCHES = [
   { id: 1, name: "สะพานขาว", shortName: "", location: "สะพานขาว" },
   { id: 2, name: "หนองจอก", shortName: "", location: "หนองจอก" },
@@ -55,6 +56,7 @@ export const BRANCHES = [
 ] as const;
 
 // 👥 User Roles Configuration
+// DEPRECATED: ใช้ API /api/v1/menu/roles แทน
 export const ROLES = [
   { id: 1, name: "Super Admin", shortName: "SA", description: "สิทธิ์เต็ม" },
   { id: 2, name: "Admin", shortName: "AD", description: "ผู้ดูแลระบบ" },

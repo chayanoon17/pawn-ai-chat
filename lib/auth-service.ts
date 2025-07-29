@@ -226,7 +226,7 @@ class AuthService {
 
     // ตรวจสอบว่ามี permission ที่ตรงกับ action ที่ต้องการหรือไม่
     const hasPermission = user.role.permissions.some(
-      (permission) => permission.action === action
+      (permission) => permission.name === action
     );
 
     // Log ใน development mode
@@ -251,7 +251,7 @@ class AuthService {
 
     // ตรวจสอบว่ามี menu permission ที่ตรงกับ menuName ที่ต้องการหรือไม่
     const hasAccess = user.role.menuPermissions.some(
-      (menuPermission) => menuPermission.menuName === menuName
+      (menuPermission) => menuPermission.name === menuName
     );
 
     // Log ใน development mode

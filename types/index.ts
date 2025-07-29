@@ -28,3 +28,6 @@ export type * from "./asset-type";
 
 // Role management types
 export type * from "./role-management";
+
+// Component props & interfaces
+export type * from "./components";

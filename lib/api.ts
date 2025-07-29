@@ -411,15 +411,4 @@ export async function getMenuPermissions(): Promise<MenuPermission[]> {
 }
 
 // Types for API functions
-interface Permission {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface MenuPermission {
-  id: number;
-  name: string;
-  description: string;
-  menu?: string;
-}
+import type { Permission, MenuPermission } from "@/types";

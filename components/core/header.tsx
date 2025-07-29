@@ -39,9 +39,9 @@ export default function Header({
 
   // 🎯 Check if current page should show filters and chat
   const shouldShowWidgetFilter =
-    pathname === "/dashboard" || pathname === "/asset-type";
+    pathname === "/dashboard" || pathname === "/asset-types";
   const shouldShowAIChat =
-    pathname === "/dashboard" || pathname === "/asset-type";
+    pathname === "/dashboard" || pathname === "/asset-types";
 
   console.log("Header rendered for page:", selectedPage);
 

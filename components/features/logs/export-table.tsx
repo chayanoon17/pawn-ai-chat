@@ -1,8 +1,6 @@
 import { ExportRow } from "./types";
 
-interface ExportTableProps {
-  data: ExportRow[];
-}
+import type { ExportTableProps } from "@/types";
 
 export function ExportTable({ data }: ExportTableProps) {
   return (

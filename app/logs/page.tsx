@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BasePageLayout from "@/components/layouts/base-page-layout";
 import {
   LoginTable,
@@ -10,78 +10,79 @@ import {
   type LoginRow,
   type ExportRow,
 } from "@/components/features/logs";
-
-// Mock Data
-const loginData: LoginRow[] = [
-  {
-    name: "จันทร์เพ็ญ ใจดี",
-    email: "janpen@example.com",
-    datetime: "2024-01-15 09:30:00",
-    action: "เข้าสู่ระบบ",
-    ip: "192.168.1.100",
-    agent: "Chrome 120.0 (Windows)",
-    session: "ses_abc123xyz",
-    location: "กรุงเทพฯ, ไทย",
-  },
-  {
-    name: "สมชาย รักงาน",
-    email: "somchai@example.com",
-    datetime: "2024-01-15 08:45:00",
-    action: "ออกจากระบบ",
-    ip: "192.168.1.101",
-    agent: "Firefox 121.0 (MacOS)",
-    session: "ses_def456uvw",
-    location: "เชียงใหม่, ไทย",
-  },
-  {
-    name: "วิชัย เทคโนโลยี",
-    email: "wichai@example.com",
-    datetime: "2024-01-15 07:15:00",
-    action: "เข้าสู่ระบบ",
-    ip: "192.168.1.102",
-    agent: "Safari 17.0 (iOS)",
-    session: "ses_ghi789rst",
-    location: "ภูเก็ต, ไทย",
-  },
-];
-
-const exportData: ExportRow[] = [
-  {
-    name: "จันทร์เพ็ญ ใจดี",
-    email: "janpen@example.com",
-    type: "รายงานตั๋วรับจำนำ",
-    format: "Excel",
-    records: 150,
-    size: "2.5 MB",
-    status: "สำเร็จ",
-    datetime: "2024-01-15 14:30:00",
-  },
-  {
-    name: "สมชาย รักงาน",
-    email: "somchai@example.com",
-    type: "รายงานประเภททรัพย์",
-    format: "PDF",
-    records: 75,
-    size: "1.8 MB",
-    status: "กำลังดำเนินการ",
-    datetime: "2024-01-15 13:15:00",
-  },
-  {
-    name: "วิชัย เทคโนโลยี",
-    email: "wichai@example.com",
-    type: "รายงานยอดขาย",
-    format: "CSV",
-    records: 200,
-    size: "0.8 MB",
-    status: "ล้มเหลว",
-    datetime: "2024-01-15 12:00:00",
-  },
-];
+import apiRequest from "@/lib/api";
+import { toast } from "sonner";
 
 export default function LogPage() {
   const [activeTab, setActiveTab] = useState<Tab>("login");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginData, setLoginData] = useState<LoginRow[]>([]);
+  const [exportData, setExportData] = useState<ExportRow[]>([]);
+
+  // Load data when tab changes
+  useEffect(() => {
+    loadTabData(activeTab);
+  }, [activeTab]);
+
+  const loadTabData = async (tab: Tab) => {
+    setIsLoading(true);
+    try {
+      switch (tab) {
+        case "login":
+          await loadLoginData();
+          break;
+        case "export":
+          await loadExportData();
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Error loading log data:', error);
+      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadLoginData = async () => {
+    try {
+      const response = await apiRequest.get('/api/v1/logs/login');
+      if (response.success) {
+        setLoginData(response.data as LoginRow[]);
+      }
+    } catch (error) {
+      console.error('Error loading login logs:', error);
+      // Fallback to empty array if API fails
+      setLoginData([]);
+    }
+  };
+
+  const loadExportData = async () => {
+    try {
+      const response = await apiRequest.get('/api/v1/logs/export');
+      if (response.success) {
+        setExportData(response.data as ExportRow[]);
+      }
+    } catch (error) {
+      console.error('Error loading export logs:', error);
+      // Fallback to empty array if API fails
+      setExportData([]);
+    }
+  };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case "login":
         return (

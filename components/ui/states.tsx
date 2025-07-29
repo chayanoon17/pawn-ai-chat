@@ -1,12 +1,11 @@
 // 🎯 Reusable Loading Component
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface LoadingSpinnerProps {
-  size?: "sm" | "md" | "lg";
-  text?: string;
-  className?: string;
-}
+import type {
+  LoadingSpinnerProps,
+  EmptyStateProps,
+  ErrorStateProps,
+} from "@/types";
 
 export function LoadingSpinner({
   size = "md",
@@ -32,13 +31,6 @@ export function LoadingSpinner({
 }
 
 // 🎯 Reusable Empty State Component
-interface EmptyStateProps {
-  icon?: string;
-  title: string;
-  description?: string;
-  className?: string;
-}
-
 export function EmptyState({
   icon = "📊",
   title,
@@ -64,12 +56,7 @@ export function EmptyState({
 }
 
 // 🎯 Reusable Error State Component
-interface ErrorStateProps {
-  message: string;
-  className?: string;
-}
-
-export function ErrorState({ message, className }: ErrorStateProps) {
+export function ErrorState({ title, description, className }: ErrorStateProps) {
   return (
     <div
       className={cn(
@@ -79,7 +66,10 @@ export function ErrorState({ message, className }: ErrorStateProps) {
     >
       <div className="flex items-center space-x-2">
         <span className="text-red-500">⚠️</span>
-        <span>{message}</span>
+        <div>
+          {title && <span className="font-medium">{title}</span>}
+          {description && <p className="text-sm mt-1">{description}</p>}
+        </div>
       </div>
     </div>
   );

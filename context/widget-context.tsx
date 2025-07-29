@@ -60,7 +60,7 @@ export const WidgetProvider = ({ children }: { children: ReactNode }) => {
           "contract-transaction-summary",
           "contract-transaction-details",
         ].includes(widget.id);
-      } else if (route.includes("/asset-type")) {
+      } else if (route.includes("/asset-types")) {
         return [
           "asset-type-summary",
           "top-ranking-asset-type",
