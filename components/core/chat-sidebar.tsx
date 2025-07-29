@@ -30,13 +30,6 @@ interface ActiveContext {
   addedAt: Date;
 }
 
-// Mock data ราคาทอง (สามารถปรับเปลี่ยนได้)
-const goldPrice = {
-  buy: 30000, // ราคาซื้อ
-  sell: 30500, // ราคาขาย
-  source: "สมาคมค้าทองคำ",
-};
-
 // 🤖 AI Thinking Animation Component
 const ThinkingAnimation = () => (
   <div className="flex items-center space-x-1">
@@ -713,12 +706,12 @@ export const ChatSidebar = ({
             onKeyPress={handleKeyPress}
             placeholder={isThinking ? "AI กำลังคิด..." : "พิมพ์ข้อความ..."}
             className="flex-1"
-            disabled={isSending || isThinking}
+            disabled={isThinking}
           />
           <Button
             onClick={handleSendMessage}
             size="sm"
-            disabled={isSending || isThinking || !inputValue.trim()}
+            disabled={isThinking || !inputValue.trim()}
           >
             <Send className="w-4 h-4" />
           </Button>

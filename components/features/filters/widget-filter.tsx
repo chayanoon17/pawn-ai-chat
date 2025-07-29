@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, ChevronDown, Calendar } from "lucide-react";
 import apiClient from "@/lib/api";
 import { format } from "date-fns";
+import { useDebounce, useStableCallback } from "@/lib/performance";
 
 import {
   Popover,
@@ -91,10 +92,6 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     return format(date, "yyyy-MM-dd");
   };
 
-  const parseDateFromValue = (value: string): Date => {
-    return new Date(value);
-  };
-
   // โหลดข้อมูลสาขา
   useEffect(() => {
     const fetchBranches = async () => {
@@ -128,10 +125,14 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
             isLoading: false,
           });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
+          error.response?.data?.message ||
+          error.message ||
           "ไม่สามารถโหลดข้อมูลสาขาได้";
         setError(errorMessage);
       } finally {
@@ -140,6 +141,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     };
 
     fetchBranches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleBranchChange = (branchId: string) => {
@@ -149,13 +151,20 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("widgetFilter_branchId", branchId);
     }
-
-    onFilterChange?.({
-      branchId,
-      date: selectedDate?.toISOString().split("T")[0] || todayStr,
-      isLoading: false,
-    });
   };
+
+  // 🎯 Debounced filter change to improve performance
+  const debouncedBranchId = useDebounce(selectedBranchId, 300);
+  const debouncedDate = useDebounce(selectedDate, 300);
+
+  // 🔄 Stable callback for filter changes
+  const handleFilterChange = useStableCallback(
+    (...args: unknown[]) => {
+      const data = args[0] as WidgetFilterData;
+      onFilterChange?.(data);
+    },
+    [onFilterChange]
+  );
 
   // รับ event จาก input[type=date]
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,13 +177,18 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     if (typeof window !== "undefined" && date) {
       localStorage.setItem("widgetFilter_date", date.toISOString());
     }
-
-    onFilterChange?.({
-      branchId: selectedBranchId,
-      date: value,
-      isLoading: false,
-    });
   };
+
+  // 📡 Effect for debounced filter changes
+  useEffect(() => {
+    if (debouncedBranchId && debouncedDate) {
+      handleFilterChange({
+        branchId: debouncedBranchId,
+        date: debouncedDate.toISOString().split("T")[0],
+        isLoading: false,
+      });
+    }
+  }, [debouncedBranchId, debouncedDate, handleFilterChange]);
 
   return (
     <div className="flex items-center gap-3">

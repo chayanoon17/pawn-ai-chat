@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -40,8 +39,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import apiClient from "@/lib/api";
+import apiClient, { getApiUrl } from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
+import { showWarning } from "@/lib/sweetalert";
 
 // 📊 Types สำหรับ API Response
 interface TransactionSummaryItem {
@@ -193,6 +193,7 @@ export default function ContractTransactionDetails({
   // 🎯 เรียก API เมื่อ filter เปลี่ยน
   useEffect(() => {
     fetchTransactionDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
   // 🔄 Reset pagination when search or filter changes
@@ -203,12 +204,17 @@ export default function ContractTransactionDetails({
   // 📥 Export CSV Function
   const handleExportCSV = () => {
     if (!branchId || !date) {
-      alert("ไม่สามารถ export ได้ กรุณาเลือกสาขาและวันที่");
+      showWarning(
+        "ไม่สามารถ Export ได้",
+        "กรุณาเลือกสาขาและวันที่ก่อนทำการ Export"
+      );
       return;
     }
 
     // สร้าง URL และเปิดในหน้าต่างใหม่เพื่อให้ browser จัดการการดาวน์โหลด
-    const exportUrl = `http://localhost:3000/api/v1/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`;
+    const exportUrl = getApiUrl(
+      `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
+    );
 
     // เปิดลิงค์ในหน้าต่างใหม่
     window.open(exportUrl, "_blank");
@@ -381,7 +387,7 @@ export default function ContractTransactionDetails({
                 })}
             </div>
 
-            <div className="flex justify-center gap-4 flex-wrap mb-8">
+            <div className="flex justify-center gap-4 flex-wrap">
               {data?.summaries
                 .slice(4, 6)
                 .map((item: TransactionSummaryItem, index: number) => {
@@ -461,15 +467,16 @@ export default function ContractTransactionDetails({
                   {searchTerm && (
                     <span>
                       {" "}
-                      จากการค้นหา "
-                      <span className="font-semibold">{searchTerm}</span>"
+                      จากการค้นหา &ldquo;
+                      <span className="font-semibold">{searchTerm}</span>&rdquo;
                     </span>
                   )}
                   {selectedType !== "all" && (
                     <span>
                       {" "}
-                      ในประเภท "
-                      <span className="font-semibold">{selectedType}</span>"
+                      ในประเภท &ldquo;
+                      <span className="font-semibold">{selectedType}</span>
+                      &rdquo;
                     </span>
                   )}
                   {data && (

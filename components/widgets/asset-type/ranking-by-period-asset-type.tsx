@@ -53,8 +53,13 @@ const COLORS = [
   "#06b6d4",
 ];
 
+interface ChartDataItem {
+  name: string;
+  [key: string]: string | number;
+}
+
 export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [chartConfig, setChartConfig] = useState<
     Record<string, { label: string; color: string }>
   >({});
@@ -90,7 +95,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       });
       setChartConfig(config);
 
-      const dateMap: Record<string, any> = {};
+      const dateMap: Record<string, Record<string, string | number>> = {};
       rankings.forEach((r) => {
         r.dailyData.forEach(({ date, count }) => {
           if (!dateMap[date])
@@ -102,17 +107,22 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       });
 
       const mergedData = Object.values(dateMap).sort(
-        (a: any, b: any) =>
-          new Date(a.name).getTime() - new Date(b.name).getTime()
-      );
+        (
+          a: Record<string, string | number>,
+          b: Record<string, string | number>
+        ) =>
+          new Date(a.name as string).getTime() -
+          new Date(b.name as string).getTime()
+      ) as ChartDataItem[];
 
       setChartData(mergedData);
       setTimestamp(apiData.timestamp);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: unknown }; message?: string };
       console.error(
         "❌ Error loading ranking data:",
-        err.response?.data || err.message || err
+        error.response?.data || error.message || err
       );
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
     } finally {
@@ -123,6 +133,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   useEffect(() => {
     if (!branchId || !date || branchId === "all") return;
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้

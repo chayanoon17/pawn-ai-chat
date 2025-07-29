@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import authService from "../lib/auth-service";
 import { User, AuthContextType } from "../types/auth";
+import { showSuccess, showError, showUnauthorized } from "../lib/sweetalert";
 
 /**
  * Auth State Interface
@@ -175,6 +176,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       dispatch({ type: "AUTH_LOGOUT" });
+
+      // แสดง SweetAlert2 success
+      showSuccess("ออกจากระบบสำเร็จ", "ขอบคุณที่ใช้บริการ", 2000);
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
