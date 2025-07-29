@@ -1,30 +1,36 @@
 import { MessageCircle, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { WidgetFilter, WidgetFilterData } from "@/components/widget-filter";
+import { WidgetFilter, WidgetFilterData } from "@/components/features/filters";
 import { usePathname } from "next/navigation";
+import { PAGE_LABELS } from "@/lib/constants";
 
+// 📝 Component Props Interface
 interface HeaderProps {
   selectedPage: string;
   onChatToggle: () => void;
-  onMenuToggle: () => void;
   isChatOpen: boolean;
   onFilterChange?: (data: WidgetFilterData) => void;
 }
 
-const pageLabels: Record<string, string> = {
-  dashboard: "Dashboard Overview",
-  "pawn-tickets": "ข้อมูลตั๋วรับจำนำ",
-  "asset-types": "ประเภททรัพย์และราคา",
-  "user-management": "จัดการข้อมูลผู้ใช้",
-  "log-management": "ประวัติการใช้งาน",
-  settings: "Settings",
-};
-
+/**
+ * Header Component
+ *
+ * แสดง header bar พร้อมฟีเจอร์:
+ * - แสดงชื่อหน้าปัจจุบัน
+ * - ปุ่มเปิด/ปิด chat sidebar
+ * - ปุ่ม sidebar trigger สำหรับ mobile
+ * - Widget filter (สำหรับหน้าที่มี widgets)
+ *
+ * @param selectedPage - ชื่อหน้าปัจจุบัน
+ * @param onChatToggle - Function สำหรับเปิด/ปิด chat sidebar
+ * @param isChatOpen - สถานะการเปิด/ปิดของ chat sidebar
+ * @param onFilterChange - Function สำหรับจัดการการเปลี่ยนแปลง widget filter
+ */
 export default function Header({
   selectedPage,
   onChatToggle,
-  onMenuToggle,
   isChatOpen,
   onFilterChange,
 }: HeaderProps) {
@@ -44,19 +50,14 @@ export default function Header({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onMenuToggle}
-              className="p-2"
-            >
+            <SidebarTrigger className="p-2">
               <Menu className="w-5 h-5" />
-            </Button>
+            </SidebarTrigger>
           )}
 
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {pageLabels[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
+              {PAGE_LABELS[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
             </h1>
             {!["user-management", "log-management"].includes(selectedPage) && (
               <p className="text-sm text-gray-500">
@@ -68,7 +69,6 @@ export default function Header({
                 })}
               </p>
             )}
-
           </div>
         </div>
 
@@ -97,7 +97,6 @@ export default function Header({
             </Button>
           )}
         </div>
-
       </div>
     </header>
   );

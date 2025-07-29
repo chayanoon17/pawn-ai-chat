@@ -1,13 +1,14 @@
 "use client";
 
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import CookieConsent from "@/components/cookie-consent";
+import { CookieConsent } from "@/components/features/auth";
+import { showLoginError, showSuccess, showError } from "@/lib/sweetalert";
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading, clearRememberMe } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -15,12 +16,19 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
+  // แยก effect สำหรับการ redirect เมื่อ authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/dashboard");
+    if (isAuthenticated && !isLoading) {
+      setIsRedirecting(true);
+      // เพิ่ม delay เล็กน้อยเพื่อให้ loading state แสดง
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   // โหลดข้อมูล remember me จาก localStorage
   useEffect(() => {
@@ -38,7 +46,7 @@ export default function LoginPage() {
     setError("");
 
     if (!email || !password) {
-      setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      showError("ข้อมูลไม่ครบถ้วน", "กรุณากรอกอีเมลและรหัสผ่าน", false);
       return;
     }
 
@@ -55,20 +63,36 @@ export default function LoginPage() {
       }
 
       await login(email, password);
+      // หลัง login สำเร็จ ให้แสดง loading state
+      showSuccess("เข้าสู่ระบบสำเร็จ!", "กำลังนำทางไปยังหน้าหลัก...", 2000);
+      setIsRedirecting(true);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
-      setError(errorMessage);
+
+      // ใช้ SweetAlert2 แทน state error
+      showLoginError(errorMessage);
+      setIsRedirecting(false); // รีเซ็ต redirecting state เมื่อเกิด error
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  // แสดง loading state เมื่อกำลังตรวจสอบสถานะหรือ redirecting
+  if (isLoading || isRedirecting) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <p className="ml-2 text-gray-600">กำลังตรวจสอบสถานะ...</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
+          </h2>
+          <p className="text-gray-600">
+            {isRedirecting
+              ? "กรุณารอสักครู่..."
+              : "กำลังตรวจสอบข้อมูลผู้ใช้..."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -118,13 +142,25 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isSubmitting}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={isSubmitting}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
 
             <button

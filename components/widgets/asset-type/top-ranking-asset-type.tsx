@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -59,10 +56,14 @@ export const TopRankingAssetType = ({
 
       setRankings(res.data.rankings || []);
       setTimestamp(res.data.timestamp ?? null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const msg =
-        err.response?.data?.message ||
-        err.message ||
+        error.response?.data?.message ||
+        error.message ||
         "เกิดข้อผิดพลาดในการโหลดข้อมูล";
       setError(msg);
       setRankings([]);
@@ -73,6 +74,7 @@ export const TopRankingAssetType = ({
 
   useEffect(() => {
     fetchTopRanking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้

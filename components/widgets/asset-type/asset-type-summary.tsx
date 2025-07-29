@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -10,6 +10,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
+import { useOptimizedMemo, usePerformanceMonitor } from "@/lib/performance";
+import { LazyLoad } from "@/lib/performance";
 
 type AssetTypeSummary = {
   assetType: string;
@@ -51,60 +53,116 @@ const COLORS = [
 
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
-const renderCustomLabel = ({
-  cx,
-  cy,
-  midAngle,
-  outerRadius,
-  name,
-  value,
-  percent,
-  index,
-}: any) => {
-  const RADIAN = Math.PI / 180;
-  const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
-  const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
-  const ex = cx + (outerRadius + 40) * Math.cos(-midAngle * RADIAN);
-  const ey = cy + (outerRadius + 40) * Math.sin(-midAngle * RADIAN);
-  const textAnchor = ex > cx ? "start" : "end";
-  const color = COLORS[index % COLORS.length];
+interface CustomLabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  outerRadius?: number;
+  name?: string;
+  value?: number;
+  percent?: number;
+  index?: number;
+}
 
-  return (
-    <g>
-      <path d={`M${sx},${sy} L${ex},${ey}`} stroke={color} fill="none" />
-      <text
-        x={ex}
-        y={ey - 10}
-        textAnchor={textAnchor}
-        fill="#1f2937"
-        fontSize={13}
-        fontWeight="bold"
-      >
-        {name}
-      </text>
-      <text
-        x={ex}
-        y={ey + 5}
-        textAnchor={textAnchor}
-        fill={color}
-        fontSize={13}
-        fontWeight={500}
-      >
-        {`${formatNumber(value)} ชิ้น (${(percent * 100).toFixed(2)}%)`}
-      </text>
-    </g>
-  );
-};
+interface AssetTypeData {
+  name: string;
+  value: number;
+  percentage: number;
+  color?: string;
+}
 
 export const AssetTypesSummary = ({
   branchId,
   date,
   isLoading: parentLoading,
 }: Props) => {
-  const [data, setData] = useState<any[]>([]);
+  // 🎯 Performance monitoring
+  usePerformanceMonitor("AssetTypesSummary");
+
+  const [data, setData] = useState<AssetTypeData[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 🎯 Stabilized custom label renderer
+  const renderCustomLabel = useCallback(
+    ({
+      cx = 0,
+      cy = 0,
+      midAngle = 0,
+      outerRadius = 0,
+      name = "",
+      value = 0,
+      percent = 0,
+      index = 0,
+    }: CustomLabelProps) => {
+      // Avoid external dependencies to prevent re-renders
+      const colors = [
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4",
+        "#FFEAA7",
+        "#DDA0DD",
+        "#98D8C8",
+        "#F7DC6F",
+        "#BB8FCE",
+        "#85C1E9",
+      ];
+
+      const RADIAN = Math.PI / 180;
+      const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+      const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+      const ex = cx + (outerRadius + 40) * Math.cos(-midAngle * RADIAN);
+      const ey = cy + (outerRadius + 40) * Math.sin(-midAngle * RADIAN);
+      const textAnchor = ex > cx ? "start" : "end";
+      const color = colors[index % colors.length];
+
+      // Local format function to avoid external dependency
+      const formatValue = (num: number): string => {
+        return new Intl.NumberFormat("th-TH").format(num);
+      };
+
+      return (
+        <g>
+          <path d={`M${sx},${sy} L${ex},${ey}`} stroke={color} fill="none" />
+          <text
+            x={ex}
+            y={ey - 10}
+            textAnchor={textAnchor}
+            fill="#1f2937"
+            fontSize={13}
+            fontWeight="bold"
+          >
+            {name}
+          </text>
+          <text
+            x={ex}
+            y={ey + 5}
+            textAnchor={textAnchor}
+            fill={color}
+            fontSize={13}
+            fontWeight={500}
+          >
+            {`${formatValue(value)} ชิ้น (${(percent * 100).toFixed(2)}%)`}
+          </text>
+        </g>
+      );
+    },
+    []
+  ); // Empty dependency array - all values are internal or from props
+
+  // 🎯 Memoized chart data transformation
+  const chartData = useOptimizedMemo(
+    () => {
+      return data.map((item, index) => ({
+        ...item,
+        color: COLORS[index % COLORS.length],
+      }));
+    },
+    [data],
+    "AssetTypesSummary-chartData"
+  );
 
   const fetchData = async () => {
     if (!branchId || !date || branchId === "all" || parentLoading) {
@@ -149,6 +207,7 @@ export const AssetTypesSummary = ({
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
@@ -221,19 +280,29 @@ export const AssetTypesSummary = ({
           </div>
         ) : (
           <>
-            <div className="h-[500px]">
+            <LazyLoad
+              fallback={
+                <div className="h-[500px] flex items-center justify-center">
+                  <div className="loading-skeleton h-full w-full rounded-lg" />
+                </div>
+              }
+              className="h-[500px]"
+            >
               <ChartContainer
                 config={{
                   value: { label: "จำนวน (ชิ้น)" },
                   ...Object.fromEntries(
-                    data.map((d) => [d.name, { label: d.name, color: d.color }])
+                    chartData.map((d) => [
+                      d.name,
+                      { label: d.name, color: d.color },
+                    ])
                   ),
                 }}
               >
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart key={`pie-chart-${branchId}-${date}`}>
                     <Pie
-                      data={data}
+                      data={chartData}
                       cx="50%"
                       cy="50%"
                       outerRadius={120}
@@ -241,19 +310,25 @@ export const AssetTypesSummary = ({
                       dataKey="value"
                       label={renderCustomLabel}
                       labelLine={false}
+                      animationBegin={0}
+                      animationDuration={800}
+                      isAnimationActive={true}
                     >
-                      {data.map((entry, i) => (
-                        <Cell key={`cell-${i}`} fill={entry.color} />
+                      {chartData.map((entry, i) => (
+                        <Cell
+                          key={`cell-${i}-${entry.name}`}
+                          fill={entry.color}
+                        />
                       ))}
                     </Pie>
                     <ChartTooltip content={<ChartTooltipContent />} />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
-            </div>
+            </LazyLoad>
 
             <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {data.map((item) => (
+              {chartData.map((item) => (
                 <div key={item.name} className="flex items-center space-x-2">
                   <div
                     className="w-3 h-3 rounded-full"

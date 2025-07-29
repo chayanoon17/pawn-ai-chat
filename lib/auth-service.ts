@@ -5,10 +5,101 @@
 
 import apiClient from "./api";
 import { User } from "@/types/auth";
-import { ApiResponse, LoginResponse } from "@/types/api";
+import { LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";
 
+/**
+ * User Management API Functions
+ */
 
+export async function createUser(data: {
+  email: string;
+  password: string;
+  fullName: string;
+  phoneNumber?: string;
+  profileUrl?: string;
+  branchId?: number;
+  roleId: number;
+  status: "ACTIVE" | "INACTIVE";
+}) {
+  const response = await apiClient.post("/api/v1/users", data);
+  return response.data;
+}
+
+export async function getAllUsers(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "ACTIVE" | "INACTIVE";
+  branchId?: number;
+  roleId?: number;
+}) {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.search) queryParams.append("search", params.search);
+  if (params?.status) queryParams.append("status", params.status);
+  if (params?.branchId)
+    queryParams.append("branchId", params.branchId.toString());
+  if (params?.roleId) queryParams.append("roleId", params.roleId.toString());
+
+  const url = `/api/v1/users${
+    queryParams.toString() ? `?${queryParams.toString()}` : ""
+  }`;
+  const response = await apiClient.get(url);
+  return response.data;
+}
+
+export async function getUserById(id: string) {
+  const response = await apiClient.get(`/api/v1/users/${id}`);
+  return response.data;
+}
+
+export async function updateUser(
+  id: string,
+  data: {
+    fullName?: string;
+    phoneNumber?: string;
+    profileUrl?: string;
+    password?: string;
+    branchId?: number;
+    roleId?: number;
+    status?: "ACTIVE" | "INACTIVE";
+  }
+) {
+  const response = await apiClient.put(`/api/v1/users/${id}`, data);
+  return response.data;
+}
+
+export async function deleteUser(id: string) {
+  const response = await apiClient.delete(`/api/v1/users/${id}`);
+  return response.data;
+}
+
+export async function getUserPermissions(id: string) {
+  const response = await apiClient.get(`/api/v1/users/${id}/permissions`);
+  return response.data;
+}
+
+export async function updateUserRole(id: string, roleId: number) {
+  const response = await apiClient.put(`/api/v1/users/${id}/role`, { roleId });
+  return response.data;
+}
+
+/**
+ * Menu/Dropdown Data API Functions
+ */
+export async function getRoles() {
+  const response = await apiClient.get("/api/v1/menu/roles");
+  return response.data;
+}
+
+export async function getBranches() {
+  const response = await apiClient.get("/api/v1/menu/branches");
+  return response.data;
+}
+
+// Legacy function for backward compatibility
 export async function registerUser(data: {
   fullName: string;
   email: string;
@@ -17,15 +108,15 @@ export async function registerUser(data: {
   role: number;
   status: string;
 }) {
-  const res = await apiClient.post("/api/auth/register", data);
-  return res;
+  return createUser({
+    email: data.email,
+    password: data.password,
+    fullName: data.fullName,
+    branchId: data.branch,
+    roleId: data.role,
+    status: data.status as "ACTIVE" | "INACTIVE",
+  });
 }
-export async function getAllUsers() {
-  const res = await apiClient.get("/api/auth/register"); // หรือ path ที่ backend กำหนด GET users
-  return res;
-}
-
-
 
 /**
  * Login Credentials Interface

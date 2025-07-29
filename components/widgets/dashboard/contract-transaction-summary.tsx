@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,7 +28,7 @@ type TransactionSummaryData = {
   name: string;
   value: number;
   color: string;
-  percentage: number; 
+  percentage: number;
 };
 
 type TransactionSummaryResponse = {
@@ -81,9 +81,8 @@ export const ContractTransactionSummary = ({
         name: item.type,
         value: item.value,
         color: COLORS[index % COLORS.length],
-        percentage: item.percentage, 
+        percentage: item.percentage,
       }));
-
 
       setData(chartData);
       setTimestamp(response.data.timestamp);
@@ -92,10 +91,14 @@ export const ContractTransactionSummary = ({
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("✨ Transaction summary loaded:", response.data);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
+        error.response?.data?.message ||
+        error.message ||
         "ไม่สามารถโหลดข้อมูลสรุปตั๋วจำนำได้";
       setError(errorMessage);
 
@@ -113,6 +116,7 @@ export const ContractTransactionSummary = ({
 
   useEffect(() => {
     fetchTransactionSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
@@ -122,19 +126,19 @@ export const ContractTransactionSummary = ({
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
     data.length > 0
       ? {
-        branchId: parseInt(branchId),
-        summaries: data.map((item) => ({
-          type: item.name,
-          count: item.value,
-          color: item.color,
-        })),
-        totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
-        lastUpdated: timestamp,
-        topTransactionType: data.reduce(
-          (max, item) => (item.value > max.value ? item : max),
-          data[0]
-        )?.name,
-      }
+          branchId: parseInt(branchId),
+          summaries: data.map((item) => ({
+            type: item.name,
+            count: item.value,
+            color: item.color,
+          })),
+          totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
+          lastUpdated: timestamp,
+          topTransactionType: data.reduce(
+            (max, item) => (item.value > max.value ? item : max),
+            data[0]
+          )?.name,
+        }
       : null
   );
 
@@ -151,56 +155,87 @@ export const ContractTransactionSummary = ({
     });
   };
 
-  const chartConfig = {
-    value: { label: "จำนวน" },
-    ...Object.fromEntries(
-      data.map((item) => [item.name, { label: item.name, color: item.color }])
-    ),
-  };
+  // 🎯 Memoize chart config to prevent re-renders
+  const chartConfig = useMemo(() => {
+    if (!data.length) return { value: { label: "จำนวน" } };
+    return {
+      value: { label: "จำนวน" },
+      ...Object.fromEntries(
+        data.map((item) => [item.name, { label: item.name, color: item.color }])
+      ),
+    };
+  }, [data]);
 
-  const renderCustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    outerRadius,
-    name,
-    value,
-    index,
-  }: any) => {
-    const RADIAN = Math.PI / 180;
-    const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
-    const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
-    const ex = cx + (outerRadius + 40) * Math.cos(-midAngle * RADIAN);
-    const ey = cy + (outerRadius + 40) * Math.sin(-midAngle * RADIAN);
-    const textAnchor = ex > cx ? "start" : "end";
-    const { color, percentage } = data[index];
+  // 🎯 Memoize the custom label renderer to prevent infinite loops
+  // 🎯 Stabilized custom label renderer with data closure
+  const renderCustomLabel = useCallback(
+    (props: {
+      cx?: number;
+      cy?: number;
+      midAngle?: number;
+      outerRadius?: number;
+      name?: string;
+      value?: number;
+      index?: number;
+    }) => {
+      const {
+        cx = 0,
+        cy = 0,
+        midAngle = 0,
+        outerRadius = 0,
+        name = "",
+        value = 0,
+        index = 0,
+      } = props;
 
-    return (
-      <g>
-        <path d={`M${sx},${sy} L${ex},${ey}`} stroke={color} fill="none" />
-        <text
-          x={ex}
-          y={ey - 10}
-          textAnchor={textAnchor}
-          fill="#1f2937"
-          fontSize={13}
-          fontWeight="bold"
-        >
-          {name}
-        </text>
-        <text
-          x={ex}
-          y={ey + 5}
-          textAnchor={textAnchor}
-          fill={color}
-          fontSize={13}
-          fontWeight={500}
-        >
-          {`${formatNumber(value)} (${percentage.toFixed(2)}%)`}
-        </text>
-      </g>
-    );
-  };
+      const RADIAN = Math.PI / 180;
+      const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+      const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+      const ex = cx + (outerRadius + 40) * Math.cos(-midAngle * RADIAN);
+      const ey = cy + (outerRadius + 40) * Math.sin(-midAngle * RADIAN);
+      const textAnchor = ex > cx ? "start" : "end";
+
+      // Local format function to avoid external dependency
+      const formatValue = (num: number): string => {
+        return new Intl.NumberFormat("th-TH").format(num);
+      };
+
+      // Calculate percentage locally
+      const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+      const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
+
+      // Get color from current data item
+      const currentItem = data[index];
+      const color = currentItem?.color || "#8884d8";
+
+      return (
+        <g>
+          <path d={`M${sx},${sy} L${ex},${ey}`} stroke={color} fill="none" />
+          <text
+            x={ex}
+            y={ey - 10}
+            textAnchor={textAnchor}
+            fill="#1f2937"
+            fontSize={13}
+            fontWeight="bold"
+          >
+            {name}
+          </text>
+          <text
+            x={ex}
+            y={ey + 5}
+            textAnchor={textAnchor}
+            fill={color}
+            fontSize={13}
+            fontWeight={500}
+          >
+            {`${formatValue(value)} (${percentage.toFixed(2)}%)`}
+          </text>
+        </g>
+      );
+    },
+    [data]
+  ); // Keep data dependency but ensure it's stable
 
   return (
     <Card className="mb-6">
@@ -214,12 +249,12 @@ export const ContractTransactionSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : error
-                  ? `เกิดข้อผิดพลาด: ${error}`
-                  : branchId === "all"
-                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                    : timestamp
-                      ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                      : "ไม่พบข้อมูล"}
+                ? `เกิดข้อผิดพลาด: ${error}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : timestamp
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
@@ -272,7 +307,7 @@ export const ContractTransactionSummary = ({
             <div className="h-[360px]">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart key={`contract-pie-chart-${branchId}-${date}`}>
                     <Pie
                       data={data}
                       cx="50%"
@@ -282,9 +317,15 @@ export const ContractTransactionSummary = ({
                       dataKey="value"
                       label={renderCustomLabel}
                       labelLine={false}
+                      animationBegin={0}
+                      animationDuration={800}
+                      isAnimationActive={true}
                     >
                       {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell
+                          key={`cell-${index}-${entry.name}`}
+                          fill={entry.color}
+                        />
                       ))}
                     </Pie>
                     <ChartTooltip content={<ChartTooltipContent />} />

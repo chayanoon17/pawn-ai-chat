@@ -1,3 +1,5 @@
+"use client";
+
 export default function LogLayout({ children }: { children: React.ReactNode }) {
-  return <div className="">{children}</div>;
+  return <div className="w-full h-full font-sans">{children}</div>;
 }

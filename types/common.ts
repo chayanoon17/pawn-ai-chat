@@ -47,7 +47,24 @@ export const MENU_NAMES = {
 /**
  * User Status - สถานะของผู้ใช้ในระบบ
  */
-export type UserStatus = "ACTIVE" | "INACTIVE";
+export type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+
+/**
+ * Widget Data Types - สำหรับระบุประเภทของ widget data
+ */
+export type WidgetDataType =
+  | "contract-transaction-summary"
+  | "daily-operation-summary"
+  | "weekly-operation-summary"
+  | "gold-price"
+  | "asset-type-summary"
+  | "ranking-by-period"
+  | "top-ranking";
+
+/**
+ * Filter Period Types - สำหรับระบุช่วงเวลาในการกรอง
+ */
+export type FilterPeriod = "today" | "week" | "month" | "year" | "custom";
 
 /**
  * Permission Action Type - Type สำหรับ permission actions

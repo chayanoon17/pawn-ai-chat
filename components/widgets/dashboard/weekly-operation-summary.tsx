@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
   YAxis,
@@ -8,11 +8,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
 import { Download, Upload } from "lucide-react";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -101,9 +97,8 @@ export const WeeklyOperationSummary = ({
     };
   };
 
-
   // 🔄 ดึงข้อมูลจาก API
-  const fetchWeeklyOperationSummary = async () => {
+  const fetchWeeklyOperationSummary = useCallback(async () => {
     if (!branchId || isLoading) return;
 
     try {
@@ -127,12 +122,12 @@ export const WeeklyOperationSummary = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [branchId, date, isLoading]);
 
   // 🎯 เรียก API เมื่อ filter เปลี่ยน
   useEffect(() => {
     fetchWeeklyOperationSummary();
-  }, [branchId, date]);
+  }, [branchId, date, fetchWeeklyOperationSummary]);
 
   // 📊 แปลงข้อมูลสำหรับกราห - รวมข้อมูล thisWeek และ lastWeek
   const prepareChartData = (
@@ -212,13 +207,29 @@ export const WeeklyOperationSummary = ({
 
   const rightChartData = data
     ? prepareChartData(
-      data.cashOut.thisWeek,
-      data.cashOut.lastWeek,
-      "เงินสดจ่าย"
-    )
+        data.cashOut.thisWeek,
+        data.cashOut.lastWeek,
+        "เงินสดจ่าย"
+      )
     : [];
   // 🎯 Custom Tooltip Component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        fullDate?: string;
+        lastWeekDate?: string;
+      };
+      name: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -234,18 +245,27 @@ export const WeeklyOperationSummary = ({
               อาทิตย์ที่แล้ว: {data.lastWeekDate}
             </p>
           )}
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 mb-1">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm font-medium">{entry.name}:</span>
-              <span className="text-sm font-bold">
-                {entry.value.toFixed(2)} ล้านบาท
-              </span>
-            </div>
-          ))}
+          {payload.map(
+            (
+              entry: {
+                name: string;
+                value: number;
+                color: string;
+              },
+              index: number
+            ) => (
+              <div key={index} className="flex items-center gap-2 mb-1">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-sm font-medium">{entry.name}:</span>
+                <span className="text-sm font-bold">
+                  {entry.value.toFixed(2)} ล้านบาท
+                </span>
+              </div>
+            )
+          )}
         </div>
       );
     }
@@ -266,36 +286,36 @@ export const WeeklyOperationSummary = ({
     "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
     data
       ? {
-        branchId: data.branchId,
-        cashIn: {
-          thisWeek: data.cashIn.thisWeek,
-          lastWeek: data.cashIn.lastWeek,
-          totalThisWeek: data.cashIn.totalThisWeek,
-          totalLastWeek: data.cashIn.totalLastWeek,
-          percentChange: data.cashIn.percentChange,
-        },
-        cashOut: {
-          thisWeek: data.cashOut.thisWeek,
-          lastWeek: data.cashOut.lastWeek,
-          totalThisWeek: data.cashOut.totalThisWeek,
-          totalLastWeek: data.cashOut.totalLastWeek,
-          percentChange: data.cashOut.percentChange,
-        },
-        timestamp: data.timestamp,
-        // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
-        analysis: {
-          chartDataLeft: leftChartData,
-          chartDataRight: rightChartData,
-          summary: {
-            cashInThisWeek: data.cashIn.totalThisWeek,
-            cashInLastWeek: data.cashIn.totalLastWeek,
-            cashInChange: data.cashIn.percentChange,
-            cashOutThisWeek: data.cashOut.totalThisWeek,
-            cashOutLastWeek: data.cashOut.totalLastWeek,
-            cashOutChange: data.cashOut.percentChange,
+          branchId: data.branchId,
+          cashIn: {
+            thisWeek: data.cashIn.thisWeek,
+            lastWeek: data.cashIn.lastWeek,
+            totalThisWeek: data.cashIn.totalThisWeek,
+            totalLastWeek: data.cashIn.totalLastWeek,
+            percentChange: data.cashIn.percentChange,
           },
-        },
-      }
+          cashOut: {
+            thisWeek: data.cashOut.thisWeek,
+            lastWeek: data.cashOut.lastWeek,
+            totalThisWeek: data.cashOut.totalThisWeek,
+            totalLastWeek: data.cashOut.totalLastWeek,
+            percentChange: data.cashOut.percentChange,
+          },
+          timestamp: data.timestamp,
+          // เพิ่มข้อมูลที่ประมวลผลแล้วสำหรับ AI
+          analysis: {
+            chartDataLeft: leftChartData,
+            chartDataRight: rightChartData,
+            summary: {
+              cashInThisWeek: data.cashIn.totalThisWeek,
+              cashInLastWeek: data.cashIn.totalLastWeek,
+              cashInChange: data.cashIn.percentChange,
+              cashOutThisWeek: data.cashOut.totalThisWeek,
+              cashOutLastWeek: data.cashOut.totalLastWeek,
+              cashOutChange: data.cashOut.percentChange,
+            },
+          },
+        }
       : null,
     [data]
   );
@@ -311,12 +331,12 @@ export const WeeklyOperationSummary = ({
             <p className="text-sm text-blue-500">
               {data
                 ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(data.timestamp))} น.`
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(data.timestamp))} น.`
                 : "กำลังโหลดข้อมูล..."}
             </p>
           </div>
@@ -474,7 +494,9 @@ export const WeeklyOperationSummary = ({
               <div className="flex items-center text-sm">
                 {cashOutChange && (
                   <>
-                    <span className={`${cashOutChange.color} flex items-center`}>
+                    <span
+                      className={`${cashOutChange.color} flex items-center`}
+                    >
                       <img
                         src={cashOutChange.icon}
                         alt="trend"
