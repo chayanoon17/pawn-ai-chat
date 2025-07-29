@@ -160,19 +160,22 @@ export default function WelcomePage() {
   }
 
   // หากมีสิทธิ์เข้าถึงเมนู ให้ redirect ไปหน้าแรกที่มีสิทธิ์
-  const firstMenu = userMenuPermissions[0];
-  const redirectPath =
-    firstMenu === "Dashboard"
-      ? "/dashboard"
-      : firstMenu === "Asset Types"
-      ? "/asset-types"
-      : firstMenu === "Users Management"
-      ? "/users"
-      : firstMenu === "Roles Management"
-      ? "/roles"
-      : firstMenu === "Activity Logs"
-      ? "/logs"
-      : "/dashboard";
+  let redirectPath = "";
+  if (userMenuPermissions.includes("Dashboard")) {
+    redirectPath = "/dashboard";
+  } else {
+    const firstMenu = userMenuPermissions[0];
+    redirectPath =
+      firstMenu === "Asset Types"
+        ? "/asset-types"
+        : firstMenu === "Users Management"
+        ? "/users"
+        : firstMenu === "Roles Management"
+        ? "/roles"
+        : firstMenu === "Activity Logs"
+        ? "/logs"
+        : "/welcome"; // fallback
+  }
 
   // Redirect to first accessible menu
   if (typeof window !== "undefined") {

@@ -76,12 +76,16 @@ export const WeeklyOperationSummary = ({
     return new Intl.NumberFormat("th-TH").format(amount);
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("th-TH", {
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
       day: "numeric",
-      month: "short",
-    }).format(date);
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatPercentChange = (percent: number) => {
@@ -321,35 +325,42 @@ export const WeeklyOperationSummary = ({
   );
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+    <Card>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
           <div>
             <CardTitle className="text-[24px] font-semibold">
               ยอดรับจำนำและรายละเอียด
             </CardTitle>
-            <p className="text-sm text-blue-500">
-              {data
-                ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }).format(new Date(data.timestamp))} น.`
-                : "กำลังโหลดข้อมูล..."}
+            <p className="text-sm text-[#3F99D8]">
+              {isLoading
+                ? "กำลังโหลดข้อมูล..."
+                : data
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         {loading || isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : error ? (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-red-500">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         ) : !data ||
           (data.cashIn.thisWeek.length === 0 &&
@@ -362,8 +373,8 @@ export const WeeklyOperationSummary = ({
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="space-y-4 min-w-0">
+          <div className="h-fit grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 {/* Badge สีเขียว */}
                 <div className="flex items-center px-3 py-1 bg-green-100 text-green-600 rounded-md text-sm font-medium">
@@ -514,7 +525,7 @@ export const WeeklyOperationSummary = ({
                 เปรียบเทียบเงินสดจ่ายอาทิตย์นี้กับอาทิตย์ที่แล้ว
               </p>
 
-              <div className="h-48">
+              <div className="flex-1">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={rightChartData}>

@@ -79,7 +79,6 @@ export const GoldPriceCard = () => {
 
   const formatDate = (iso: string) => {
     const date = new Date(iso);
-
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
       day: "numeric",
@@ -91,32 +90,21 @@ export const GoldPriceCard = () => {
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-xl">🏅</span>
-            </div>
-            <div>
-              <CardTitle className="text-[24px] font-semibold text-gray-900">
-                ราคาทองคำอ้างอิง
-              </CardTitle>
-              <p className="text-sm text-blue-500">
-                {isLoading
-                  ? "กำลังโหลดข้อมูล..."
-                  : latestPrice
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(latestPrice.updatedAt)} น.`
-                  : "ไม่พบข้อมูล"}
-              </p>
-            </div>
+    <Card>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <CardTitle className="text-[24px] font-semibold">
+              ราคาทองคำอ้างอิง
+            </CardTitle>
+            <p className="text-sm text-[#3F99D8]">
+              {isLoading
+                ? "กำลังโหลดข้อมูล..."
+                : latestPrice
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(latestPrice.updatedAt)} น.`
+                : "ไม่พบข้อมูล"}
+            </p>
           </div>
-          {latestPrice && !isLoading && (
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>ข้อมูลปัจจุบัน</span>
-            </div>
-          )}
         </div>
       </CardHeader>
 
@@ -133,12 +121,14 @@ export const GoldPriceCard = () => {
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-4 mb-6">
-            <div className="flex items-start space-x-3">
-              <div className="text-red-500 text-xl">⚠️</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-red-800 font-medium">เกิดข้อผิดพลาด</p>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
               </div>
             </div>
           </div>

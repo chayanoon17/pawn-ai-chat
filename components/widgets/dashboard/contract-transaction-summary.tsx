@@ -239,21 +239,19 @@ export const ContractTransactionSummary = ({
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-4">
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
           <div>
             <CardTitle className="text-[24px] font-semibold">
               ข้อมูลแสดงสถานะตั๋วจำนำ
             </CardTitle>
-            <p className="text-sm text-[#36B8EE]">
+            <p className="text-sm text-[#3F99D8]">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
-                : error
-                ? `เกิดข้อผิดพลาด: ${error}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : timestamp
                 ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
             </p>
           </div>
@@ -304,7 +302,7 @@ export const ContractTransactionSummary = ({
         {/* Chart Display */}
         {data.length > 0 && !isLoading && (
           <>
-            <div className="h-[360px]">
+            <div className="h-[400px]">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart key={`contract-pie-chart-${branchId}-${date}`}>

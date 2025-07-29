@@ -83,6 +83,23 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
+  // 🎯 Helper function สำหรับแปลง date เป็น YYYY-MM-DD format ตาม timezone ท้องถิ่น
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Debug log
+    console.log("🔍 formatDateForAPI:", {
+      input: date,
+      output: formattedDate,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+
+    return formattedDate;
+  };
+
   // 🎯 Helper function สำหรับแปลง date format
   const formatDateForDisplay = (date: Date): string => {
     return format(date, "dd/MM/yyyy");
@@ -110,16 +127,16 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
 
           onFilterChange?.({
             branchId: firstBranchId,
-            date:
-              selectedDate?.toISOString().split("T")[0] ||
-              format(new Date(), "yyyy-MM-dd"),
+            date: selectedDate
+              ? formatDateForAPI(selectedDate)
+              : formatDateForAPI(new Date()),
             isLoading: false,
           });
         } else if (selectedBranchId && selectedDate) {
           // ถ้ามีค่า saved อยู่แล้ว ให้ trigger onFilterChange
           onFilterChange?.({
             branchId: selectedBranchId,
-            date: selectedDate.toISOString().split("T")[0],
+            date: formatDateForAPI(selectedDate),
             isLoading: false,
           });
         }
@@ -180,7 +197,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     if (debouncedBranchId && debouncedDate) {
       handleFilterChange({
         branchId: debouncedBranchId,
-        date: debouncedDate.toISOString().split("T")[0],
+        date: formatDateForAPI(debouncedDate),
         isLoading: false,
       });
     }

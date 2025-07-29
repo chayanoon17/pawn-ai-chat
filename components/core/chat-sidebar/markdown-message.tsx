@@ -8,8 +8,11 @@ interface MarkdownMessageProps {
 
 // 📝 Markdown Message Component
 export const MarkdownMessage = ({ content, isUser }: MarkdownMessageProps) => {
+  // Ensure content is always a string
+  const safeContent = typeof content === "string" ? content : String(content);
+
   if (isUser) {
-    return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+    return <p className="text-sm whitespace-pre-wrap">{safeContent}</p>;
   }
 
   return (
@@ -110,7 +113,7 @@ export const MarkdownMessage = ({ content, isUser }: MarkdownMessageProps) => {
           hr: () => <hr className="border-gray-300 my-2" />,
         }}
       >
-        {content}
+        {safeContent}
       </ReactMarkdown>
     </div>
   );

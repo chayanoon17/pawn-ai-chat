@@ -235,8 +235,9 @@ export const AssetTypesSummary = ({
       : null
   );
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString("th-TH", {
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
       day: "numeric",
       month: "long",
@@ -244,23 +245,29 @@ export const AssetTypesSummary = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-[24px] font-semibold">
-          ข้อมูลประเภททรัพย์และจำนวน
-        </CardTitle>
-        <p className="text-sm text-[#36B8EE]">
-          {isLoading
-            ? "กำลังโหลดข้อมูล..."
-            : error
-            ? "เกิดข้อผิดพลาดในการโหลดข้อมูล"
-            : timestamp
-            ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-            : "ไม่พบข้อมูล"}
-        </p>
+    <Card>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <CardTitle className="text-[24px] font-semibold">
+              ข้อมูลประเภททรัพย์และจำนวน
+            </CardTitle>
+            <p className="text-sm text-[#3F99D8]">
+              {isLoading
+                ? "กำลังโหลดข้อมูล..."
+                : timestamp
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
+            </p>
+          </div>
+        </div>
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
@@ -268,28 +275,26 @@ export const AssetTypesSummary = ({
             <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-md">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-gray-500 py-12">
-            <div className="text-center text-gray-400 py-16">
-              <div className="text-4xl mb-2">📊</div>
-              <p className="text-sm">ไม่มีข้อมูล</p>
-              <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
-            </div>
+          <div className="text-center text-gray-400 py-16">
+            <div className="text-4xl mb-2">📊</div>
+            <p className="text-sm">ไม่มีข้อมูล</p>
+            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         ) : (
           <>
-            <LazyLoad
-              fallback={
-                <ChartLoading
-                  className="h-[500px]"
-                  message="กำลังโหลดกราฟประเภททรัพย์..."
-                />
-              }
-              className="h-[500px]"
-            >
+            <div className="h-[400px]">
               <ChartContainer
                 config={{
                   value: { label: "จำนวน (ชิ้น)" },
@@ -327,8 +332,9 @@ export const AssetTypesSummary = ({
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
-            </LazyLoad>
+            </div>
 
+            {/* Legend */}
             <div className="flex flex-wrap gap-4 justify-center mt-4">
               {chartData.map((item) => (
                 <div key={item.name} className="flex items-center space-x-2">

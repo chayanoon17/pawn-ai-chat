@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -294,33 +294,36 @@ export default function ContractTransactionDetails({
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
 
   // 🎯 Helper function สำหรับจัดรูปแบบวันที่
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
       day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-6">
-        <div className="mb-6 flex justify-between items-start">
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
           <div>
-            <h2 className="text-xl font-semibold">รายการรับจำนำทั้งหมด</h2>
-            <p className="text-sm text-blue-500">
-              {data
-                ? `อัปเดตล่าสุดเมื่อ ${new Intl.DateTimeFormat("th-TH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }).format(new Date(data.timestamp))} น.`
-                : `ประจำวันที่ ${formatDate(date)}`}
+            <CardTitle className="text-[24px] font-semibold text-gray-900">
+              รายการรับจำนำทั้งหมด
+            </CardTitle>
+            <p className="text-sm text-[#3F99D8]">
+              {isLoading
+                ? "กำลังโหลดข้อมูล..."
+                : data
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </p>
           </div>
-
           {/* Export Button */}
           {data && data.transactions.length > 0 && (
             <Button
@@ -331,18 +334,28 @@ export default function ContractTransactionDetails({
               className="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
             >
               <Download className="w-4 h-4" />
-              Export CSV
+              ส่งออกเป็น CSV
             </Button>
           )}
         </div>
+      </CardHeader>
 
+      <CardContent className="p-6">
         {loading || isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : error ? (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-red-500">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         ) : !data || data.transactions.length === 0 ? (
           <div className="text-center text-gray-400 py-16">

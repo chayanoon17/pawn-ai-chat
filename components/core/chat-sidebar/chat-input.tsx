@@ -8,7 +8,6 @@ interface ChatInputProps {
   onSendMessage: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   isThinking: boolean;
-  isSending: boolean;
   hasContext: boolean;
 }
 
@@ -18,14 +17,13 @@ export const ChatInput = ({
   onSendMessage,
   onKeyPress,
   isThinking,
-  isSending,
   hasContext,
 }: ChatInputProps) => {
   return (
     <div className="p-4 border-t border-gray-200 bg-white shadow-lg">
       <div className="space-y-3">
         {/* Status Indicator */}
-        {(isSending || isThinking) && (
+        {isThinking && (
           <div className="flex items-center justify-center space-x-2 py-2">
             <div className="flex space-x-1">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -33,7 +31,7 @@ export const ChatInput = ({
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
             </div>
             <span className="text-sm text-blue-600 font-medium">
-              {isThinking ? "AI กำลังคิด..." : "กำลังส่งข้อความ..."}
+              AI กำลังคิด...
             </span>
           </div>
         )}
@@ -61,7 +59,7 @@ export const ChatInput = ({
             )}
           </div>
           <Button
-            onClick={onSendMessage}
+            onClick={() => onSendMessage()}
             size="sm"
             disabled={isThinking || !inputValue.trim()}
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

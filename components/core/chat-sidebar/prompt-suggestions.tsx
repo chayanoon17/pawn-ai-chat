@@ -35,7 +35,7 @@ export const PromptSuggestions = ({
   const iconHoverBg = isGeneral ? "hover:bg-gray-200" : "hover:bg-blue-200";
   const iconColor = isGeneral ? "text-gray-600" : "text-blue-600";
   const titleColor = isGeneral ? "text-gray-700" : "text-blue-800";
-  const subtitleColor = isGeneral ? "text-gray-600" : "text-indigo-600";
+  const subtitleColor = isGeneral ? "text-gray-600" : "text-blue-600";
 
   return (
     <div className={`border-t border-gray-200 ${bgColor}`}>
@@ -102,7 +102,7 @@ export const PromptSuggestions = ({
           <div
             className={`${isGeneral ? "max-h-40" : "max-h-48"} overflow-y-auto`}
           >
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-2 pr-2">
               {prompts.map((prompt) => (
                 <Button
                   key={prompt}
@@ -112,7 +112,7 @@ export const PromptSuggestions = ({
                     getPromptButtonStyle
                       ? `text-left justify-start h-auto py-3 transition-all duration-200 shadow-sm hover:shadow-md ${getPromptButtonStyle(
                           prompt
-                        )} ${!isGeneral ? "hover:scale-[1.02]" : ""}`
+                        )}`
                       : "text-sm text-left justify-start h-auto py-3 bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
                   }
                   disabled={isLoading}

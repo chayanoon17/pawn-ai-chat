@@ -113,7 +113,7 @@ export const DailyOperationSummary = ({
             <CardTitle className="text-[24px] font-semibold">
               รายงานผลการดำเนินงาน
             </CardTitle>
-            <p className="text-sm text-[#36B8EE]">
+            <p className="text-sm text-[#3F99D8]">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
@@ -139,10 +139,16 @@ export const DailyOperationSummary = ({
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="text-center text-gray-400 py-16">
-            <div className="text-4xl mb-2">📊</div>
-            <p className="text-sm">ไม่มีข้อมูลรายงานผลการดำเนินงาน</p>
-            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 

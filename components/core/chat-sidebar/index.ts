@@ -6,6 +6,7 @@ export { PromptSuggestions } from "./prompt-suggestions";
 export { ChatInput } from "./chat-input";
 export { ThinkingAnimation } from "./thinking-animation";
 export { MarkdownMessage } from "./markdown-message";
+export { ChatErrorBoundary } from "./chat-error-boundary";
 
 // Export utilities
 export {

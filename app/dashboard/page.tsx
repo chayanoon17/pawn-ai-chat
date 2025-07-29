@@ -33,16 +33,6 @@ export default function DashboardPage() {
       <BasePageLayout page="pawn-tickets" pageTitle="แดชบอร์ด">
         {(filterData: WidgetFilterData) => (
           <div className="space-y-8">
-            {/* Page Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                📊 แดชบอร์ดภาพรวม
-              </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                ติดตามข้อมูลธุรกิจและการดำเนินงานแบบเรียลไทม์
-              </p>
-            </div>
-
             {/* Gold Price Section */}
             <GoldPriceCard />
 

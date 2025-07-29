@@ -197,7 +197,7 @@ export function AppSidebar() {
                               ? "text-white hover:text-white"
                               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                           }`}
-                          style={isActive ? { backgroundColor: "#3F99D8" } : {}}
+                          style={isActive ? { backgroundColor: "#308AC7" } : {}}
                         >
                           <Icon className="h-5 w-5" />
                           <span>{item.label}</span>

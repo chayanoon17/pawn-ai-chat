@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -103,38 +103,52 @@ export const TopRankingAssetType = ({
       : null
   );
 
-  const formattedDate = timestamp
-    ? new Date(timestamp).toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
-    <Card className="mb-6">
-      <CardContent>
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center my-1 space-y-4 lg:space-y-0">
+    <Card>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
           <div>
-            <h2 className="text-[24px] font-semibold mb-1">
+            <CardTitle className="text-[24px] font-semibold">
               10 อันดับ รายการประเภททรัพย์และราคา
-            </h2>
-            <p className="text-sm text-[#36B8EE]">
+            </CardTitle>
+            <p className="text-sm text-[#3F99D8]">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
-                : formattedDate
-                ? `อัปเดตล่าสุดเมื่อ ${formattedDate}`
+                : timestamp
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
+      </CardHeader>
 
+      <CardContent>
         {/* Error */}
         {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 

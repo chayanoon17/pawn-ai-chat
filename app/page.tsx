@@ -25,19 +25,22 @@ export default function Page() {
       }
 
       // Redirect ไปเมนูแรกที่มีสิทธิ์เข้าถึง
-      const firstMenu = userMenuPermissions[0];
-      const redirectPath =
-        firstMenu === "Dashboard"
-          ? "/dashboard"
-          : firstMenu === "Asset Types"
-          ? "/asset-types"
-          : firstMenu === "Users Management"
-          ? "/users"
-          : firstMenu === "Roles Management"
-          ? "/roles"
-          : firstMenu === "Activity Logs"
-          ? "/logs"
-          : "/welcome"; // fallback
+      let redirectPath = "";
+      if (userMenuPermissions.includes("Dashboard")) {
+        redirectPath = "/dashboard";
+      } else {
+        const firstMenu = userMenuPermissions[0];
+        redirectPath =
+          firstMenu === "Asset Types"
+            ? "/asset-types"
+            : firstMenu === "Users Management"
+            ? "/users"
+            : firstMenu === "Roles Management"
+            ? "/roles"
+            : firstMenu === "Activity Logs"
+            ? "/logs"
+            : "/welcome"; // fallback
+      }
 
       router.push(redirectPath);
     }

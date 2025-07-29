@@ -1,4 +1,4 @@
-import { MessageCircle, Menu, X } from "lucide-react";
+import { Bot, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -78,7 +78,7 @@ export default function Header({
             <WidgetFilter onFilterChange={onFilterChange} />
           )}
 
-          {/* AI Chat - แสดงเฉพาะหน้า dashboard และ asset-type */}
+          {/* Pawn AI - แสดงเฉพาะหน้า dashboard และ asset-type */}
           {shouldShowAIChat && (
             <Button
               onClick={onChatToggle}
@@ -86,8 +86,8 @@ export default function Header({
               size="sm"
               className="flex items-center space-x-1"
             >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">{"AI Chat"}</span>
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:inline">{"Pawn AI"}</span>
             </Button>
           )}
         </div>

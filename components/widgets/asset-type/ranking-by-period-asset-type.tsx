@@ -157,36 +157,39 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       : null
   );
 
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+    <Card>
+      <CardHeader className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center w-full">
           <div>
             <CardTitle className="text-[24px] font-semibold">
               ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา
             </CardTitle>
-            <p className="text-sm text-[#36B8EE]">
+            <p className="text-sm text-[#3F99D8]">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
-                : error
-                ? error
                 : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${new Date(timestamp).toLocaleString(
-                    "th-TH",
-                    {
-                      timeZone: "Asia/Bangkok",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}`
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
             </p>
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
@@ -194,8 +197,16 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
             <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-md">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500 py-12">
