@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { useOptimizedMemo, usePerformanceMonitor } from "@/lib/performance";
+import { ChartLoading } from "@/components/ui/loading";
 import { LazyLoad } from "@/lib/performance";
 
 type AssetTypeSummary = {
@@ -282,9 +283,10 @@ export const AssetTypesSummary = ({
           <>
             <LazyLoad
               fallback={
-                <div className="h-[500px] flex items-center justify-center">
-                  <div className="loading-skeleton h-full w-full rounded-lg" />
-                </div>
+                <ChartLoading
+                  className="h-[500px]"
+                  message="กำลังโหลดกราฟประเภททรัพย์..."
+                />
               }
               className="h-[500px]"
             >

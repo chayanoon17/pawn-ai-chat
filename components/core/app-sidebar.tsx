@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
 import { showConfirmation } from "@/lib/sweetalert";
+import { InlineLoading } from "@/components/ui/loading";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -238,7 +239,11 @@ export function AppSidebar() {
               aria-label="Logout"
             >
               {isLoggingOut ? (
-                <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+                <InlineLoading
+                  message="กำลังออกจากระบบ..."
+                  size="sm"
+                  showText
+                />
               ) : (
                 <LogOut className="w-4 h-4 text-gray-500 transition-colors duration-200" />
               )}

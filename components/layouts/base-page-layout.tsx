@@ -9,7 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatSidebar } from "@/components/core";
 import { WidgetFilterData } from "@/components/features/filters";
 import { WidgetProvider } from "@/context/widget-context";
-import { LoadingSpinner } from "@/components/ui/states";
+import { LoadingSpinner } from "@/components/ui/loading";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface BasePageLayoutProps {
