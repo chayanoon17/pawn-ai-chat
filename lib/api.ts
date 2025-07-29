@@ -10,6 +10,7 @@ import axios, {
   AxiosResponse,
 } from "axios";
 import { ApiResponse, ApiErrorResponse } from "@/types/api";
+import {ConversationListResponse} from "@/types/api";
 
 export async function sendChatMessage(message: string): Promise<string> {
   const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
@@ -61,7 +62,7 @@ export async function sendChatMessageStream(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+        body: JSON.stringify({ message, messages }), //  ส่งทั้ง message เดี่ยวและ history
         credentials: "include",
       }
     );
@@ -111,6 +112,39 @@ export async function sendChatMessageStream(
     throw error;
   }
 }
+
+
+export async function getUserConversations(page = 1, limit = 10) {
+  const res = await apiClient.get<ConversationListResponse>(
+    `/api/v1/chat/conversations?page=${page}&limit=${limit}`
+  );
+
+  console.log("✅ getUserConversations raw result:", res);
+
+  // Return แบบไม่ซ้อน data.data
+  return res.data;
+}
+
+export interface Message {
+  from: "user" | "ai";
+  text: string;
+  time: string;
+}
+
+export async function getConversationMessages(conversationId: string) {
+  const res = await apiClient.get<ApiResponse<Message[]>>(
+    `/api/v1/chat/conversations/${conversationId}/messages`
+  );
+  return res.data;
+}
+
+
+
+export async function deleteConversation(conversationId: string) {
+  return apiClient.delete(`/api/v1/chat/conversations/${conversationId}`);
+}
+
+
 
 /**
  * API Client Class - Singleton pattern สำหรับการจัดการ HTTP requests

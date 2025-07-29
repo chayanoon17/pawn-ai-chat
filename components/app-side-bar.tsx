@@ -76,10 +76,10 @@ export function AppSidebar() {
                     <Link href={id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        className={`w-full justify-start space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${
+                        className={`w-full justify-start  space-x-3 px-3 py-2 rounded-lg transition-colors flex items-center text-sm font-medium ${
                           isActive
                             ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            : "text-gray-600 hover:bg-blue-500 hover:text-gray-950"
                         }`}
                       >
                         <Icon className="h-5 w-5" />
@@ -143,7 +143,7 @@ export function AppSidebar() {
                     </>
                   ) : (
                     <>
-                      <LogOut className="w-4 h-4 group-hover:text-blue-600 transition-colors duration-200" />
+                      <LogOut className="w-4 h-4 group-hover:text-blue-600  transition-colors duration-20" />
                       <span className="text-sm">ออกจากระบบ</span>
                     </>
                   )}

@@ -661,7 +661,7 @@ export const ChatSidebar = ({
                 variant="outline"
                 size="sm"
                 className="text-sm"
-                disabled={isSending || isThinking}
+                disabled={ isThinking}
                 onClick={() => {
                   setInputValue(prompt);
                   handleSendMessage();
@@ -692,7 +692,7 @@ export const ChatSidebar = ({
                 variant="outline"
                 size="sm"
                 className={getPromptButtonStyle(prompt)}
-                disabled={isSending || isThinking}
+                disabled={isThinking}
                 onClick={() => {
                   setInputValue(prompt);
                   handleSendMessage();
@@ -713,12 +713,12 @@ export const ChatSidebar = ({
             onKeyPress={handleKeyPress}
             placeholder={isThinking ? "AI กำลังคิด..." : "พิมพ์ข้อความ..."}
             className="flex-1"
-            disabled={isSending || isThinking}
+            disabled={ isThinking}
           />
           <Button
             onClick={handleSendMessage}
             size="sm"
-            disabled={isSending || isThinking || !inputValue.trim()}
+            disabled={ isThinking || !inputValue.trim()}
           >
             <Send className="w-4 h-4" />
           </Button>
