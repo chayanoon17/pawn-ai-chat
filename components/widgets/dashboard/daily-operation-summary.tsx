@@ -106,7 +106,7 @@ export const DailyOperationSummary = ({
   };
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardHeader className="flex flex-col space-y-4">
         <div className="flex justify-between items-center w-full">
           <div>

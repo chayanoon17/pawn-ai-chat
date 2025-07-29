@@ -82,18 +82,12 @@ export default function Header({
           {shouldShowAIChat && (
             <Button
               onClick={onChatToggle}
-              variant={isChatOpen ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1"
             >
-              {isChatOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <MessageCircle className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">
-                {isChatOpen ? "ปิด Chat" : "AI Chat"}
-              </span>
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">{"AI Chat"}</span>
             </Button>
           )}
         </div>

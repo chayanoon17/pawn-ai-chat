@@ -1,8 +1,7 @@
-// 🎯 Base Layout Component สำหรับลดโค้ดซ้ำซ้อน
 "use client";
 
-import { useState, useCallback, ReactNode, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useState, useCallback, ReactNode } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/core";
 import Header from "@/components/core/header";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
@@ -10,7 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatSidebar } from "@/components/core";
 import { WidgetFilterData } from "@/components/features/filters";
 import { WidgetProvider } from "@/context/widget-context";
-import { LoadingSpinner, EmptyState, ErrorState } from "@/components/ui/states";
+import { LoadingSpinner } from "@/components/ui/states";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface BasePageLayoutProps {
   children: ReactNode | ((filterData: WidgetFilterData) => ReactNode);
@@ -31,10 +31,6 @@ export default function BasePageLayout({
   pageTitle,
   showFilter = true,
   onFilterChange,
-  className = "",
-  ariaLabel,
-  showBackButton = false,
-  onBack,
 }: BasePageLayoutProps) {
   const isMobile = useIsMobile();
 
@@ -113,17 +109,26 @@ export default function BasePageLayout({
             </main>
 
             {/* Chat Sidebar - Responsive */}
-            {isChatOpen && (
+            {isMobile ? (
+              // Mobile: ใช้ Sheet เหมือน AppSidebar
+              <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
+                <SheetContent
+                  side="right"
+                  className="p-0 w-full max-w-sm [&>button]:hidden"
+                >
+                  <ChatSidebar
+                    onClose={() => setIsChatOpen(false)}
+                    className="w-full h-full border-0"
+                  />
+                </SheetContent>
+              </Sheet>
+            ) : (
+              // Desktop: ใช้ fixed positioning
               <ChatSidebar
-                isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
                 className={`
-                  ${
-                    isMobile
-                      ? "fixed inset-0 z-50"
-                      : "fixed top-0 right-0 bottom-0 w-80"
-                  }
-                  bg-white shadow-lg transform transition-transform duration-300
+                  fixed top-0 right-0 bottom-0 z-40
+                  shadow-lg transform transition-transform duration-300 ease-in-out
                   ${isChatOpen ? "translate-x-0" : "translate-x-full"}
                 `}
               />

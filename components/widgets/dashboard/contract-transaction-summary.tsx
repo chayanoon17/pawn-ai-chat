@@ -238,7 +238,7 @@ export const ContractTransactionSummary = ({
   ); // Keep data dependency but ensure it's stable
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
           <div>
