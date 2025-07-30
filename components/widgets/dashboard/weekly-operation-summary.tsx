@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, TrendingUp, Clock } from "lucide-react";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 interface WeeklyOperationData {
@@ -325,14 +325,17 @@ export const WeeklyOperationSummary = ({
   );
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <CardTitle className="text-[24px] font-semibold">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               ยอดรับจำนำและรายละเอียด
             </CardTitle>
-            <p className="text-sm text-[#3F99D8]">
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : data
@@ -340,7 +343,7 @@ export const WeeklyOperationSummary = ({
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -348,10 +351,13 @@ export const WeeklyOperationSummary = ({
       <CardContent>
         {loading || isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-2">
               <div className="text-red-500">⚠️</div>
               <div>

@@ -110,6 +110,7 @@ export const showDeleteConfirmation = (
     showCancelButton: true,
     confirmButtonColor: "#ef4444", // red-500
     confirmButtonText,
+    cancelButtonColor: "#6b7280", // gray-500
     cancelButtonText,
     reverseButtons: true,
   });

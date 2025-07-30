@@ -3,14 +3,20 @@
 import {
   Search,
   SlidersHorizontal,
-  CreditCard,
-  Percent,
-  RefreshCw,
-  HeartCrack,
-  DivideSquare,
-  PlusCircle,
-  Clock,
   Download,
+  FileBarChart,
+  Ticket,
+  Tickets,
+  TicketCheck,
+  TicketMinus,
+  TicketPercent,
+  TicketPlus,
+  TicketX,
+  Eye,
+  Clock,
+  UserRound,
+  Gem,
+  CircleDollarSign,
 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +45,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import apiClient, { getApiUrl } from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { showWarning } from "@/lib/sweetalert";
@@ -59,6 +73,9 @@ interface TransactionDetailItem {
   interestAmount: number;
   transactionType: string;
   branchId: number;
+  branchName: string;
+  branchShortName: string;
+  branchLocation: string;
   assetType: string;
   assetDetail: string;
   pawnPrice: number;
@@ -88,7 +105,7 @@ interface ContractTransactionDetailsProps {
 // ✅ สีของการ์ดและไอคอน
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "รับจำนำ":
+    case "จำนำ":
       return "bg-green-100 text-green-700";
     case "ส่งดอกเบี้ย":
       return "bg-blue-100 text-blue-700";
@@ -96,12 +113,12 @@ const getStatusColor = (status: string) => {
       return "bg-orange-100 text-orange-700";
     case "หลุดจำนำ":
       return "bg-pink-100 text-pink-700";
-    case "แบ่งไถ่":
-      return "bg-yellow-100 text-yellow-700";
+    case "ผ่อนต้น":
+      return "bg-teal-100 text-teal-700";
     case "เพิ่มต้น":
       return "bg-purple-100 text-purple-700";
-    case "ผ่อนผัน":
-      return "bg-teal-100 text-teal-700";
+    case "แบ่งไถ่":
+      return "bg-yellow-100 text-yellow-700";
     default:
       return "bg-gray-100 text-gray-600";
   }
@@ -109,7 +126,7 @@ const getStatusColor = (status: string) => {
 
 const getIconBgColor = (status: string) => {
   switch (status) {
-    case "รับจำนำ":
+    case "จำนำ":
       return "bg-green-700";
     case "ส่งดอกเบี้ย":
       return "bg-blue-700";
@@ -117,34 +134,34 @@ const getIconBgColor = (status: string) => {
       return "bg-orange-700";
     case "หลุดจำนำ":
       return "bg-pink-700";
-    case "แบ่งไถ่":
-      return "bg-yellow-600";
+    case "ผ่อนต้น":
+      return "bg-teal-700";
     case "เพิ่มต้น":
       return "bg-purple-700";
-    case "ผ่อนผัน":
-      return "bg-teal-700";
+    case "แบ่งไถ่":
+      return "bg-yellow-600";
     default:
       return "bg-gray-500";
   }
 };
 
 type TransactionType =
-  | "รับจำนำ"
+  | "จำนำ"
   | "ส่งดอกเบี้ย"
   | "ไถ่ถอน"
   | "หลุดจำนำ"
-  | "แบ่งไถ่"
+  | "ผ่อนต้น"
   | "เพิ่มต้น"
-  | "ผ่อนผัน";
+  | "แบ่งไถ่";
 
 const statusIconMap: Record<TransactionType, JSX.Element> = {
-  รับจำนำ: <CreditCard className="w-6 h-6 text-white" />,
-  ส่งดอกเบี้ย: <Percent className="w-6 h-6 text-white" />,
-  ไถ่ถอน: <RefreshCw className="w-6 h-6 text-white" />,
-  หลุดจำนำ: <HeartCrack className="w-6 h-6 text-white" />,
-  แบ่งไถ่: <DivideSquare className="w-6 h-6 text-white" />,
-  เพิ่มต้น: <PlusCircle className="w-6 h-6 text-white" />,
-  ผ่อนผัน: <Clock className="w-6 h-6 text-white" />,
+  จำนำ: <Ticket className="w-5 h-5 text-white" />,
+  ส่งดอกเบี้ย: <TicketPercent className="w-5 h-5 text-white" />,
+  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-white" />,
+  หลุดจำนำ: <TicketX className="w-5 h-5 text-white" />,
+  ผ่อนต้น: <TicketCheck className="w-5 h-5 text-white" />,
+  เพิ่มต้น: <TicketPlus className="w-5 h-5 text-white" />,
+  แบ่งไถ่: <Tickets className="w-5 h-5 text-white" />,
 };
 
 export default function ContractTransactionDetails({
@@ -161,6 +178,9 @@ export default function ContractTransactionDetails({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionDetailItem | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const pageSize = 10;
 
   // 🔄 ดึงข้อมูลจาก API
@@ -306,23 +326,38 @@ export default function ContractTransactionDetails({
     });
   };
 
+  const formatDateOnly = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          <div>
-            <CardTitle className="text-[24px] font-semibold text-gray-900">
-              รายการรับจำนำทั้งหมด
-            </CardTitle>
-            <p className="text-sm text-[#3F99D8]">
-              {isLoading
-                ? "กำลังโหลดข้อมูล..."
-                : data
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
-            </p>
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between space-y-4 lg:space-y-0">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-slate-100 rounded-lg">
+              <FileBarChart className="w-5 h-5 text-slate-600" />
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-lg font-semibold text-slate-80">
+                รายการรับจำนำทั้งหมด
+              </CardTitle>
+              <span className="text-sm text-slate-500">
+                {isLoading
+                  ? "กำลังโหลดข้อมูล..."
+                  : data
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                  : branchId === "all"
+                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                  : "ไม่พบข้อมูล"}
+              </span>
+            </div>
           </div>
           {/* Export Button */}
           {data && data.transactions.length > 0 && (
@@ -331,7 +366,7 @@ export default function ContractTransactionDetails({
               disabled={loading || isLoading}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
             >
               <Download className="w-4 h-4" />
               ส่งออกเป็น CSV
@@ -340,13 +375,16 @@ export default function ContractTransactionDetails({
         </div>
       </CardHeader>
 
-      <CardContent className="p-6">
+      <CardContent>
         {loading || isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-2">
               <div className="text-red-500">⚠️</div>
               <div>
@@ -435,7 +473,7 @@ export default function ContractTransactionDetails({
             </div>
 
             {/* ✅ Search & Filter */}
-            <div className="my-4">
+            <div className="my-5">
               <div className="flex flex-col sm:flex-row gap-4 w-full">
                 {/* Search Box - Full Width */}
                 <div className="relative flex-1">
@@ -508,11 +546,12 @@ export default function ContractTransactionDetails({
                 <TableHeader>
                   <TableRow className="bg-gray-100">
                     <TableHead>เลขที่สัญญา</TableHead>
-                    <TableHead>ชื่อ</TableHead>
+                    <TableHead>ชื่อ - นามสกุล</TableHead>
                     <TableHead>ประเภททรัพย์</TableHead>
-                    <TableHead>รายละเอียด</TableHead>
-                    <TableHead>ประเภท</TableHead>
-                    <TableHead className="text-right">ราคา</TableHead>
+                    <TableHead className="text-center">รายละเอียด</TableHead>
+                    <TableHead className="pl-8">ประเภท</TableHead>
+                    <TableHead className="text-center pl-8">ราคา</TableHead>
+                    <TableHead className="text-center">จัดการ</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -538,12 +577,25 @@ export default function ContractTransactionDetails({
                       <TableCell className="text-right">
                         {item.pawnPrice.toLocaleString()} บาท
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedTransaction(item);
+                            setViewDialogOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {Array.from({ length: pageSize - paginatedData.length }).map(
                     (_, idx) => (
                       <TableRow key={`empty-${idx}`}>
-                        <TableCell colSpan={6} className="py-6" />
+                        <TableCell colSpan={7} className="py-6" />
                       </TableRow>
                     )
                   )}
@@ -621,6 +673,236 @@ export default function ContractTransactionDetails({
             </div>
           </>
         )}
+
+        {/* Transaction Detail Dialog */}
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <FileBarChart className="w-5 h-5 text-slate-600" />
+                <span>รายละเอียดธุรกรรม</span>
+              </DialogTitle>
+              <DialogDescription className="text-slate-500">
+                ข้อมูลรายละเอียดของธุรกรรมเลขที่{" "}
+                {selectedTransaction?.contractNumber}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedTransaction && (
+              <div className="space-y-4">
+                {/* ข้อมูลสัญญา */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                    <Ticket className="w-4 h-4 text-slate-500" />
+                    <span>ข้อมูลสัญญา</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        เลขที่สัญญา
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-mono">
+                        {selectedTransaction.contractNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ประเภทธุรกรรม
+                      </label>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                            selectedTransaction.transactionType
+                          )}`}
+                        >
+                          {selectedTransaction.transactionType}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        สถานะตั๋ว
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.ticketStatus}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        สาขา
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.branchLocation} (
+                        {selectedTransaction.branchShortName})
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ข้อมูลลูกค้า */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                    <UserRound className="w-4 h-4 text-slate-500" />
+                    <span>ข้อมูลลูกค้า</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ชื่อ-นามสกุล
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.customerName}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        เบอร์โทรศัพท์
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.customerPhone || "-"}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ที่อยู่
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.customerAddress || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        อาชีพ
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.customerOccupation || "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ข้อมูลทรัพย์สิน */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                    <Gem className="w-4 h-4 text-slate-500" />
+                    <span>ข้อมูลทรัพย์สิน</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ประเภททรัพย์
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.assetType}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ราคาจำนำ
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-semibold">
+                        {selectedTransaction.pawnPrice.toLocaleString()} บาท
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        รายละเอียดทรัพย์
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 whitespace-pre-wrap">
+                        {selectedTransaction.assetDetail}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ข้อมูลการเงิน */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                    <CircleDollarSign className="w-4 h-4 text-slate-500" />
+                    <span>ข้อมูลการเงิน</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ยอดคงเหลือ
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-semibold">
+                        {selectedTransaction.remainingAmount.toLocaleString()}{" "}
+                        บาท
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ดอกเบี้ย
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.interestAmount.toLocaleString()}{" "}
+                        บาท
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ดอกเบี้ยรายเดือน
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.monthlyInterest.toLocaleString()}{" "}
+                        บาท
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        จำนวนวันเกินกำหนด
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.overdueDays} วัน
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ข้อมูลวันที่ */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-slate-500" />
+                    <span>ข้อมูลวันที่</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        วันที่ทำธุรกรรม
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {formatDateOnly(selectedTransaction.transactionDate)}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        วันที่ชำระดอกเบี้ย
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.interestPaymentDate
+                          ? formatDateOnly(
+                              selectedTransaction.interestPaymentDate
+                            )
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        วันที่ไถ่ถอน
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1">
+                        {selectedTransaction.redeemedDate
+                          ? formatDateOnly(selectedTransaction.redeemedDate)
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

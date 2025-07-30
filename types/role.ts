@@ -6,6 +6,9 @@
 // Import shared types
 import { Permission, MenuPermission, Branch } from "./auth";
 
+// Re-export for convenience
+export type { Permission, MenuPermission, Branch };
+
 // ===== ROLE MANAGEMENT SPECIFIC TYPES =====
 export interface Role {
   id: number;
@@ -22,13 +25,15 @@ export interface Role {
 export interface CreateRoleData {
   name: string;
   description: string;
-  permissions: number[]; // Array of permission IDs
-  menuPermissions: number[]; // Array of menu permission IDs
-  branches: number[]; // Array of branch IDs
+  permissionIds?: number[]; // Array of permission IDs
+  menuPermissionIds?: number[]; // Array of menu permission IDs
 }
 
-export interface UpdateRoleData extends CreateRoleData {
-  id: number;
+export interface UpdateRoleData {
+  name: string;
+  description: string;
+  permissionIds?: number[]; // Array of permission IDs
+  menuPermissionIds?: number[]; // Array of menu permission IDs
 }
 
 export interface RoleFormData {

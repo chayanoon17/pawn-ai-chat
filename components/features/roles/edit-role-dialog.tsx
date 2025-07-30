@@ -1,12 +1,6 @@
-/**
- * Edit Role Dialog Component
- */
-
 "use client";
 
 import { useState, useEffect } from "react";
-import { Shield, Menu as MenuIcon, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,460 +9,302 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import apiRequest from "@/lib/api";
-import { toast } from "sonner";
+import { Briefcase, FileText, LayoutGrid, KeyRound } from "lucide-react";
+import { updateRole } from "@/lib/api";
+import { usePermissions } from "@/hooks/use-permissions";
+import { showUpdateSuccess, showError, showWarning } from "@/lib/sweetalert";
 import type {
-  EditRoleDialogProps,
   Permission,
   MenuPermission,
-  Branch,
-} from "@/types";
-import type { Role } from "@/types/role-management";
+  CreateRoleData,
+  Role,
+} from "@/types/role";
+
+interface EditRoleDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedRole: Role | null;
+  availablePermissions: Permission[];
+  availableMenuPermissions: MenuPermission[];
+  onRoleUpdated: (updatedRole: Role) => void;
+}
 
 export function EditRoleDialog({
   open,
   onOpenChange,
-  role,
+  selectedRole,
+  availablePermissions,
+  availableMenuPermissions,
   onRoleUpdated,
-  canManagePermissions,
-  canManageMenuPermissions,
 }: EditRoleDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const { isSuperAdmin, isAdmin } = usePermissions();
 
-  // API Data
-  const [availablePermissions, setAvailablePermissions] = useState<
-    Permission[]
-  >([]);
-  const [availableMenuPermissions, setAvailableMenuPermissions] = useState<
-    MenuPermission[]
-  >([]);
-  const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
-
-  // Form data
-  const [formData, setFormData] = useState({
+  const [editRoleData, setEditRoleData] = useState<CreateRoleData>({
     name: "",
     description: "",
-    permissions: [] as number[],
-    menuPermissions: [] as number[],
-    branches: [] as number[],
+    permissionIds: [],
+    menuPermissionIds: [],
   });
 
-  // Load data from API when dialog opens
+  // Update form data when selectedRole changes
   useEffect(() => {
-    if (open) {
-      loadApiData();
-      initializeFormData();
+    if (selectedRole) {
+      setEditRoleData({
+        name: selectedRole.name,
+        description: selectedRole.description,
+        permissionIds: selectedRole.permissions.map((p) => p.id),
+        menuPermissionIds: selectedRole.menuPermissions.map((mp) => mp.id),
+      });
     }
-  }, [open, role]);
+  }, [selectedRole]);
 
-  const loadApiData = async () => {
-    setIsLoadingData(true);
-    try {
-      // Load permissions (if Super Admin)
-      if (canManagePermissions) {
-        const permissionsResponse = await apiRequest.get(
-          "/api/v1/menu/permissions"
-        );
-        if (permissionsResponse.success) {
-          setAvailablePermissions(permissionsResponse.data as Permission[]);
-        }
-      }
+  const handleEditRole = async () => {
+    if (!selectedRole) return;
 
-      // Load menu permissions (if Admin or Super Admin)
-      if (canManageMenuPermissions) {
-        const menuPermissionsResponse = await apiRequest.get(
-          "/api/v1/menu/menu-permissions"
-        );
-        if (menuPermissionsResponse.success) {
-          setAvailableMenuPermissions(
-            menuPermissionsResponse.data as MenuPermission[]
-          );
-        }
-      }
-
-      // Load branches
-      const branchesResponse = await apiRequest.get("/api/v1/menu/branches");
-      if (branchesResponse.success) {
-        setAvailableBranches(branchesResponse.data as Branch[]);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  const initializeFormData = () => {
-    setFormData({
-      name: role.name || "",
-      description: role.description || "",
-      permissions: role.permissions?.map((p) => p.id) || [],
-      menuPermissions: role.menuPermissions?.map((mp) => mp.id) || [],
-      branches: [], // Role doesn't have branches property, will be loaded from API
-    });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handlePermissionChange = (permissionId: number, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      permissions: checked
-        ? [...prev.permissions, permissionId]
-        : prev.permissions.filter((id) => id !== permissionId),
-    }));
-  };
-
-  const handleMenuPermissionChange = (
-    menuPermissionId: number,
-    checked: boolean
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      menuPermissions: checked
-        ? [...prev.menuPermissions, menuPermissionId]
-        : prev.menuPermissions.filter((id) => id !== menuPermissionId),
-    }));
-  };
-
-  const handleBranchChange = (branchId: number, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      branches: checked
-        ? [...prev.branches, branchId]
-        : prev.branches.filter((id) => id !== branchId),
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.name.trim()) {
-      toast.error("กรุณากรอกชื่อตำแหน่ง");
+    // Validation
+    if (!editRoleData.name.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกชื่อตำแหน่ง");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await apiRequest.put(
-        `/api/v1/menu/roles/${role.id}`,
-        formData
-      );
+    if (!editRoleData.description.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกคำอธิบายตำแหน่ง");
+      return;
+    }
 
-      if (response.success) {
-        toast.success("อัปเดตตำแหน่งสำเร็จ");
-        onRoleUpdated();
-        onOpenChange(false);
-      } else {
-        toast.error(response.message || "เกิดข้อผิดพลาดในการอัปเดตตำแหน่ง");
-      }
+    try {
+      // เรียก API อัปเดต role
+      const updatedRoleData = await updateRole(selectedRole.id, editRoleData);
+
+      // เรียก callback function
+      onRoleUpdated(updatedRoleData);
+
+      // ปิด dialog และรีเซ็ตฟอร์ม
+      onOpenChange(false);
+      setEditRoleData({
+        name: "",
+        description: "",
+        permissionIds: [],
+        menuPermissionIds: [],
+      });
+
+      // แสดง SweetAlert2 success
+      showUpdateSuccess(
+        "อัปเดตตำแหน่งสำเร็จ!",
+        `ตำแหน่ง "${editRoleData.name}" ถูกอัปเดตเรียบร้อยแล้ว`
+      );
     } catch (error) {
       console.error("Error updating role:", error);
-      toast.error("เกิดข้อผิดพลาดในการอัปเดตตำแหน่ง");
-    } finally {
-      setIsLoading(false);
+      showError(
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถอัปเดตตำแหน่งได้ กรุณาลองใหม่อีกครั้ง"
+      );
     }
   };
 
   const handleClose = () => {
     onOpenChange(false);
+    // Don't reset form data here, let parent component handle it
   };
-
-  // Group permissions by analyzing name content
-  const groupPermissionsByCategory = (permissions: Permission[]) => {
-    const groups: Record<string, Permission[]> = {};
-
-    permissions.forEach((permission) => {
-      // Simple categorization based on permission name
-      let category = "อื่นๆ";
-
-      if (
-        permission.name.includes("user") ||
-        permission.name.includes("ผู้ใช้")
-      ) {
-        category = "จัดการผู้ใช้";
-      } else if (
-        permission.name.includes("role") ||
-        permission.name.includes("ตำแหน่ง")
-      ) {
-        category = "จัดการตำแหน่ง";
-      } else if (
-        permission.name.includes("report") ||
-        permission.name.includes("รายงาน")
-      ) {
-        category = "รายงาน";
-      } else if (
-        permission.name.includes("setting") ||
-        permission.name.includes("ตั้งค่า")
-      ) {
-        category = "ตั้งค่าระบบ";
-      }
-
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(permission);
-    });
-
-    return groups;
-  };
-
-  if (isLoadingData) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const permissionGroups = groupPermissionsByCategory(availablePermissions);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>แก้ไขตำแหน่ง: {role.name}</DialogTitle>
-          <DialogDescription>
-            แก้ไขข้อมูลตำแหน่งและสิทธิ์การเข้าถึง
+          <DialogTitle className="flex items-center space-x-2">
+            <Briefcase className="w-5 h-5 text-slate-600" />
+            <span>แก้ไขตำแหน่ง: {selectedRole?.name}</span>
+          </DialogTitle>
+          <DialogDescription className="text-slate-500">
+            แก้ไขข้อมูลตำแหน่งและสิทธิ์การใช้งาน
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                ข้อมูลพื้นฐาน
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Basic Info */}
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+            <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+              <FileText className="w-4 h-4 text-slate-500" />
+              <span>ข้อมูลพื้นฐาน</span>
+            </h3>
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="name">ชื่อตำแหน่ง *</Label>
+                <Label
+                  htmlFor="edit-name"
+                  className="text-xs font-medium text-slate-500 uppercase tracking-wide"
+                >
+                  ชื่อตำแหน่ง
+                </Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="กรอกชื่อตำแหน่ง"
+                  id="edit-name"
+                  value={editRoleData.name}
+                  onChange={(e) =>
+                    setEditRoleData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder="เช่น ผู้ดูแลระบบ"
+                  className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                 />
               </div>
               <div>
-                <Label htmlFor="description">คำอธิบาย</Label>
+                <Label
+                  htmlFor="edit-description"
+                  className="text-xs font-medium text-slate-500 uppercase tracking-wide"
+                >
+                  คำอธิบาย
+                </Label>
                 <Textarea
-                  id="description"
-                  value={formData.description}
+                  id="edit-description"
+                  value={editRoleData.description}
                   onChange={(e) =>
-                    handleInputChange("description", e.target.value)
+                    setEditRoleData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
                   }
-                  placeholder="กรอกคำอธิบายตำแหน่ง"
-                  rows={3}
+                  placeholder="อธิบายหน้าที่และความรับผิดชอบ"
+                  className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Permissions Section - Only show if user can manage permissions */}
-          {canManagePermissions && availablePermissions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  สิทธิ์การใช้งาน
-                </CardTitle>
-                <CardDescription>
-                  เลือกสิทธิ์ที่ต้องการให้กับตำแหน่งนี้
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {Object.entries(permissionGroups).map(
-                    ([category, permissions]) => (
-                      <div key={category}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="secondary">{category}</Badge>
-                          <span className="text-sm text-gray-500">
-                            ({permissions.length} รายการ)
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-4">
-                          {permissions.map((permission) => (
-                            <div
-                              key={permission.id}
-                              className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50"
-                            >
-                              <Checkbox
-                                id={`permission-${permission.id}`}
-                                checked={formData.permissions.includes(
-                                  permission.id
-                                )}
-                                onCheckedChange={(checked) =>
-                                  handlePermissionChange(
-                                    permission.id,
-                                    checked as boolean
-                                  )
-                                }
-                              />
-                              <div className="flex-1 min-w-0">
-                                <label
-                                  htmlFor={`permission-${permission.id}`}
-                                  className="text-sm font-medium text-gray-900 cursor-pointer"
-                                >
-                                  {permission.name}
-                                </label>
-                                {permission.description && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {permission.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {category !==
-                          Object.keys(permissionGroups)[
-                            Object.keys(permissionGroups).length - 1
-                          ] && <Separator className="mt-4" />}
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Menu Permissions Section - Only show if user can manage menu permissions */}
-          {canManageMenuPermissions && availableMenuPermissions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MenuIcon className="w-4 h-4" />
-                  สิทธิ์เมนู
-                </CardTitle>
-                <CardDescription>
-                  เลือกเมนูที่ต้องการให้ตำแหน่งนี้เข้าถึงได้
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {availableMenuPermissions.map((menuPermission) => (
-                    <div
-                      key={menuPermission.id}
-                      className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50"
-                    >
-                      <Checkbox
-                        id={`menu-permission-${menuPermission.id}`}
-                        checked={formData.menuPermissions.includes(
-                          menuPermission.id
-                        )}
-                        onCheckedChange={(checked) =>
-                          handleMenuPermissionChange(
-                            menuPermission.id,
-                            checked as boolean
-                          )
+          {/* Menu Permissions - Super Admin และ Admin */}
+          {(isSuperAdmin() || isAdmin()) && (
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+              <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                <LayoutGrid className="w-4 h-4 text-slate-500" />
+                <span>สิทธิ์การเข้าถึงเมนู</span>
+              </h3>
+              <p className="text-xs text-slate-500 mb-3">
+                เลือกเมนูที่ตำแหน่งนี้สามารถเข้าถึงได้ (Super Admin และ Admin)
+              </p>
+              <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+                {availableMenuPermissions.map((menuPermission) => (
+                  <div
+                    key={menuPermission.id}
+                    className="flex items-start space-x-3 p-2 hover:bg-slate-50 rounded"
+                  >
+                    <Checkbox
+                      id={`edit-menu-${menuPermission.id}`}
+                      checked={(editRoleData.menuPermissionIds || []).includes(
+                        menuPermission.id
+                      )}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setEditRoleData((prev) => ({
+                            ...prev,
+                            menuPermissionIds: [
+                              ...(prev.menuPermissionIds || []),
+                              menuPermission.id,
+                            ],
+                          }));
+                        } else {
+                          setEditRoleData((prev) => ({
+                            ...prev,
+                            menuPermissionIds: (
+                              prev.menuPermissionIds || []
+                            ).filter((id) => id !== menuPermission.id),
+                          }));
                         }
-                      />
-                      <div className="flex-1 min-w-0">
-                        <label
-                          htmlFor={`menu-permission-${menuPermission.id}`}
-                          className="text-sm font-medium text-gray-900 cursor-pointer"
-                        >
-                          {menuPermission.name}
-                        </label>
-                        {menuPermission.description && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {menuPermission.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Branches Section */}
-          {availableBranches.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>สาขาที่เข้าถึงได้</CardTitle>
-                <CardDescription>
-                  เลือกสาขาที่ตำแหน่งนี้สามารถเข้าถึงได้
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {availableBranches.map((branch) => (
-                    <div
-                      key={branch.id}
-                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50"
-                    >
-                      <Checkbox
-                        id={`branch-${branch.id}`}
-                        checked={formData.branches.includes(branch.id)}
-                        onCheckedChange={(checked) =>
-                          handleBranchChange(branch.id, checked as boolean)
-                        }
-                      />
-                      <label
-                        htmlFor={`branch-${branch.id}`}
-                        className="text-sm font-medium text-gray-900 cursor-pointer"
+                      }}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`edit-menu-${menuPermission.id}`}
+                        className="text-sm font-medium text-slate-700"
                       >
-                        {branch.name}
-                      </label>
+                        {menuPermission.name}
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        {menuPermission.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Permissions - เฉพาะ Super Admin เท่านั้น */}
+          {isSuperAdmin() && (
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+              <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+                <KeyRound className="w-4 h-4 text-slate-500" />
+                <span>สิทธิ์การใช้งาน</span>
+              </h3>
+              <p className="text-xs text-slate-500 mb-3">
+                เลือกสิทธิ์ที่ตำแหน่งนี้จะมี (เฉพาะ Super Admin)
+              </p>
+              <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-white">
+                {availablePermissions.map((permission) => (
+                  <div
+                    key={permission.id}
+                    className="flex items-start space-x-3 p-2 hover:bg-slate-50 rounded"
+                  >
+                    <Checkbox
+                      id={`edit-permission-${permission.id}`}
+                      checked={(editRoleData.permissionIds || []).includes(
+                        permission.id
+                      )}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setEditRoleData((prev) => ({
+                            ...prev,
+                            permissionIds: [
+                              ...(prev.permissionIds || []),
+                              permission.id,
+                            ],
+                          }));
+                        } else {
+                          setEditRoleData((prev) => ({
+                            ...prev,
+                            permissionIds: (prev.permissionIds || []).filter(
+                              (id) => id !== permission.id
+                            ),
+                          }));
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`edit-permission-${permission.id}`}
+                        className="text-sm font-medium text-slate-700"
+                      >
+                        {permission.name}
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        {permission.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-            <X className="w-4 h-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            className="border-slate-300 text-slate-700 hover:bg-slate-100"
+          >
             ยกเลิก
           </Button>
           <Button
-            onClick={handleSubmit}
-            disabled={isLoading || !formData.name.trim()}
+            onClick={handleEditRole}
+            disabled={!editRoleData.name.trim()}
+            className="bg-[#308AC7] hover:bg-[#3F99D8] text-white"
           >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                กำลังอัปเดต...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                อัปเดตตำแหน่ง
-              </>
-            )}
+            บันทึกการแก้ไข
           </Button>
         </DialogFooter>
       </DialogContent>

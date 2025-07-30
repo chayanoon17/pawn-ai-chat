@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package, Clock } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -248,14 +249,17 @@ export const AssetTypesSummary = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <CardTitle className="text-[24px] font-semibold">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <Package className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลประเภททรัพย์และจำนวน
             </CardTitle>
-            <p className="text-sm text-[#3F99D8]">
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
@@ -263,7 +267,7 @@ export const AssetTypesSummary = ({
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -271,11 +275,13 @@ export const AssetTypesSummary = ({
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2" />
-            <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-2">
               <div className="text-red-500">⚠️</div>
               <div>

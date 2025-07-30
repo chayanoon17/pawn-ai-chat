@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Clock } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -238,14 +239,17 @@ export const ContractTransactionSummary = ({
   ); // Keep data dependency but ensure it's stable
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <CardTitle className="text-[24px] font-semibold">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <FileText className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลแสดงสถานะตั๋วจำนำ
             </CardTitle>
-            <p className="text-sm text-[#3F99D8]">
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
@@ -253,25 +257,25 @@ export const ContractTransactionSummary = ({
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-6">
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-              <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
             </div>
           </div>
         )}
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-2">
               <div className="text-red-500">⚠️</div>
               <div>
@@ -286,7 +290,7 @@ export const ContractTransactionSummary = ({
 
         {/* No Branch Selected */}
         {branchId === "all" && !isLoading && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <div className="text-blue-500">ℹ️</div>
               <div>
@@ -302,7 +306,7 @@ export const ContractTransactionSummary = ({
         {/* Chart Display */}
         {data.length > 0 && !isLoading && (
           <>
-            <div className="h-[400px]">
+            <div className="flex-1">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart key={`contract-pie-chart-${branchId}-${date}`}>
@@ -352,7 +356,7 @@ export const ContractTransactionSummary = ({
 
         {/* No Data State */}
         {data.length === 0 && !isLoading && !error && branchId !== "all" && (
-          <div className="text-center text-gray-400 py-16">
+          <div className="text-center text-slate-400 py-16">
             <div className="text-4xl mb-2">📊</div>
             <p className="text-sm">ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>

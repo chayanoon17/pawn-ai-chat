@@ -7,6 +7,77 @@ import { useMemo } from "react";
 import type { MenuPermission } from "@/lib/permissions";
 
 /**
+ * Hook สำหรับตรวจสอบ Permission ของผู้ใช้งาน
+ */
+export function usePermissions() {
+  const { user, isAuthenticated } = useAuth();
+
+  /**
+   * ตรวจสอบว่าผู้ใช้มีสิทธิ์ในการทำงานที่ระบุหรือไม่
+   */
+  const hasPermission = (action: string): boolean => {
+    if (!user || !user.role || !user.role.permissions) {
+      return false;
+    }
+
+    return user.role.permissions.some(
+      (permission) => permission.name === action
+    );
+  };
+
+  /**
+   * ตรวจสอบว่าผู้ใช้เป็น Super Admin หรือไม่
+   */
+  const isSuperAdmin = (): boolean => {
+    return user?.role?.name === "Super Admin";
+  };
+
+  /**
+   * ตรวจสอบว่าผู้ใช้เป็น Admin (Super Admin หรือ Admin) หรือไม่
+   */
+  const isAdmin = (): boolean => {
+    return user?.role?.name === "Super Admin" || user?.role?.name === "Admin";
+  };
+
+  /**
+   * ตรวจสอบว่าผู้ใช้มีสิทธิ์จัดการ Permission หรือไม่
+   * (เฉพาะ Super Admin เท่านั้น)
+   */
+  const canManagePermissions = (): boolean => {
+    return isSuperAdmin();
+  };
+
+  /**
+   * ตรวจสอบว่าผู้ใช้มีสิทธิ์จัดการ Menu Permission หรือไม่
+   * (Super Admin และ Admin สามารถจัดการได้)
+   */
+  const canManageMenuPermissions = (): boolean => {
+    return isAdmin();
+  };
+
+  /**
+   * ตรวจสอบว่าผู้ใช้มีสิทธิ์จัดการ Role หรือไม่
+   */
+  const canManageRoles = (): boolean => {
+    return (
+      hasPermission("CREATE:Role") ||
+      hasPermission("UPDATE:Role") ||
+      hasPermission("DELETE:Role")
+    );
+  };
+
+  return {
+    user,
+    hasPermission,
+    isSuperAdmin,
+    isAdmin,
+    canManagePermissions,
+    canManageMenuPermissions,
+    canManageRoles,
+  };
+}
+
+/**
  * Hook สำหรับตรวจสอบ Menu Permission ของผู้ใช้งาน
  */
 export function useMenuPermissions() {

@@ -15,15 +15,15 @@ export interface CreateRoleDialogProps {
 export interface EditRoleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: import("./role-management").Role;
+  role: import("./role").Role;
   onRoleUpdated: () => void;
   canManagePermissions: boolean;
   canManageMenuPermissions: boolean;
 }
 
 export interface RoleTableProps {
-  data: import("./role-management").Role[];
-  onEdit: (role: import("./role-management").Role) => void;
+  data: import("./role").Role[];
+  onEdit: (role: import("./role").Role) => void;
   onDelete: (roleId: number) => void;
   canManagePermissions: boolean;
   canManageMenuPermissions: boolean;
