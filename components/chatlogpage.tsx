@@ -92,9 +92,7 @@ export default function ChatLogPage() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-semibold mb-4">ประวัติการสนทนา</h1>
-
-      <table className="w-full table-auto text-sm">
+      <table className="w-full table-auto ">
         <thead className="bg-gray-100">
           <tr>
             <th className="text-left p-2">คำถาม</th>

@@ -11,9 +11,9 @@ import {
 import { Users, UserCheck, Shield } from "lucide-react";
 import { UserTable, AddUserButton } from "@/components/features/users";
 import BasePageLayout from "@/components/layouts/base-page-layout";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UserPage() {
-  // 🎯 State Management
   const [userStats, setUserStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
@@ -22,9 +22,7 @@ export default function UserPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // 🎯 Load user statistics
   useEffect(() => {
-    // Simulate loading stats
     setTimeout(() => {
       setUserStats({
         totalUsers: 45,
@@ -35,7 +33,6 @@ export default function UserPage() {
     }, 1000);
   }, [refreshTrigger]);
 
-  // 🎯 Handle user created/updated
   const handleUserUpdated = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
@@ -47,12 +44,45 @@ export default function UserPage() {
       showFilter={false}
     >
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="space-y-8">
+          {/* Header Skeleton */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-10 w-32 rounded-md" />
+          </div>
+
+          {/* Stat Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="p-4 space-y-4">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </Card>
+            ))}
+          </div>
+
+          {/* User Table Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[...Array(5)].map((_, index) => (
+                  <Skeleton key={index} className="h-6 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       ) : (
         <div className="space-y-8">
-          {/* 📊 Header Section */}
+          {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">จัดการผู้ใช้</h1>
@@ -63,7 +93,7 @@ export default function UserPage() {
             <AddUserButton onUserCreated={handleUserUpdated} />
           </div>
 
-          {/* 📊 Stats Cards */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -113,14 +143,13 @@ export default function UserPage() {
             </Card>
           </div>
 
-          {/* 🔍 Search and Filter Section */}
+          {/* User Table */}
           <Card>
             <CardHeader>
               <CardTitle>รายการผู้ใช้</CardTitle>
               <CardDescription>ค้นหาและจัดการผู้ใช้ในระบบ</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* 📋 User Table */}
               <div className="rounded-lg border border-gray-200 overflow-hidden">
                 <UserTable />
               </div>

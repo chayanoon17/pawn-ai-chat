@@ -10,40 +10,41 @@ import {
   type LoginRow,
   type ExportRow,
 } from "@/components/features/logs";
+import ChatLogPage from "@/components/chatlogpage";
 
 // Mock Data
-const loginData: LoginRow[] = [
-  {
-    name: "จันทร์เพ็ญ ใจดี",
-    email: "janpen@example.com",
-    datetime: "2024-01-15 09:30:00",
-    action: "เข้าสู่ระบบ",
-    ip: "192.168.1.100",
-    agent: "Chrome 120.0 (Windows)",
-    session: "ses_abc123xyz",
-    location: "กรุงเทพฯ, ไทย",
-  },
-  {
-    name: "สมชาย รักงาน",
-    email: "somchai@example.com",
-    datetime: "2024-01-15 08:45:00",
-    action: "ออกจากระบบ",
-    ip: "192.168.1.101",
-    agent: "Firefox 121.0 (MacOS)",
-    session: "ses_def456uvw",
-    location: "เชียงใหม่, ไทย",
-  },
-  {
-    name: "วิชัย เทคโนโลยี",
-    email: "wichai@example.com",
-    datetime: "2024-01-15 07:15:00",
-    action: "เข้าสู่ระบบ",
-    ip: "192.168.1.102",
-    agent: "Safari 17.0 (iOS)",
-    session: "ses_ghi789rst",
-    location: "ภูเก็ต, ไทย",
-  },
-];
+// const loginData: LoginRow[] = [
+//   {
+//     name: "จันทร์เพ็ญ ใจดี",
+//     email: "janpen@example.com",
+//     datetime: "2024-01-15 09:30:00",
+//     action: "เข้าสู่ระบบ",
+//     ip: "192.168.1.100",
+//     agent: "Chrome 120.0 (Windows)",
+//     session: "ses_abc123xyz",
+//     location: "กรุงเทพฯ, ไทย",
+//   },
+//   {
+//     name: "สมชาย รักงาน",
+//     email: "somchai@example.com",
+//     datetime: "2024-01-15 08:45:00",
+//     action: "ออกจากระบบ",
+//     ip: "192.168.1.101",
+//     agent: "Firefox 121.0 (MacOS)",
+//     session: "ses_def456uvw",
+//     location: "เชียงใหม่, ไทย",
+//   },
+//   {
+//     name: "วิชัย เทคโนโลยี",
+//     email: "wichai@example.com",
+//     datetime: "2024-01-15 07:15:00",
+//     action: "เข้าสู่ระบบ",
+//     ip: "192.168.1.102",
+//     agent: "Safari 17.0 (iOS)",
+//     session: "ses_ghi789rst",
+//     location: "ภูเก็ต, ไทย",
+//   },
+// ];
 
 const exportData: ExportRow[] = [
   {
@@ -87,7 +88,8 @@ export default function LogPage() {
       case "login":
         return (
           <div className="p-4">
-            <LoginTable data={loginData} />
+            <LoginTable
+             />
           </div>
         );
       case "export":
@@ -110,10 +112,9 @@ export default function LogPage() {
         );
       case "chat":
         return (
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">💬</div>
-            <p className="text-lg font-medium">ยังไม่มีข้อมูลประวัติการสนทนา</p>
-            <p className="text-sm mt-2">ข้อมูลจะแสดงเมื่อมีการใช้งาน AI Chat</p>
+          <div className="text-center p-4">
+            <ChatLogPage
+            />
           </div>
         );
       default:

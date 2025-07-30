@@ -75,4 +75,44 @@ export interface ConversationListResponse {
   totalPages: number;
 }
 
+// type ของการดึง log chat ของ user
+  export interface Message {
+  from: "user" | "ai";
+  text: string;
+  time: string;
+}
 
+export interface ActivityLog {
+  [x: string]: any;
+  id: number;
+  activity: string;
+  description: string;
+  ipAddress: string;
+  userAgent: string;
+  sessionId: string | null;
+  success: boolean;
+  errorMessage: string | null;
+  createdAt: string; // ISO string
+  userId: number;
+  metadata: {
+    email: string;
+    ipAddress: string;
+    loginTime: string;
+    userAgent: string;
+    // เพิ่ม location ถ้า backend มี
+    location?: string;
+  };
+  user: {
+    id: number;
+    email: string;
+    fullName: string;
+    role: {
+      id: number;
+      name: string;
+    };
+    branch: {
+      id: number;
+      name: string;
+    } | null;
+  };
+}

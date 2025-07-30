@@ -3,7 +3,12 @@
  * จัดการการเชื่อมต่อกับ Backend API พร้อม httpOnly Cookies และ Security Features
  */
 
-import { ApiResponse, ApiErrorResponse } from "@/types/api";
+import {
+   ApiResponse,
+   ApiErrorResponse,
+   Message,
+   ActivityLog, 
+    } from "@/types/api";
 import {ConversationListResponse} from "@/types/api";
 
 /**
@@ -119,6 +124,38 @@ export async function sendChatMessageStream(
     throw error;
   }
 }
+
+// ดึงข้อมูลประวัติของผู้ใช้ในหน้า log เพื่่อดููบทสนทนาที่ผู็ใช้สนมนา
+export async function getUserConversations(page = 1, limit = 10) {
+  const res = await apiClient.get<ConversationListResponse>(
+    `/api/v1/chat/conversations?page=${page}&limit=${limit}`
+  );
+  // Return แบบไม่ซ้อน data.data
+  return res.data;
+}
+
+// ดึงบทสนทนาแสดงใน modul
+export async function getConversationMessages(conversationId: string) {
+  const res = await apiClient.get<ApiResponse<Message[]>>(
+    `/api/v1/chat/conversations/${conversationId}/messages`
+  );
+  return res.data;
+}
+// ลบข้อมูลบทสนทนา 
+export async function deleteConversation(conversationId: string) {
+  return apiClient.delete(`/api/v1/chat/conversations/${conversationId}`);
+}
+
+
+
+export async function getActivityLogs(page = 1, limit = 10) {
+  const res = await apiClient.get<ActivityLog>(
+    `/api/v1/activity/logs?page=${page}&limit=${limit}`
+  );
+
+  return res.data;
+}
+
 
 // Types สำหรับ fetch API
 interface FetchConfig extends RequestInit {
