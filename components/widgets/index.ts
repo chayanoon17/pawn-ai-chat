@@ -5,7 +5,7 @@
 
 // 📊 Dashboard Widgets
 export { default as ContractTransactionDetails } from "./dashboard/contract-transaction-details";
-export { ContractTransactionSummary } from "./dashboard/contract-transaction-summary";
+export { ContractTransactionSummary } from "./dashboard/contract-transaction-type-summary";
 export { DailyOperationSummary } from "./dashboard/daily-operation-summary";
 export { GoldPriceCard } from "./dashboard/gold-price";
 export { WeeklyOperationSummary } from "./dashboard/weekly-operation-summary";

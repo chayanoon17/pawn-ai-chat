@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Clock } from "lucide-react";
+import { ChartPie } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -13,26 +13,26 @@ import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [
-  "#10b981", // green-500
+  "#0ea5e9", // sky-500 - สำหรับสถานะปกติ
+  "#10b981", // green-500 - สำหรับสถานะดี
+  "#f59e0b", // amber-500 - สำหรับสถานะเตือน
+  "#ef4444", // red-500 - สำหรับสถานะผิดปกติ
+  "#8b5cf6", // violet-500 - สำหรับสถานะพิเศษ
+  "#ec4899", // pink-500 - สำหรับสถานะอื่นๆ
   "#06b6d4", // cyan-500
-  "#8b5cf6", // violet-500
-  "#ef4444", // red-500
-  "#ec4899", // pink-500
-  "#f59e0b", // amber-500
   "#f97316", // orange-500
-  "#0ea5e9", // sky-500
 ];
 
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
-type TransactionSummaryData = {
+type StatusSummaryData = {
   name: string;
   value: number;
   color: string;
   percentage: number;
 };
 
-type TransactionSummaryResponse = {
+type StatusSummaryResponse = {
   branchId: number;
   summaries: Array<{
     type: string;
@@ -42,24 +42,24 @@ type TransactionSummaryResponse = {
   timestamp: string;
 };
 
-interface ContractTransactionSummaryProps {
+interface ContractStatusSummaryProps {
   branchId: string;
   date: string;
   isLoading?: boolean;
 }
 
-export const ContractTransactionSummary = ({
+export const ContractStatusSummary = ({
   branchId,
   date,
   isLoading: parentLoading,
-}: ContractTransactionSummaryProps) => {
-  const [data, setData] = useState<TransactionSummaryData[]>([]);
+}: ContractStatusSummaryProps) => {
+  const [data, setData] = useState<StatusSummaryData[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🌟 เรียก API ดึงข้อมูลสรุปสถานะตั๋วจำนำ
-  const fetchTransactionSummary = async () => {
+  // 🌟 เรียก API ดึงข้อมูลสรุปสถานะสัญญา
+  const fetchStatusSummary = async () => {
     // ถ้าไม่มี branchId หรือ date ยัง loading อยู่ ไม่ต้องเรียก API
     if (!branchId || !date || parentLoading || branchId === "all") {
       setData([]);
@@ -72,9 +72,9 @@ export const ContractTransactionSummary = ({
       setIsLoading(true);
       setError(null);
 
-      // เรียก API ดึงข้อมูลสรุปสถานะตั๋วจำนำ
-      const response = await apiClient.get<TransactionSummaryResponse>(
-        `/api/v1/contracts/transactions/summary?branchId=${branchId}&date=${date}`
+      // เรียก API ดึงข้อมูลสรุปสถานะสัญญา
+      const response = await apiClient.get<StatusSummaryResponse>(
+        `/api/v1/contracts/transactions/summary?branchId=${branchId}&date=${date}&summaryType=contractStatus`
       );
 
       // แปลงข้อมูลให้เป็นรูปแบบสำหรับ PieChart
@@ -90,7 +90,7 @@ export const ContractTransactionSummary = ({
 
       // Log ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Transaction summary loaded:", response.data);
+        console.log("✨ Contract status summary loaded:", response.data);
       }
     } catch (err: unknown) {
       const error = err as {
@@ -100,7 +100,7 @@ export const ContractTransactionSummary = ({
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        "ไม่สามารถโหลดข้อมูลสรุปตั๋วจำนำได้";
+        "ไม่สามารถโหลดข้อมูลสรุปสถานะสัญญาได้";
       setError(errorMessage);
 
       setData([]);
@@ -108,7 +108,7 @@ export const ContractTransactionSummary = ({
 
       // Log error ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.error("❌ Failed to fetch transaction summary:", err);
+        console.error("❌ Failed to fetch contract status summary:", err);
       }
     } finally {
       setIsLoading(false);
@@ -116,26 +116,26 @@ export const ContractTransactionSummary = ({
   };
 
   useEffect(() => {
-    fetchTransactionSummary();
+    fetchStatusSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
-    "contract-transaction-summary",
-    "สรุปสถานะตั๋วจำนำ",
-    "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
+    "contract-status-summary",
+    "สรุปสถานะสัญญาจำนำ",
+    "ข้อมูลสรุปสถานะสัญญาจำนำ เช่น ปกติ ครบกำหนด เกินกำหนด ประมูล",
     data.length > 0
       ? {
           branchId: parseInt(branchId),
           summaries: data.map((item) => ({
-            type: item.name,
+            status: item.name,
             count: item.value,
             color: item.color,
           })),
-          totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
+          totalContracts: data.reduce((sum, item) => sum + item.value, 0),
           lastUpdated: timestamp,
-          topTransactionType: data.reduce(
+          topStatus: data.reduce(
             (max, item) => (item.value > max.value ? item : max),
             data[0]
           )?.name,
@@ -243,11 +243,11 @@ export const ContractTransactionSummary = ({
       <CardHeader className="px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-slate-100 rounded-lg">
-            <FileText className="w-5 h-5 text-slate-600" />
+            <ChartPie className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-slate-80">
-              ข้อมูลแสดงสถานะตั๋วจำนำ
+            <CardTitle className="text-lg font-semibold text-slate-800">
+              ข้อมูลสรุปสถานะสัญญาจำนำ
             </CardTitle>
             <span className="text-sm text-slate-500">
               {isLoading
@@ -296,7 +296,7 @@ export const ContractTransactionSummary = ({
               <div>
                 <p className="text-blue-800 font-medium">เลือกสาขา</p>
                 <p className="text-blue-600 text-sm">
-                  กรุณาเลือกสาขาเพื่อดูข้อมูลสถานะตั๋วจำนำ
+                  กรุณาเลือกสาขาเพื่อดูข้อมูลสถานะสัญญาจำนำ
                 </p>
               </div>
             </div>
@@ -309,7 +309,9 @@ export const ContractTransactionSummary = ({
             <div className="flex-1">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart key={`contract-pie-chart-${branchId}-${date}`}>
+                  <PieChart
+                    key={`contract-status-pie-chart-${branchId}-${date}`}
+                  >
                     <Pie
                       data={data}
                       cx="50%"
@@ -357,8 +359,8 @@ export const ContractTransactionSummary = ({
         {/* No Data State */}
         {data.length === 0 && !isLoading && !error && branchId !== "all" && (
           <div className="text-center text-slate-400 py-16">
-            <div className="text-4xl mb-2">📊</div>
-            <p className="text-sm">ไม่มีข้อมูลสถานะตั๋วจำนำ</p>
+            <div className="text-4xl mb-2">📋</div>
+            <p className="text-sm">ไม่มีข้อมูลสถานะสัญญาจำนำ</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}
