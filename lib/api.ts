@@ -4,6 +4,7 @@
  */
 
 import { ApiResponse, ApiErrorResponse } from "@/types/api";
+import type { Branch } from "@/types/auth";
 
 /**
  * Get base URL from environment variable
@@ -488,8 +489,8 @@ export async function getMenuRoles() {
   return response.data;
 }
 
-export async function getMenuBranches() {
-  const response = await apiClient.get("/api/v1/menu/branches");
+export async function getMenuBranches(): Promise<Branch[]> {
+  const response = await apiClient.get<Branch[]>("/api/v1/menu/branches");
   return response.data;
 }
 

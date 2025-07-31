@@ -34,8 +34,12 @@ export function AppSidebar() {
   const { user, logout } = useAuth();
   const { hasMenuPermission } = useMenuPermissions();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Default: expand ทุกกลุ่มไว้ ผู้ใช้สามารถ collapse ได้เอง
+  // หากมีการเพิ่มกลุ่มใหม่ ให้เพิ่ม ID ของกลุ่มนั้นที่นี่
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    "management",
+    "/management", // กลุ่มการจัดการระบบ
+    // เพิ่มกลุ่มอื่นๆ ได้ตรงนี้ เช่น: "/reports", "/settings" เป็นต้น
   ]);
 
   const toggleGroup = (groupId: string) => {
@@ -143,7 +147,7 @@ export function AppSidebar() {
       // For groups, filter children and only show group if it has visible children
       const visibleChildren =
         item.children?.filter((child) =>
-          hasMenuPermission(child.permission as String)
+          hasMenuPermission(child.permission as string)
         ) || [];
 
       if (visibleChildren.length === 0) return false;
@@ -154,7 +158,7 @@ export function AppSidebar() {
     } else {
       // For single items, check permission
       return item.permission
-        ? hasMenuPermission(item.permission as String)
+        ? hasMenuPermission(item.permission as string)
         : true;
     }
   });

@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/select";
 import { Users, FileText, Mail, Briefcase } from "lucide-react";
 import { updateUser } from "@/lib/auth-service";
+import { getMenuBranches } from "@/lib/api";
 import { showUpdateSuccess, showError, showWarning } from "@/lib/sweetalert";
-import type { User } from "@/types/auth";
+import type { User, Branch } from "@/types/auth";
 import type { Role } from "@/types/role";
 import type { UserStatus } from "@/types/common";
 
@@ -31,7 +32,7 @@ interface UpdateUserData {
   fullName: string;
   phoneNumber?: string;
   roleId: number;
-  branchId: number;
+  branchId: number | null;
   status: UserStatus;
 }
 
@@ -40,7 +41,7 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedUser: User | null;
   availableRoles: Role[];
-  onUserUpdated: (updatedUser: User) => void;
+  onUserUpdated: (updatedUser: User) => Promise<void>;
 }
 
 export function EditUserDialog({
@@ -50,24 +51,49 @@ export function EditUserDialog({
   availableRoles,
   onUserUpdated,
 }: EditUserDialogProps) {
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [specifyBranch, setSpecifyBranch] = useState(false);
   const [editUserData, setEditUserData] = useState<UpdateUserData>({
     email: "",
     fullName: "",
     phoneNumber: "",
     roleId: 0,
-    branchId: 1,
+    branchId: null,
     status: "ACTIVE",
   });
+
+  // Load branches when dialog opens
+  useEffect(() => {
+    if (open) {
+      const loadBranches = async () => {
+        setLoadingBranches(true);
+        try {
+          const branchData = await getMenuBranches();
+          setBranches(branchData);
+        } catch (error) {
+          console.error("Failed to load branches:", error);
+          showError("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลสาขาได้");
+        } finally {
+          setLoadingBranches(false);
+        }
+      };
+      loadBranches();
+    }
+  }, [open]);
 
   // Update form data when selectedUser changes
   useEffect(() => {
     if (selectedUser) {
+      const hasBranch = !!(selectedUser.branchId && selectedUser.branchId > 0);
+      setSpecifyBranch(hasBranch);
       setEditUserData({
         email: selectedUser.email,
         fullName: selectedUser.fullName,
         phoneNumber: selectedUser.phoneNumber || "",
         roleId: selectedUser.roleId,
-        branchId: selectedUser.branchId,
+        branchId: hasBranch ? selectedUser.branchId : null,
         status: selectedUser.status,
       });
     }
@@ -99,15 +125,24 @@ export function EditUserDialog({
       return;
     }
 
+    setIsUpdating(true);
     try {
+      // เตรียมข้อมูลสำหรับส่ง API โดยแปลง null เป็น undefined
+      const dataToSend = {
+        ...editUserData,
+        branchId: editUserData.branchId ?? undefined,
+      };
+
+      console.log("Updating user with data:", dataToSend);
+
       // เรียก API อัปเดต user
       const updatedUserData = (await updateUser(
         selectedUser.id.toString(),
-        editUserData
+        dataToSend
       )) as User;
 
       // เรียก callback function
-      onUserUpdated(updatedUserData);
+      await onUserUpdated(updatedUserData);
 
       // ปิด dialog
       onOpenChange(false);
@@ -123,6 +158,8 @@ export function EditUserDialog({
         "เกิดข้อผิดพลาด",
         "ไม่สามารถอัปเดตผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง"
       );
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -293,16 +330,49 @@ export function EditUserDialog({
               </div>
               <div className="w-full">
                 <Label
-                  htmlFor="edit-branchId"
+                  htmlFor="edit-specifyBranch"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   สาขา
                 </Label>
                 <Select
+                  value={specifyBranch ? "specify" : "not-specify"}
+                  onValueChange={(value) => {
+                    const shouldSpecify = value === "specify";
+                    setSpecifyBranch(shouldSpecify);
+                    if (!shouldSpecify) {
+                      setEditUserData((prev) => ({
+                        ...prev,
+                        branchId: null,
+                      }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500">
+                    <SelectValue placeholder="เลือกการระบุสาขา" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not-specify">ไม่ระบุสาขา</SelectItem>
+                    <SelectItem value="specify">ระบุสาขา</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Branch selection - only show when specifyBranch is true */}
+            {specifyBranch && (
+              <div className="mt-4">
+                <Label
+                  htmlFor="edit-branchId"
+                  className="text-xs font-medium text-slate-500 uppercase tracking-wide"
+                >
+                  เลือกสาขา
+                </Label>
+                <Select
                   value={
-                    editUserData.branchId > 0
+                    editUserData.branchId && editUserData.branchId > 0
                       ? editUserData.branchId.toString()
-                      : "1"
+                      : ""
                   }
                   onValueChange={(value) =>
                     setEditUserData((prev) => ({
@@ -315,12 +385,28 @@ export function EditUserDialog({
                     <SelectValue placeholder="เลือกสาขา" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">สาขาหลัก</SelectItem>
-                    {/* Add more branches as needed */}
+                    {loadingBranches ? (
+                      <SelectItem value="loading" disabled>
+                        กำลังโหลดข้อมูลสาขา...
+                      </SelectItem>
+                    ) : branches.length > 0 ? (
+                      branches.map((branch) => (
+                        <SelectItem
+                          key={branch.id}
+                          value={branch.id.toString()}
+                        >
+                          {branch.location} ({branch.shortName})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-data" disabled>
+                        ไม่พบข้อมูลสาขา
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -335,11 +421,13 @@ export function EditUserDialog({
           <Button
             onClick={handleEditUser}
             disabled={
-              !editUserData.fullName.trim() || !editUserData.email.trim()
+              !editUserData.fullName.trim() ||
+              !editUserData.email.trim() ||
+              isUpdating
             }
             className="bg-[#308AC7] hover:bg-[#3F99D8] text-white"
           >
-            บันทึกการแก้ไข
+            {isUpdating ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
           </Button>
         </DialogFooter>
       </DialogContent>

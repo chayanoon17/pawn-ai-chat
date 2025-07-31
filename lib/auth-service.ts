@@ -261,7 +261,7 @@ class AuthService {
    * ตรวจสอบว่าเป็น Admin หรือไม่
    */
   isAdmin(user: User | null): boolean {
-    return this.hasPermission(user, PERMISSION_ACTIONS.SYSTEM_ADMIN);
+    return user?.role?.name === "Super Admin" || user?.role?.name === "Admin";
   }
 
   /**

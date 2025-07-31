@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/select";
 import { Users, FileText, Mail, Lock, Briefcase } from "lucide-react";
 import { createUser } from "@/lib/auth-service";
+import { getMenuBranches } from "@/lib/api";
 import { showCreateSuccess, showError, showWarning } from "@/lib/sweetalert";
-import type { User } from "@/types/auth";
+import type { User, Branch } from "@/types/auth";
 import type { Role } from "@/types/role";
 
 interface CreateUserData {
@@ -31,7 +32,7 @@ interface CreateUserData {
   phoneNumber?: string;
   password: string;
   roleId: number;
-  branchId: number;
+  branchId: number | null;
   status: "ACTIVE" | "INACTIVE";
 }
 
@@ -39,7 +40,7 @@ interface CreateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   availableRoles: Role[];
-  onUserCreated: (newUser: User) => void;
+  onUserCreated: (newUser: User) => Promise<void>;
 }
 
 export function CreateUserDialog({
@@ -48,15 +49,39 @@ export function CreateUserDialog({
   availableRoles,
   onUserCreated,
 }: CreateUserDialogProps) {
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [specifyBranch, setSpecifyBranch] = useState(false);
   const [createUserData, setCreateUserData] = useState<CreateUserData>({
     email: "",
     fullName: "",
     phoneNumber: "",
     password: "",
     roleId: 0,
-    branchId: 1, // Default branch ID
+    branchId: null, // No default branch selected
     status: "ACTIVE",
   });
+
+  // Load branches when dialog opens
+  useEffect(() => {
+    if (open) {
+      const loadBranches = async () => {
+        setLoadingBranches(true);
+        try {
+          const branchData = await getMenuBranches();
+          setBranches(branchData);
+          // No default branch selection
+        } catch (error) {
+          console.error("Failed to load branches:", error);
+          showError("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลสาขาได้");
+        } finally {
+          setLoadingBranches(false);
+        }
+      };
+      loadBranches();
+    }
+  }, [open]);
 
   const handleCreateUser = async () => {
     // Validation
@@ -80,6 +105,11 @@ export function CreateUserDialog({
       return;
     }
 
+    if (specifyBranch && !createUserData.branchId) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกสาขา");
+      return;
+    }
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(createUserData.email)) {
@@ -93,22 +123,30 @@ export function CreateUserDialog({
       return;
     }
 
+    setIsCreating(true);
     try {
+      // เตรียมข้อมูลสำหรับส่ง API โดยแปลง null เป็น undefined
+      const dataToSend = {
+        ...createUserData,
+        branchId: createUserData.branchId ?? undefined,
+      };
+
       // เรียก API สร้าง user
-      const newUserData = (await createUser(createUserData)) as User;
+      const newUserData = (await createUser(dataToSend)) as User;
 
       // เรียก callback function
-      onUserCreated(newUserData);
+      await onUserCreated(newUserData);
 
       // ปิด dialog และรีเซ็ตฟอร์ม
       onOpenChange(false);
+      setSpecifyBranch(false);
       setCreateUserData({
         email: "",
         fullName: "",
         phoneNumber: "",
         password: "",
         roleId: 0,
-        branchId: 1,
+        branchId: null,
         status: "ACTIVE",
       });
 
@@ -123,18 +161,21 @@ export function CreateUserDialog({
         "เกิดข้อผิดพลาด",
         "ไม่สามารถสร้างผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง"
       );
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleClose = () => {
     onOpenChange(false);
+    setSpecifyBranch(false);
     setCreateUserData({
       email: "",
       fullName: "",
       phoneNumber: "",
       password: "",
       roleId: 0,
-      branchId: 1,
+      branchId: null,
       status: "ACTIVE",
     });
   };
@@ -304,13 +345,50 @@ export function CreateUserDialog({
               </div>
               <div className="w-full">
                 <Label
-                  htmlFor="branchId"
+                  htmlFor="specifyBranch"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   สาขา
                 </Label>
                 <Select
-                  value={createUserData.branchId.toString()}
+                  value={specifyBranch ? "specify" : "not-specify"}
+                  onValueChange={(value) => {
+                    const shouldSpecify = value === "specify";
+                    setSpecifyBranch(shouldSpecify);
+                    if (!shouldSpecify) {
+                      setCreateUserData((prev) => ({
+                        ...prev,
+                        branchId: null,
+                      }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500">
+                    <SelectValue placeholder="เลือกการระบุสาขา" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not-specify">ไม่ระบุสาขา</SelectItem>
+                    <SelectItem value="specify">ระบุสาขา</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Branch selection - only show when specifyBranch is true */}
+            {specifyBranch && (
+              <div className="mt-4">
+                <Label
+                  htmlFor="branchId"
+                  className="text-xs font-medium text-slate-500 uppercase tracking-wide"
+                >
+                  เลือกสาขา
+                </Label>
+                <Select
+                  value={
+                    createUserData.branchId && createUserData.branchId > 0
+                      ? createUserData.branchId.toString()
+                      : ""
+                  }
                   onValueChange={(value) =>
                     setCreateUserData((prev) => ({
                       ...prev,
@@ -322,12 +400,28 @@ export function CreateUserDialog({
                     <SelectValue placeholder="เลือกสาขา" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">สาขาหลัก</SelectItem>
-                    {/* Add more branches as needed */}
+                    {loadingBranches ? (
+                      <SelectItem value="loading" disabled>
+                        กำลังโหลดข้อมูลสาขา...
+                      </SelectItem>
+                    ) : branches.length > 0 ? (
+                      branches.map((branch) => (
+                        <SelectItem
+                          key={branch.id}
+                          value={branch.id.toString()}
+                        >
+                          {branch.location} ({branch.shortName})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-data" disabled>
+                        ไม่พบข้อมูลสาขา
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -342,11 +436,13 @@ export function CreateUserDialog({
           <Button
             onClick={handleCreateUser}
             disabled={
-              !createUserData.fullName.trim() || !createUserData.email.trim()
+              !createUserData.fullName.trim() ||
+              !createUserData.email.trim() ||
+              isCreating
             }
             className="bg-[#308AC7] hover:bg-[#3F99D8] text-white"
           >
-            สร้างผู้ใช้
+            {isCreating ? "กำลังสร้างผู้ใช้..." : "สร้างผู้ใช้"}
           </Button>
         </DialogFooter>
       </DialogContent>

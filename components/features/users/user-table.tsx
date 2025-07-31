@@ -278,7 +278,9 @@ export function UserTable({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-600">
-                      {user.branch?.name || "ไม่ระบุ"}
+                      {user.branch
+                        ? `${user.branch.location} (${user.branch.shortName})`
+                        : "ไม่ระบุ"}
                     </TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell className="text-slate-600 text-sm">

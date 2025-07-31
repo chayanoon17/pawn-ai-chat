@@ -3,23 +3,20 @@
  */
 
 import React from "react";
-import {
-  useMenuPermissions,
-  type MenuPermission,
-} from "@/hooks/use-permissions";
+import { useMenuPermissions } from "@/hooks/use-permissions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, ShieldX } from "lucide-react";
 
 interface MenuPermissionGuardProps {
   children: React.ReactNode;
-  requiredMenuPermission: MenuPermission;
+  requiredMenuPermission: string;
   fallback?: React.ReactNode;
   showAlert?: boolean;
 }
 
 interface AnyMenuPermissionGuardProps {
   children: React.ReactNode;
-  requiredMenuPermissions: MenuPermission[];
+  requiredMenuPermissions: string[];
   fallback?: React.ReactNode;
   showAlert?: boolean;
 }
