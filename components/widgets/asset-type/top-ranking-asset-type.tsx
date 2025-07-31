@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trophy, Clock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -103,46 +104,65 @@ export const TopRankingAssetType = ({
       : null
   );
 
-  const formattedDate = timestamp
-    ? new Date(timestamp).toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
-    <Card className="mb-6">
-      <CardContent>
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center my-1 space-y-4 lg:space-y-0">
-          <div>
-            <h2 className="text-[24px] font-semibold mb-1">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <Trophy className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               10 อันดับ รายการประเภททรัพย์และราคา
-            </h2>
-            <p className="text-sm text-[#36B8EE]">
+            </CardTitle>
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
-                : formattedDate
-                ? `อัปเดตล่าสุดเมื่อ ${formattedDate}`
+                : timestamp
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
+      </CardHeader>
 
+      <CardContent>
         {/* Error */}
         {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Loading */}
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2" />
-            <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
         ) : rankings.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500 py-12">

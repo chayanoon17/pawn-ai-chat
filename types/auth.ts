@@ -6,24 +6,33 @@
 import { UserStatus } from "./common";
 
 /**
- * Permission Interface - สิทธิ์การทำงานแต่ละรายการ
+ * Permission Interface - สิทธิ์การทำงานแต่ละรายการ (ตาม API format)
  */
 export interface Permission {
   id: number;
-  action: string; // เช่น "CREATE:User", "READ:Report"
+  name: string; // เช่น "CREATE:User", "READ:Report"
   description: string; // คำอธิบายสิทธิ์
-  category: string; // หมวดหมู่ เช่น "User Management"
 }
 
 /**
- * Menu Permission Interface - สิทธิ์เข้าถึงเมนูแต่ละรายการ
+ * Menu Permission Interface - สิทธิ์เข้าถึงเมนูแต่ละรายการ (ตาม API format)
  */
 export interface MenuPermission {
   id: number;
-  menuName: string; // เช่น "User Management", "Reports"
+  name: string; // เช่น "User Management", "Reports"
   description: string; // คำอธิบายเมนู
-  icon?: string; // ไอคอนเมนู (optional)
-  url?: string; // URL ของเมนู (optional)
+}
+
+/**
+ * Branch Interface - สาขาที่ใช้ในระบบ
+ */
+export interface Branch {
+  id: number;
+  name: string;
+  code?: string;
+  address?: string;
+  phone?: string;
+  status: "ACTIVE" | "INACTIVE";
 }
 
 /**
@@ -35,6 +44,7 @@ export interface Role {
   description?: string;
   permissions: Permission[];
   menuPermissions: MenuPermission[];
+  userCount?: number; // จำนวนผู้ใช้ที่มีบทบาทนี้
 }
 
 /**

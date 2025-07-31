@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BasePageLayout from "@/components/layouts/base-page-layout";
 import {
   LoginTable,
@@ -10,6 +10,7 @@ import {
   type LoginRow,
   type ExportRow,
 } from "@/components/features/logs";
+<<<<<<< HEAD:app/log/page.tsx
 import ChatLogPage from "@/components/chatlogpage";
 
 // const exportData: ExportRow[] = [
@@ -44,12 +45,82 @@ import ChatLogPage from "@/components/chatlogpage";
 //     datetime: "2024-01-15 12:00:00",
 //   },
 // ];
+=======
+import apiRequest from "@/lib/api";
+import { toast } from "sonner";
+>>>>>>> origin/feat/admin:app/logs/page.tsx
 
 export default function LogPage() {
 
   const [activeTab, setActiveTab] = useState<Tab>("login");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginData, setLoginData] = useState<LoginRow[]>([]);
+  const [exportData, setExportData] = useState<ExportRow[]>([]);
+
+  // Load data when tab changes
+  useEffect(() => {
+    loadTabData(activeTab);
+  }, [activeTab]);
+
+  const loadTabData = async (tab: Tab) => {
+    setIsLoading(true);
+    try {
+      switch (tab) {
+        case "login":
+          await loadLoginData();
+          break;
+        case "export":
+          await loadExportData();
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Error loading log data:', error);
+      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadLoginData = async () => {
+    try {
+      const response = await apiRequest.get('/api/v1/logs/login');
+      if (response.success) {
+        setLoginData(response.data as LoginRow[]);
+      }
+    } catch (error) {
+      console.error('Error loading login logs:', error);
+      // Fallback to empty array if API fails
+      setLoginData([]);
+    }
+  };
+
+  const loadExportData = async () => {
+    try {
+      const response = await apiRequest.get('/api/v1/logs/export');
+      if (response.success) {
+        setExportData(response.data as ExportRow[]);
+      }
+    } catch (error) {
+      console.error('Error loading export logs:', error);
+      // Fallback to empty array if API fails
+      setExportData([]);
+    }
+  };
 
   const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case "login":
         return (

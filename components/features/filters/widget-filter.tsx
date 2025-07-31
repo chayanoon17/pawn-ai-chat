@@ -5,6 +5,7 @@ import { Check, ChevronDown, Calendar } from "lucide-react";
 import apiClient from "@/lib/api";
 import { format } from "date-fns";
 import { useDebounce, useStableCallback } from "@/lib/performance";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   Popover,
@@ -19,12 +20,13 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 type Branch = {
   id: number;
-  location: string;
   name: string;
+  location: string;
+  shortName: string;
 };
 
 export type WidgetFilterData = {
@@ -39,6 +41,7 @@ interface WidgetFilterProps {
 
 export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const isMobile = useIsMobile();
 
   // 🔄 Load saved values from localStorage with session check
   const [selectedBranchId, setSelectedBranchId] = useState<string>(() => {
@@ -80,16 +83,26 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  // หาวันที่วันนี้เป็น string "yyyy-MM-dd" เพื่อใช้ max attribute
-  const todayStr = format(new Date(), "yyyy-MM-dd");
+  // 🎯 Helper function สำหรับแปลง date เป็น YYYY-MM-DD format ตาม timezone ท้องถิ่น
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Debug log
+    console.log("🔍 formatDateForAPI:", {
+      input: date,
+      output: formattedDate,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+
+    return formattedDate;
+  };
 
   // 🎯 Helper function สำหรับแปลง date format
   const formatDateForDisplay = (date: Date): string => {
     return format(date, "dd/MM/yyyy");
-  };
-
-  const formatDateForValue = (date: Date): string => {
-    return format(date, "yyyy-MM-dd");
   };
 
   // โหลดข้อมูลสาขา
@@ -114,14 +127,16 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
 
           onFilterChange?.({
             branchId: firstBranchId,
-            date: selectedDate?.toISOString().split("T")[0] || todayStr,
+            date: selectedDate
+              ? formatDateForAPI(selectedDate)
+              : formatDateForAPI(new Date()),
             isLoading: false,
           });
         } else if (selectedBranchId && selectedDate) {
           // ถ้ามีค่า saved อยู่แล้ว ให้ trigger onFilterChange
           onFilterChange?.({
             branchId: selectedBranchId,
-            date: selectedDate.toISOString().split("T")[0],
+            date: formatDateForAPI(selectedDate),
             isLoading: false,
           });
         }
@@ -166,10 +181,8 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     [onFilterChange]
   );
 
-  // รับ event จาก input[type=date]
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value; // "yyyy-MM-dd"
-    const date = value ? new Date(value) : undefined;
+  // รับ event จาก Calendar component
+  const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     setIsDatePickerOpen(false);
 
@@ -184,28 +197,54 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     if (debouncedBranchId && debouncedDate) {
       handleFilterChange({
         branchId: debouncedBranchId,
-        date: debouncedDate.toISOString().split("T")[0],
+        date: formatDateForAPI(debouncedDate),
         isLoading: false,
       });
     }
   }, [debouncedBranchId, debouncedDate, handleFilterChange]);
 
   return (
-    <div className="flex items-center gap-3">
+    <div
+      className={`flex items-center ${
+        isMobile ? "gap-1 flex-col sm:flex-row sm:gap-2" : "gap-3"
+      }`}
+    >
       {/* 🔎 Branch Select with Search */}
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-[160px] justify-between h-[36px] text-sm"
+            className={`${
+              isMobile
+                ? "w-full sm:w-[140px] text-xs sm:text-sm h-[32px] sm:h-[36px]"
+                : "w-[180px] text-sm h-[36px]"
+            } justify-between`}
             disabled={isLoading || branches.length === 0}
           >
-            {branches.find((b) => b.id.toString() === selectedBranchId)
-              ?.location ?? "เลือกสาขา"}
-            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+            <span className="truncate">
+              {(() => {
+                const selectedBranch = branches.find(
+                  (b) => b.id.toString() === selectedBranchId
+                );
+                if (selectedBranch) {
+                  // แสดงแค่ชื่อสั้นใน mobile
+                  return isMobile
+                    ? selectedBranch.shortName
+                    : `${selectedBranch.location} (${selectedBranch.shortName})`;
+                }
+                return isMobile ? "สาขา" : "เลือกสาขา";
+              })()}
+            </span>
+            <ChevronDown
+              className={`ml-1 ${isMobile ? "h-3 w-3" : "h-4 w-4"} opacity-50`}
+            />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-[200px] max-h-[300px] overflow-y-auto">
+        <PopoverContent
+          className={`p-0 ${
+            isMobile ? "w-[160px]" : "w-[200px]"
+          } max-h-[300px] overflow-y-auto`}
+        >
           <Command>
             <CommandInput placeholder="ค้นหาสาขา..." className="h-9" />
             <CommandEmpty>ไม่พบสาขา</CommandEmpty>
@@ -215,10 +254,15 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
                   key={branch.id}
                   value={branch.location}
                   onSelect={() => handleBranchChange(branch.id.toString())}
+                  className={isMobile ? "text-xs" : ""}
                 >
-                  {branch.location}
+                  {isMobile
+                    ? `${branch.shortName} - ${branch.location}`
+                    : `${branch.location} (${branch.shortName})`}
                   {branch.id.toString() === selectedBranchId && (
-                    <Check className="ml-auto h-4 w-4" />
+                    <Check
+                      className={`ml-auto ${isMobile ? "h-3 w-3" : "h-4 w-4"}`}
+                    />
                   )}
                 </CommandItem>
               ))}
@@ -232,25 +276,33 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-[140px] justify-between h-[36px] text-sm"
+            className={`${
+              isMobile
+                ? "w-full sm:w-[110px] text-xs sm:text-sm h-[32px] sm:h-[36px]"
+                : "w-[140px] text-sm h-[36px]"
+            } justify-between`}
           >
-            {selectedDate ? formatDateForDisplay(selectedDate) : "เลือกวันที่"}
-            <Calendar className="ml-2 h-4 w-4 opacity-50" />
+            {selectedDate
+              ? isMobile
+                ? format(selectedDate, "dd/MM") // แสดงแค่วัน/เดือนใน mobile
+                : formatDateForDisplay(selectedDate)
+              : isMobile
+              ? "วันที่"
+              : "เลือกวันที่"}
+            <Calendar
+              className={`ml-1 ${isMobile ? "h-3 w-3" : "h-4 w-4"} opacity-50`}
+            />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-2" align="start">
-          <div className="flex flex-col space-y-2">
-            <div className="text-sm font-medium text-gray-700 px-2">
-              เลือกวันที่
-            </div>
-            <Input
-              type="date"
-              max={todayStr}
-              value={selectedDate ? formatDateForValue(selectedDate) : todayStr}
-              onChange={handleDateInputChange}
-              className="h-[36px] text-sm"
-            />
-          </div>
+        <PopoverContent className="w-auto p-0" align="start">
+          <CalendarComponent
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleDateSelect}
+            disabled={(date) => date > new Date()} // ไม่ให้เลือกวันข้างหน้า
+            initialFocus
+            className={isMobile ? "text-xs" : ""}
+          />
         </PopoverContent>
       </Popover>
 
