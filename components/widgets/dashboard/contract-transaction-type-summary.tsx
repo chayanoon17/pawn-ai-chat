@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Clock } from "lucide-react";
+import { ChartPie } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -74,7 +74,7 @@ export const ContractTransactionSummary = ({
 
       // เรียก API ดึงข้อมูลสรุปสถานะตั๋วจำนำ
       const response = await apiClient.get<TransactionSummaryResponse>(
-        `/api/v1/contracts/transactions/summary?branchId=${branchId}&date=${date}`
+        `/api/v1/contracts/transactions/summary?branchId=${branchId}&date=${date}&summaryType=transactionType`
       );
 
       // แปลงข้อมูลให้เป็นรูปแบบสำหรับ PieChart
@@ -122,8 +122,8 @@ export const ContractTransactionSummary = ({
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
-    "contract-transaction-summary",
-    "สรุปสถานะตั๋วจำนำ",
+    "contract-transaction-type-summary",
+    "สรุปประเภทธุรกรรมตั๋วจำนำ",
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
     data.length > 0
       ? {
@@ -243,11 +243,11 @@ export const ContractTransactionSummary = ({
       <CardHeader className="px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-slate-100 rounded-lg">
-            <FileText className="w-5 h-5 text-slate-600" />
+            <ChartPie className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">
-              ข้อมูลแสดงสถานะตั๋วจำนำ
+              ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ
             </CardTitle>
             <span className="text-sm text-slate-500">
               {isLoading

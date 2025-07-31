@@ -59,16 +59,14 @@ export default function Header({
             <h1 className="text-xl font-semibold text-gray-900">
               {PAGE_LABELS[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
             </h1>
-            {!["user-management", "log-management"].includes(selectedPage) && (
-              <p className="text-sm text-gray-500">
-                วันที่{" "}
-                {new Date().toLocaleDateString("th-TH", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            )}
+            <p className="text-sm text-gray-500">
+              วันที่{" "}
+              {new Date().toLocaleDateString("th-TH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
         </div>
 

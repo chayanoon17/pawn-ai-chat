@@ -1,7 +1,8 @@
 "use client";
 
 import BasePageLayout from "@/components/layouts/base-page-layout";
-import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-summary";
+import { ContractStatusSummary } from "@/components/widgets/dashboard/contract-status-summary";
+import { ContractTransactionSummary } from "@/components/widgets/dashboard/contract-transaction-type-summary";
 import { DailyOperationSummary } from "@/components/widgets/dashboard/daily-operation-summary";
 import { GoldPriceCard } from "@/components/widgets/dashboard/gold-price";
 import { WeeklyOperationSummary } from "@/components/widgets/dashboard/weekly-operation-summary";
@@ -36,9 +37,15 @@ export default function DashboardPage() {
             {/* Gold Price Section */}
             <GoldPriceCard />
 
+            <DailyOperationSummary
+              branchId={filterData.branchId}
+              date={filterData.date}
+              isLoading={filterData.isLoading}
+            />
+
             {/* Summary Cards */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              <DailyOperationSummary
+              <ContractStatusSummary
                 branchId={filterData.branchId}
                 date={filterData.date}
                 isLoading={filterData.isLoading}

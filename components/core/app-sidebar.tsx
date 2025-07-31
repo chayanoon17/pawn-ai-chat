@@ -27,6 +27,7 @@ import { useAuth } from "@/context/auth-context";
 import { useMenuPermissions } from "@/hooks/use-permissions";
 import { MenuPermission } from "@/lib/permissions";
 import { showConfirmation } from "@/lib/sweetalert";
+import { trackMenuAccess } from "@/lib/api";
 import { InlineLoading } from "@/components/ui/loading";
 
 export function AppSidebar() {
@@ -68,9 +69,29 @@ export function AppSidebar() {
     }
   };
 
+  const handleMenuClick = async (
+    menuName: string,
+    menuPath: string,
+    menuId: string,
+    parentMenu?: string
+  ) => {
+    try {
+      await trackMenuAccess({
+        menuName,
+        menuPath,
+        menuId,
+        parentMenu: parentMenu || "",
+      });
+    } catch (error) {
+      // Error handling แล้วใน trackMenuAccess function
+      console.error("Menu access tracking failed:", error);
+    }
+  };
+
   const menuItems = [
     {
       id: "/dashboard",
+      menuId: "1",
       label: "ข้อมูลตั๋วรับจำนำ",
       icon: BarChart3,
       type: "single",
@@ -78,6 +99,7 @@ export function AppSidebar() {
     },
     {
       id: "/asset-types",
+      menuId: "2",
       label: "ประเภททรัพย์และราคา",
       icon: FileText,
       type: "single",
@@ -85,18 +107,21 @@ export function AppSidebar() {
     },
     {
       id: "management",
+      menuId: "3",
       label: "การจัดการระบบ",
       icon: Settings,
       type: "group",
       children: [
         {
           id: "/users",
+          menuId: "4",
           label: "จัดการผู้ใช้",
           icon: Users,
           permission: "Users Management",
         },
         {
           id: "/roles",
+          menuId: "5",
           label: "จัดการตำแหน่ง",
           icon: UserCog,
           permission: "Roles Management",
@@ -105,6 +130,7 @@ export function AppSidebar() {
     },
     {
       id: "/logs",
+      menuId: "6",
       label: "ประวัติการใช้งาน",
       icon: Logs,
       type: "single",
@@ -192,6 +218,9 @@ export function AppSidebar() {
                     <SidebarMenuItem key={item.id}>
                       <Link href={item.id}>
                         <button
+                          onClick={() =>
+                            handleMenuClick(item.label, item.id, item.menuId)
+                          }
                           className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
                             isActive
                               ? "text-white hover:text-white"
@@ -242,6 +271,14 @@ export function AppSidebar() {
                             return (
                               <Link key={child.id} href={child.id}>
                                 <button
+                                  onClick={() =>
+                                    handleMenuClick(
+                                      child.label,
+                                      child.id,
+                                      child.menuId,
+                                      item.label
+                                    )
+                                  }
                                   className={`w-full justify-start space-x-3 px-3 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
                                     isChildActive
                                       ? "text-white hover:text-white"

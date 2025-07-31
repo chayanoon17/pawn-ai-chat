@@ -53,7 +53,8 @@ export type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
  * Widget Data Types - สำหรับระบุประเภทของ widget data
  */
 export type WidgetDataType =
-  | "contract-transaction-summary"
+  | "contract-transaction-type-summary"
+  | "contract-status-summary"
   | "daily-operation-summary"
   | "weekly-operation-summary"
   | "gold-price"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,116 +19,124 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, FileText, Mail, Briefcase } from "lucide-react";
-import { updateUser } from "@/lib/auth-service";
-import { showUpdateSuccess, showError, showWarning } from "@/lib/sweetalert";
+import { Users, FileText, Mail, Lock, Briefcase } from "lucide-react";
+import { createUser } from "@/lib/auth-service";
+import { showCreateSuccess, showError, showWarning } from "@/lib/sweetalert";
 import type { User } from "@/types/auth";
 import type { Role } from "@/types/role";
-import type { UserStatus } from "@/types/common";
 
-interface UpdateUserData {
+interface CreateUserData {
   email: string;
   fullName: string;
   phoneNumber?: string;
+  password: string;
   roleId: number;
   branchId: number;
-  status: UserStatus;
+  status: "ACTIVE" | "INACTIVE";
 }
 
-interface EditUserDialogProps {
+interface CreateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedUser: User | null;
   availableRoles: Role[];
-  onUserUpdated: (updatedUser: User) => void;
+  onUserCreated: (newUser: User) => void;
 }
 
-export function EditUserDialog({
+export function CreateUserDialog({
   open,
   onOpenChange,
-  selectedUser,
   availableRoles,
-  onUserUpdated,
-}: EditUserDialogProps) {
-  const [editUserData, setEditUserData] = useState<UpdateUserData>({
+  onUserCreated,
+}: CreateUserDialogProps) {
+  const [createUserData, setCreateUserData] = useState<CreateUserData>({
     email: "",
     fullName: "",
     phoneNumber: "",
+    password: "",
     roleId: 0,
-    branchId: 1,
+    branchId: 1, // Default branch ID
     status: "ACTIVE",
   });
 
-  // Update form data when selectedUser changes
-  useEffect(() => {
-    if (selectedUser) {
-      setEditUserData({
-        email: selectedUser.email,
-        fullName: selectedUser.fullName,
-        phoneNumber: selectedUser.phoneNumber || "",
-        roleId: selectedUser.roleId,
-        branchId: selectedUser.branchId,
-        status: selectedUser.status,
-      });
-    }
-  }, [selectedUser]);
-
-  const handleEditUser = async () => {
-    if (!selectedUser) return;
-
+  const handleCreateUser = async () => {
     // Validation
-    if (!editUserData.email.trim()) {
+    if (!createUserData.email.trim()) {
       showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกอีเมล");
       return;
     }
 
-    if (!editUserData.fullName.trim()) {
+    if (!createUserData.fullName.trim()) {
       showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกชื่อผู้ใช้");
       return;
     }
 
-    if (editUserData.roleId === 0) {
+    if (!createUserData.password.trim()) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณากรอกรหัสผ่าน");
+      return;
+    }
+
+    if (createUserData.roleId === 0) {
       showWarning("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกตำแหน่ง");
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editUserData.email)) {
+    if (!emailRegex.test(createUserData.email)) {
       showWarning("รูปแบบไม่ถูกต้อง", "กรุณากรอกอีเมลให้ถูกต้อง");
       return;
     }
 
+    // Password validation
+    if (createUserData.password.length < 6) {
+      showWarning("รหัสผ่านไม่ปลอดภัย", "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
     try {
-      // เรียก API อัปเดต user
-      const updatedUserData = (await updateUser(
-        selectedUser.id.toString(),
-        editUserData
-      )) as User;
+      // เรียก API สร้าง user
+      const newUserData = (await createUser(createUserData)) as User;
 
       // เรียก callback function
-      onUserUpdated(updatedUserData);
+      onUserCreated(newUserData);
 
-      // ปิด dialog
+      // ปิด dialog และรีเซ็ตฟอร์ม
       onOpenChange(false);
+      setCreateUserData({
+        email: "",
+        fullName: "",
+        phoneNumber: "",
+        password: "",
+        roleId: 0,
+        branchId: 1,
+        status: "ACTIVE",
+      });
 
       // แสดง SweetAlert2 success
-      showUpdateSuccess(
-        "อัปเดตผู้ใช้สำเร็จ!",
-        `ข้อมูลผู้ใช้ "${editUserData.fullName}" ถูกอัปเดตเรียบร้อยแล้ว`
+      showCreateSuccess(
+        "สร้างผู้ใช้สำเร็จ!",
+        `ผู้ใช้ "${createUserData.fullName}" ถูกสร้างเรียบร้อยแล้ว`
       );
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error creating user:", error);
       showError(
         "เกิดข้อผิดพลาด",
-        "ไม่สามารถอัปเดตผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง"
+        "ไม่สามารถสร้างผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง"
       );
     }
   };
 
   const handleClose = () => {
     onOpenChange(false);
-    // Don't reset form data here, let parent component handle it
+    setCreateUserData({
+      email: "",
+      fullName: "",
+      phoneNumber: "",
+      password: "",
+      roleId: 0,
+      branchId: 1,
+      status: "ACTIVE",
+    });
   };
 
   return (
@@ -137,10 +145,10 @@ export function EditUserDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Users className="w-5 h-5 text-slate-600" />
-            <span>แก้ไขผู้ใช้: {selectedUser?.fullName}</span>
+            <span>เพิ่มผู้ใช้ใหม่</span>
           </DialogTitle>
           <DialogDescription className="text-slate-500">
-            แก้ไขข้อมูลผู้ใช้และตำแหน่ง
+            กรอกข้อมูลผู้ใช้ใหม่และเลือกตำแหน่ง
           </DialogDescription>
         </DialogHeader>
 
@@ -151,19 +159,19 @@ export function EditUserDialog({
               <FileText className="w-4 h-4 text-slate-500" />
               <span>ข้อมูลพื้นฐาน</span>
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label
-                  htmlFor="edit-fullName"
+                  htmlFor="fullName"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   ชื่อผู้ใช้
                 </Label>
                 <Input
-                  id="edit-fullName"
-                  value={editUserData.fullName}
+                  id="fullName"
+                  value={createUserData.fullName}
                   onChange={(e) =>
-                    setEditUserData((prev) => ({
+                    setCreateUserData((prev) => ({
                       ...prev,
                       fullName: e.target.value,
                     }))
@@ -171,32 +179,6 @@ export function EditUserDialog({
                   placeholder="เช่น นายสมชาย ใจดี"
                   className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                 />
-              </div>
-              <div>
-                <Label
-                  htmlFor="edit-status"
-                  className="text-xs font-medium text-slate-500 uppercase tracking-wide"
-                >
-                  สถานะ
-                </Label>
-                <Select
-                  value={editUserData.status}
-                  onValueChange={(value: UserStatus) =>
-                    setEditUserData((prev) => ({
-                      ...prev,
-                      status: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">ใช้งาน</SelectItem>
-                    <SelectItem value="INACTIVE">ไม่ใช้งาน</SelectItem>
-                    <SelectItem value="SUSPENDED">ถูกระงับ</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
@@ -210,17 +192,17 @@ export function EditUserDialog({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label
-                  htmlFor="edit-email"
+                  htmlFor="email"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   อีเมล
                 </Label>
                 <Input
-                  id="edit-email"
+                  id="email"
                   type="email"
-                  value={editUserData.email}
+                  value={createUserData.email}
                   onChange={(e) =>
-                    setEditUserData((prev) => ({
+                    setCreateUserData((prev) => ({
                       ...prev,
                       email: e.target.value,
                     }))
@@ -231,16 +213,16 @@ export function EditUserDialog({
               </div>
               <div>
                 <Label
-                  htmlFor="edit-phoneNumber"
+                  htmlFor="phoneNumber"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   เบอร์โทร (ไม่บังคับ)
                 </Label>
                 <Input
-                  id="edit-phoneNumber"
-                  value={editUserData.phoneNumber}
+                  id="phoneNumber"
+                  value={createUserData.phoneNumber}
                   onChange={(e) =>
-                    setEditUserData((prev) => ({
+                    setCreateUserData((prev) => ({
                       ...prev,
                       phoneNumber: e.target.value,
                     }))
@@ -249,6 +231,35 @@ export function EditUserDialog({
                   className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Security */}
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+            <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
+              <Lock className="w-4 h-4 text-slate-500" />
+              <span>ความปลอดภัย</span>
+            </h3>
+            <div>
+              <Label
+                htmlFor="password"
+                className="text-xs font-medium text-slate-500 uppercase tracking-wide"
+              >
+                รหัสผ่าน
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={createUserData.password}
+                onChange={(e) =>
+                  setCreateUserData((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+                placeholder="รหัสผ่านอย่างน้อย 6 ตัวอักษร"
+                className="bg-white mt-1 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+              />
             </div>
           </div>
 
@@ -261,19 +272,19 @@ export function EditUserDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="w-full">
                 <Label
-                  htmlFor="edit-roleId"
+                  htmlFor="roleId"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   ตำแหน่ง
                 </Label>
                 <Select
                   value={
-                    editUserData.roleId > 0
-                      ? editUserData.roleId.toString()
+                    createUserData.roleId > 0
+                      ? createUserData.roleId.toString()
                       : ""
                   }
                   onValueChange={(value) =>
-                    setEditUserData((prev) => ({
+                    setCreateUserData((prev) => ({
                       ...prev,
                       roleId: parseInt(value),
                     }))
@@ -293,19 +304,15 @@ export function EditUserDialog({
               </div>
               <div className="w-full">
                 <Label
-                  htmlFor="edit-branchId"
+                  htmlFor="branchId"
                   className="text-xs font-medium text-slate-500 uppercase tracking-wide"
                 >
                   สาขา
                 </Label>
                 <Select
-                  value={
-                    editUserData.branchId > 0
-                      ? editUserData.branchId.toString()
-                      : "1"
-                  }
+                  value={createUserData.branchId.toString()}
                   onValueChange={(value) =>
-                    setEditUserData((prev) => ({
+                    setCreateUserData((prev) => ({
                       ...prev,
                       branchId: parseInt(value),
                     }))
@@ -328,18 +335,18 @@ export function EditUserDialog({
           <Button
             variant="outline"
             onClick={handleClose}
-            className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            className="border-slate-200 text-slate-600 hover:bg-slate-50"
           >
             ยกเลิก
           </Button>
           <Button
-            onClick={handleEditUser}
+            onClick={handleCreateUser}
             disabled={
-              !editUserData.fullName.trim() || !editUserData.email.trim()
+              !createUserData.fullName.trim() || !createUserData.email.trim()
             }
             className="bg-[#308AC7] hover:bg-[#3F99D8] text-white"
           >
-            บันทึกการแก้ไข
+            สร้างผู้ใช้
           </Button>
         </DialogFooter>
       </DialogContent>
