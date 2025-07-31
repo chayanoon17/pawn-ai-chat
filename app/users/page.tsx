@@ -96,7 +96,7 @@ export default function UserManagementPage() {
 
   return (
     <MenuPermissionGuard
-      requiredMenuPermission="Users Management"
+      requiredMenuPermission="User Management"
       fallback={
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">

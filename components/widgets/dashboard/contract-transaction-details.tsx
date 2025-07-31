@@ -4,14 +4,13 @@ import {
   Search,
   SlidersHorizontal,
   Download,
-  FileBarChart,
+  TableIcon,
   Ticket,
   Tickets,
   TicketCheck,
   TicketMinus,
   TicketPercent,
   TicketPlus,
-  TicketX,
   Eye,
   Clock,
   UserRound,
@@ -52,7 +51,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import apiClient, { getApiUrl } from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { showWarning } from "@/lib/sweetalert";
@@ -241,7 +239,7 @@ export default function ContractTransactionDetails({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "contract-transaction-details",
-    "รายละเอียดธุรกรรมตั๋วจำนำ",
+    "รายการรับจำนำทั้งหมด",
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
@@ -336,7 +334,7 @@ export default function ContractTransactionDetails({
         <div className="flex flex-col lg:flex-row lg:items-start justify-between space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-slate-100 rounded-lg">
-              <FileBarChart className="w-5 h-5 text-slate-600" />
+              <TableIcon className="w-5 h-5 text-slate-600" />
             </div>
             <div className="flex-1">
               <CardTitle className="text-lg font-semibold text-slate-80">
@@ -639,7 +637,7 @@ export default function ContractTransactionDetails({
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
-                <FileBarChart className="w-5 h-5 text-slate-600" />
+                <TableIcon className="w-5 h-5 text-slate-600" />
                 <span>รายละเอียดธุรกรรม</span>
               </DialogTitle>
               <DialogDescription className="text-slate-500">

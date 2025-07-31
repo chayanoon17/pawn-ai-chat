@@ -9,7 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatSidebar } from "@/components/core";
 import { WidgetFilterData } from "@/components/features/filters";
 import { WidgetProvider } from "@/context/widget-context";
-import { LoadingSpinner } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface BasePageLayoutProps {
@@ -67,15 +67,11 @@ export default function BasePageLayout({
   // 🔐 Guard - แสดง loading state with better UX
   if (!shouldRender) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <div className="mt-6 space-y-2">
-            <p className="text-lg font-medium text-gray-700">{message}</p>
-            <p className="text-sm text-gray-500">กรุณารอสักครู่...</p>
-          </div>
-        </div>
-      </div>
+      <LoadingScreen
+        message={message}
+        size="lg"
+        className="bg-gradient-to-br from-gray-50 to-gray-100"
+      />
     );
   }
 

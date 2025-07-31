@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { CookieConsent } from "@/components/features/auth";
 import { showLoginError, showSuccess, showError } from "@/lib/sweetalert";
-import { LoadingSpinner, ButtonLoading } from "@/components/ui/loading";
+import { ButtonLoading } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -91,19 +92,11 @@ export default function LoginPage() {
   // แสดง loading state เมื่อกำลังตรวจสอบสถานะหรือ redirecting
   if (isLoading || isRedirecting) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <LoadingSpinner size="xl" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
-          </h2>
-          <p className="text-gray-600">
-            {isRedirecting
-              ? "กรุณารอสักครู่..."
-              : "กำลังตรวจสอบข้อมูลผู้ใช้..."}
-          </p>
-        </div>
-      </div>
+      <LoadingScreen
+        message={isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
+        size="lg"
+        className="bg-gradient-to-br from-blue-50 to-indigo-100"
+      />
     );
   }
 
