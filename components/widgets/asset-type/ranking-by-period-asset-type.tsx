@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3, Clock } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -157,45 +158,61 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       : null
   );
 
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          <div>
-            <CardTitle className="text-[24px] font-semibold">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <BarChart3 className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา
             </CardTitle>
-            <p className="text-sm text-[#36B8EE]">
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
-                : error
-                ? error
                 : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${new Date(timestamp).toLocaleString(
-                    "th-TH",
-                    {
-                      timeZone: "Asia/Bangkok",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}`
+                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2" />
-            <span className="text-gray-600">กำลังโหลดข้อมูล...</span>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดข้อมูล...</span>
+            </div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-md">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500 py-12">

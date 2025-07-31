@@ -1,9 +1,4 @@
-import { Tab } from "./types";
-
-interface LogTabsProps {
-  activeTab: Tab;
-  onTabChange: (tab: Tab) => void;
-}
+import type { Tab, LogTabsProps } from "@/types";
 
 const tabs: { id: Tab; label: string; icon: string }[] = [
   { id: "login", label: "ประวัติการเข้าใช้", icon: "🔑" },

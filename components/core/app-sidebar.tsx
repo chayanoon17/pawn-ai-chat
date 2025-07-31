@@ -10,6 +10,7 @@ import {
   UserCog,
   ChevronDown,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,11 +24,15 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
+import { useMenuPermissions } from "@/hooks/use-permissions";
+import { MenuPermission } from "@/lib/permissions";
 import { showConfirmation } from "@/lib/sweetalert";
+import { InlineLoading } from "@/components/ui/loading";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { hasMenuPermission } = useMenuPermissions();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
     "management",
@@ -69,12 +74,14 @@ export function AppSidebar() {
       label: "ข้อมูลตั๋วรับจำนำ",
       icon: BarChart3,
       type: "single",
+      permission: "Dashboard",
     },
     {
-      id: "/asset-type",
+      id: "/asset-types",
       label: "ประเภททรัพย์และราคา",
       icon: FileText,
       type: "single",
+      permission: "Asset Types",
     },
     {
       id: "management",
@@ -82,12 +89,50 @@ export function AppSidebar() {
       icon: Settings,
       type: "group",
       children: [
-        { id: "/user", label: "จัดการผู้ใช้", icon: Users },
-        { id: "/role", label: "จัดการตำแหน่ง", icon: UserCog },
+        {
+          id: "/users",
+          label: "จัดการผู้ใช้",
+          icon: Users,
+          permission: "Users Management",
+        },
+        {
+          id: "/roles",
+          label: "จัดการตำแหน่ง",
+          icon: UserCog,
+          permission: "Roles Management",
+        },
       ],
     },
-    { id: "/log", label: "ประวัติการใช้งาน", icon: Logs, type: "single" },
+    {
+      id: "/logs",
+      label: "ประวัติการใช้งาน",
+      icon: Logs,
+      type: "single",
+      permission: "Activity Logs",
+    },
   ];
+
+  // Filter menu items based on permissions
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (item.type === "group") {
+      // For groups, filter children and only show group if it has visible children
+      const visibleChildren =
+        item.children?.filter((child) =>
+          hasMenuPermission(child.permission as MenuPermission)
+        ) || [];
+
+      if (visibleChildren.length === 0) return false;
+
+      // Update the item with filtered children
+      item.children = visibleChildren;
+      return true;
+    } else {
+      // For single items, check permission
+      return item.permission
+        ? hasMenuPermission(item.permission as MenuPermission)
+        : true;
+    }
+  });
 
   return (
     <Sidebar className="border-r bg-white w-64">
@@ -117,90 +162,112 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <div className="px-4 py-2 space-y-2">
-            {menuItems.map((item) => {
-              // --- โค้ดสำหรับเมนูแบบเดี่ยว (Single Item) ---
-              if (item.type === "single") {
-                const isActive = pathname === item.id;
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <Link href={item.id}>
+            {filteredMenuItems.length === 0 ? (
+              // Empty State - ไม่มีเมนูที่สามารถเข้าถึงได้
+              <div className="px-4 py-8 text-center">
+                <div className="space-y-3">
+                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <Shield className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      ไม่มีสิทธิ์เข้าถึง
+                    </h3>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      คุณยังไม่ได้รับสิทธิ์ในการเข้าถึงเมนูใดๆ ในระบบ
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      กรุณาติดต่อผู้ดูแลระบบ
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              filteredMenuItems.map((item) => {
+                // --- โค้ดสำหรับเมนูแบบเดี่ยว (Single Item) ---
+                if (item.type === "single") {
+                  const isActive = pathname === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <Link href={item.id}>
+                        <button
+                          className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
+                            isActive
+                              ? "text-white hover:text-white"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                          style={isActive ? { backgroundColor: "#308AC7" } : {}}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </button>
+                      </Link>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                // --- โค้ดสำหรับเมนูแบบกลุ่ม (Group) ---
+                if (item.type === "group") {
+                  const isExpanded = expandedGroups.includes(item.id);
+                  const Icon = item.icon;
+                  const hasActiveChild = item.children?.some(
+                    (child) => pathname === child.id
+                  );
+
+                  return (
+                    <SidebarMenuItem key={item.id}>
                       <button
+                        onClick={() => toggleGroup(item.id)}
                         className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
-                          isActive
-                            ? "text-white hover:text-white"
+                          hasActiveChild && !isExpanded
+                            ? "font-semibold !text-[#3F99D8] !bg-gray-100"
                             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                         }`}
-                        style={isActive ? { backgroundColor: "#3F99D8" } : {}}
                       >
                         <Icon className="h-5 w-5" />
-                        <span>{item.label}</span>
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
                       </button>
-                    </Link>
-                  </SidebarMenuItem>
-                );
-              }
 
-              // --- โค้ดสำหรับเมนูแบบกลุ่ม (Group) ---
-              if (item.type === "group") {
-                const isExpanded = expandedGroups.includes(item.id);
-                const Icon = item.icon;
-                const hasActiveChild = item.children?.some(
-                  (child) => pathname === child.id
-                );
-
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <button
-                      onClick={() => toggleGroup(item.id)}
-                      className={`w-full justify-start space-x-4 px-4 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
-                        hasActiveChild && !isExpanded
-                          ? "font-semibold !text-[#3F99D8] !bg-gray-100"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
+                      {isExpanded && item.children && (
+                        <div className="ml-5 mt-2 space-y-1 border-l border-gray-200 pl-4">
+                          {item.children.map((child) => {
+                            const isChildActive = pathname === child.id;
+                            const ChildIcon = child.icon;
+                            return (
+                              <Link key={child.id} href={child.id}>
+                                <button
+                                  className={`w-full justify-start space-x-3 px-3 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
+                                    isChildActive
+                                      ? "text-white hover:text-white"
+                                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                  }`}
+                                  style={
+                                    isChildActive
+                                      ? { backgroundColor: "#3F99D8" }
+                                      : {}
+                                  }
+                                >
+                                  <ChildIcon className="h-4 w-4" />
+                                  <span>{child.label}</span>
+                                </button>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       )}
-                    </button>
+                    </SidebarMenuItem>
+                  );
+                }
 
-                    {isExpanded && item.children && (
-                      <div className="ml-5 mt-2 space-y-1 border-l border-gray-200 pl-4">
-                        {item.children.map((child) => {
-                          const isChildActive = pathname === child.id;
-                          const ChildIcon = child.icon;
-                          return (
-                            <Link key={child.id} href={child.id}>
-                              <button
-                                className={`w-full justify-start space-x-3 px-3 py-3.5 rounded-lg transition-all duration-200 flex items-center text-sm font-medium ${
-                                  isChildActive
-                                    ? "text-white hover:text-white"
-                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                                }`}
-                                style={
-                                  isChildActive
-                                    ? { backgroundColor: "#3F99D8" }
-                                    : {}
-                                }
-                              >
-                                <ChildIcon className="h-4 w-4" />
-                                <span>{child.label}</span>
-                              </button>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </SidebarMenuItem>
-                );
-              }
-
-              return null;
-            })}
+                return null;
+              })
+            )}
           </div>
         </SidebarMenu>
       </SidebarContent>
@@ -238,7 +305,11 @@ export function AppSidebar() {
               aria-label="Logout"
             >
               {isLoggingOut ? (
-                <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+                <InlineLoading
+                  message="กำลังออกจากระบบ..."
+                  size="sm"
+                  showText
+                />
               ) : (
                 <LogOut className="w-4 h-4 text-gray-500 transition-colors duration-200" />
               )}

@@ -1,4 +1,4 @@
-import { MessageCircle, Menu, X } from "lucide-react";
+import { Bot, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -39,9 +39,9 @@ export default function Header({
 
   // 🎯 Check if current page should show filters and chat
   const shouldShowWidgetFilter =
-    pathname === "/dashboard" || pathname === "/asset-type";
+    pathname === "/dashboard" || pathname === "/asset-types";
   const shouldShowAIChat =
-    pathname === "/dashboard" || pathname === "/asset-type";
+    pathname === "/dashboard" || pathname === "/asset-types";
 
   console.log("Header rendered for page:", selectedPage);
 
@@ -78,22 +78,16 @@ export default function Header({
             <WidgetFilter onFilterChange={onFilterChange} />
           )}
 
-          {/* AI Chat - แสดงเฉพาะหน้า dashboard และ asset-type */}
+          {/* Pawn AI - แสดงเฉพาะหน้า dashboard และ asset-type */}
           {shouldShowAIChat && (
             <Button
               onClick={onChatToggle}
-              variant={isChatOpen ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1"
             >
-              {isChatOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <MessageCircle className="w-4 h-4" />
-              )}
-              <span className="hidden sm:inline">
-                {isChatOpen ? "ปิด Chat" : "AI Chat"}
-              </span>
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:inline">{"Pawn AI"}</span>
             </Button>
           )}
         </div>

@@ -1,8 +1,6 @@
 import { LoginRow } from "./types";
 
-interface LoginTableProps {
-  data: LoginRow[];
-}
+import type { LoginTableProps } from "@/types";
 
 export function LoginTable({ data }: LoginTableProps) {
   return (

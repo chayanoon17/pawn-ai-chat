@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -106,14 +106,17 @@ export const DailyOperationSummary = ({
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <CardTitle className="text-[24px] font-semibold">
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <BarChart3 className="w-5 h-5 text-slate-600" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-slate-80">
               รายงานผลการดำเนินงาน
             </CardTitle>
-            <p className="text-sm text-[#36B8EE]">
+            <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
@@ -121,7 +124,7 @@ export const DailyOperationSummary = ({
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
-            </p>
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -131,24 +134,30 @@ export const DailyOperationSummary = ({
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-              <span className="text-gray-600">กำลังโหลดรายงาน...</span>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
+              <span className="text-slate-600">กำลังโหลดรายงาน...</span>
             </div>
           </div>
         )}
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="text-center text-gray-400 py-16">
-            <div className="text-4xl mb-2">📊</div>
-            <p className="text-sm">ไม่มีข้อมูลรายงานผลการดำเนินงาน</p>
-            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="text-red-500">⚠️</div>
+              <div>
+                <p className="text-red-800 font-medium">
+                  ไม่สามารถโหลดข้อมูลได้
+                </p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {/* No Branch Selected */}
         {branchId === "all" && !isLoading && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <div className="text-blue-500">ℹ️</div>
               <div>
@@ -164,180 +173,143 @@ export const DailyOperationSummary = ({
         {/* Data Display */}
         {summary && !isLoading && (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* ฝั่ง ยกมา */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">ทรัพย์จำนำ (ยกมา)</h3>
-                <div className="space-y-4">
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {summary.beginningBalance.count.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600">ราย</div>
-                      </div>
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <h3 className="text-sm font-medium text-slate-700 mb-3">
+                  ทรัพย์จำนำ (ยกมา)
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-white rounded-md p-3 border border-slate-200">
+                    <div className="text-xl font-bold text-slate-800">
+                      {summary.beginningBalance.count.toLocaleString()}
                     </div>
+                    <div className="text-xs text-slate-500">ราย</div>
                   </div>
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {formatAmount(summary.beginningBalance.amount)}
-                        </div>
-                        <div className="text-sm text-gray-600">บาท</div>
-                      </div>
+                  <div className="bg-white rounded-md p-3 border border-slate-200">
+                    <div className="text-xl font-bold text-slate-800">
+                      {formatAmount(summary.beginningBalance.amount)}
                     </div>
+                    <div className="text-xs text-slate-500">บาท</div>
                   </div>
                 </div>
               </div>
 
               {/* ฝั่ง ปัจจุบัน */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <h3 className="text-sm font-medium text-slate-700 mb-3">
                   ทรัพย์จำนำ (ปัจจุบัน)
                 </h3>
-                <div className="space-y-4">
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {summary.endingBalance.count.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600">ราย</div>
-                      </div>
-                      {summary.countChange !== 0 && (
-                        <div
-                          className={`flex items-center ${
-                            summary.countChange > 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {summary.countChange > 0 ? (
-                            <TrendingUp className="w-4 h-4 mr-1" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4 mr-1" />
-                          )}
-                          <span className="font-medium">
-                            {summary.countChange > 0 ? "+" : ""}
-                            {summary.countChange.toFixed(2)}%
-                          </span>
-                        </div>
-                      )}
+                <div className="space-y-3">
+                  <div className="bg-white rounded-md p-3 border border-slate-200">
+                    <div className="text-xl font-bold text-slate-800">
+                      {summary.endingBalance.count.toLocaleString()}
                     </div>
+                    <div className="text-xs text-slate-500">ราย</div>
                   </div>
 
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {formatAmount(summary.endingBalance.amount)}
-                        </div>
-                        <div className="text-sm text-gray-600">บาท</div>
-                      </div>
-                      {summary.amountChange !== 0 && (
-                        <div
-                          className={`flex items-center ${
-                            summary.amountChange > 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {summary.amountChange > 0 ? (
-                            <TrendingUp className="w-4 h-4 mr-1" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4 mr-1" />
-                          )}
-                          <span className="font-medium">
-                            {summary.amountChange > 0 ? "+" : ""}
-                            {summary.amountChange.toFixed(2)}%
-                          </span>
-                        </div>
-                      )}
+                  <div className="bg-white rounded-md p-3 border border-slate-200">
+                    <div className="text-xl font-bold text-slate-800">
+                      {formatAmount(summary.endingBalance.amount)}
                     </div>
+                    <div className="text-xs text-slate-500">บาท</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Summary */}
-            {/* Summary (ใหม่) */}
-            <div className="mt-6 pt-4 border-t">
-              <h4 className="font-semibold text-gray-700 mb-2">
-                สรุปอัตราผลการดำเนินงานของทรัพย์จำนำ
+            {/* Summary - Minimal Design */}
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <h4 className="text-sm font-medium text-slate-700 mb-3">
+                สรุปการเปลี่ยนแปลง
               </h4>
-              <div className="space-y-1 text-[15px] font-medium text-gray-700">
-                {/* Line 1: เพิ่มขึ้น/ลดลง */}
-                <p>
-                  ทรัพย์จำนำ{" "}
-                  <span
-                    className={
-                      summary.endingBalance.count >
-                      summary.beginningBalance.count
-                        ? "text-green-600"
-                        : summary.endingBalance.count <
-                          summary.beginningBalance.count
-                        ? "text-red-600"
-                        : "text-gray-600"
-                    }
-                  >
-                    {summary.endingBalance.count >
-                    summary.beginningBalance.count
-                      ? "เพิ่มขึ้น"
-                      : summary.endingBalance.count <
-                        summary.beginningBalance.count
-                      ? "ลดลง"
-                      : "ไม่มีการเปลี่ยนแปลง"}
-                  </span>
-                </p>
 
-                {/* Line 2: จำนวนเงิน */}
-                <p>
-                  {Math.abs(
-                    summary.endingBalance.amount -
-                      summary.beginningBalance.amount
-                  ).toLocaleString("th-TH", { minimumFractionDigits: 2 })}{" "}
-                  บาท{" "}
-                  <span
-                    className={
-                      summary.amountChange > 0
-                        ? "text-green-600"
-                        : summary.amountChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
-                    }
-                  >
-                    {summary.amountChange > 0
-                      ? `เพิ่มขึ้น ${summary.amountChange.toFixed(2)}%`
-                      : summary.amountChange < 0
-                      ? `ลดลง ${Math.abs(summary.amountChange).toFixed(2)}%`
-                      : "ไม่เปลี่ยนแปลง"}
-                  </span>
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Amount Change */}
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">
+                        มูลค่าเปลี่ยนแปลง
+                      </p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {Math.abs(
+                          summary.endingBalance.amount -
+                            summary.beginningBalance.amount
+                        ).toLocaleString("th-TH", {
+                          maximumFractionDigits: 0,
+                        })}{" "}
+                        บาท
+                      </p>
+                    </div>
+                    <div
+                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                        summary.amountChange > 0
+                          ? "bg-green-100 text-green-700"
+                          : summary.amountChange < 0
+                          ? "bg-red-100 text-red-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {summary.amountChange > 0 ? (
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                      ) : summary.amountChange < 0 ? (
+                        <TrendingDown className="w-3 h-3 mr-1" />
+                      ) : (
+                        <div className="w-3 h-3 bg-slate-400 rounded-full mr-1"></div>
+                      )}
+                      <span>
+                        {summary.amountChange > 0
+                          ? `+${summary.amountChange.toFixed(1)}%`
+                          : summary.amountChange < 0
+                          ? `${summary.amountChange.toFixed(1)}%`
+                          : "0%"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                {/* Line 3: จำนวนราย */}
-                <p>
-                  {Math.abs(
-                    summary.endingBalance.count - summary.beginningBalance.count
-                  ).toLocaleString("th-TH")}{" "}
-                  ราย{" "}
-                  <span
-                    className={
-                      summary.countChange > 0
-                        ? "text-green-600"
-                        : summary.countChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
-                    }
-                  >
-                    {summary.countChange > 0
-                      ? `เพิ่มขึ้น ${summary.countChange.toFixed(2)}%`
-                      : summary.countChange < 0
-                      ? `ลดลง ${Math.abs(summary.countChange).toFixed(2)}%`
-                      : "ไม่เปลี่ยนแปลง"}
-                  </span>
-                </p>
+                {/* Count Change */}
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">
+                        จำนวนรายเปลี่ยนแปลง
+                      </p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {Math.abs(
+                          summary.endingBalance.count -
+                            summary.beginningBalance.count
+                        ).toLocaleString("th-TH")}{" "}
+                        ราย
+                      </p>
+                    </div>
+                    <div
+                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                        summary.countChange > 0
+                          ? "bg-green-100 text-green-700"
+                          : summary.countChange < 0
+                          ? "bg-red-100 text-red-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {summary.countChange > 0 ? (
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                      ) : summary.countChange < 0 ? (
+                        <TrendingDown className="w-3 h-3 mr-1" />
+                      ) : (
+                        <div className="w-3 h-3 bg-slate-400 rounded-full mr-1"></div>
+                      )}
+                      <span>
+                        {summary.countChange > 0
+                          ? `+${summary.countChange.toFixed(1)}%`
+                          : summary.countChange < 0
+                          ? `${summary.countChange.toFixed(1)}%`
+                          : "0%"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </>

@@ -1,11 +1,12 @@
 "use client";
 
-import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { CookieConsent } from "@/components/features/auth";
 import { showLoginError, showSuccess, showError } from "@/lib/sweetalert";
+import { LoadingSpinner, ButtonLoading } from "@/components/ui/loading";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -92,7 +93,7 @@ export default function LoginPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <LoadingSpinner size="xl" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             {isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
           </h2>
@@ -179,10 +180,7 @@ export default function LoginPage() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full text-sm font-medium transition-colors flex justify-center"
             >
               {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  กำลังเข้าสู่ระบบ...
-                </>
+                <ButtonLoading message="กำลังเข้าสู่ระบบ..." size="sm" />
               ) : (
                 "เข้าสู่ระบบ"
               )}
