@@ -2,7 +2,8 @@
 
 import { Dialog, Button, Flex, Text } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
-import { createUser, getRoles, getBranches } from "@/lib/auth-service";
+import { createUser } from "@/lib/auth-service";
+import { getMenuBranches, getMenuRoles } from "@/lib/api";
 import type { Branch, Role, CreateUserPayload } from "@/types";
 import {
   showCreateSuccess,
@@ -55,8 +56,8 @@ export default function AddUserDialog({ onUserCreated }: AddUserDialogProps) {
     const loadData = async () => {
       try {
         const [branchesResponse, rolesResponse] = await Promise.all([
-          getBranches(),
-          getRoles(),
+          getMenuBranches(),
+          getMenuRoles(),
         ]);
         setBranches((branchesResponse as Branch[]) || []);
         setRoles((rolesResponse as Role[]) || []);

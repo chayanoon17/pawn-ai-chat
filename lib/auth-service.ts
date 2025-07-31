@@ -64,7 +64,7 @@ export async function updateUser(
     password?: string;
     branchId?: number;
     roleId?: number;
-    status?: "ACTIVE" | "INACTIVE";
+    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   }
 ) {
   const response = await apiClient.put(`/api/v1/users/${id}`, data);
@@ -83,19 +83,6 @@ export async function getUserPermissions(id: string) {
 
 export async function updateUserRole(id: string, roleId: number) {
   const response = await apiClient.put(`/api/v1/users/${id}/role`, { roleId });
-  return response.data;
-}
-
-/**
- * Menu/Dropdown Data API Functions
- */
-export async function getRoles() {
-  const response = await apiClient.get("/api/v1/menu/roles");
-  return response.data;
-}
-
-export async function getBranches() {
-  const response = await apiClient.get("/api/v1/menu/branches");
   return response.data;
 }
 

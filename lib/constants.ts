@@ -25,45 +25,10 @@ export const PAGE_LABELS: Record<string, string> = {
   "pawn-tickets": "ข้อมูลตั๋วรับจำนำ",
   "asset-types": "ประเภททรัพย์และราคา",
   "user-management": "จัดการข้อมูลผู้ใช้",
+  "role-management": "จัดการตำแหน่งและสิทธิ์",
   "log-management": "ประวัติการใช้งาน",
   settings: "Settings",
 } as const;
-
-// 🏢 Branch Data (ใช้ชั่วคราวจนกว่าจะ integrate กับ API)
-// DEPRECATED: ใช้ API /api/v1/menu/branches แทน
-export const BRANCHES = [
-  { id: 1, name: "สะพานขาว", shortName: "", location: "สะพานขาว" },
-  { id: 2, name: "หนองจอก", shortName: "", location: "หนองจอก" },
-  { id: 3, name: "บางซื่อ", shortName: "", location: "บางซื่อ" },
-  { id: 4, name: "ลาดพร้าว", shortName: "", location: "ลาดพร้าว" },
-  { id: 5, name: "วงศ์สว่าง", shortName: "", location: "วงศ์สว่าง" },
-  { id: 6, name: "ช่องนนทรี", shortName: "", location: "ช่องนนทรี" },
-  { id: 7, name: "ราชเทวี", shortName: "", location: "ราชเทวี" },
-  { id: 8, name: "พระราม 2", shortName: "", location: "พระราม 2" },
-  { id: 9, name: "บางแค", shortName: "", location: "บางแค" },
-  { id: 10, name: "ธนบุรี-ปากท่อ", shortName: "", location: "ธนบุรี-ปากท่อ" },
-  { id: 11, name: "ห้วยขวาง", shortName: "", location: "ห้วยขวาง" },
-  { id: 12, name: "บางกะปิ", shortName: "", location: "บางกะปิ" },
-  { id: 13, name: "สะพานพุทธ", shortName: "", location: "สะพานพุทธ" },
-  { id: 14, name: "อุดมสุข", shortName: "", location: "อุดมสุข" },
-  { id: 15, name: "ดอนเมือง", shortName: "", location: "ดอนเมือง" },
-  { id: 16, name: "สุวินทวงศ์", shortName: "", location: "สุวินทวงศ์" },
-  { id: 17, name: "ปากเกร็ด", shortName: "", location: "ปากเกร็ด" },
-  { id: 18, name: "บางบอน", shortName: "", location: "บางบอน" },
-  { id: 19, name: "หนองแขม", shortName: "", location: "หนองแขม" },
-  { id: 20, name: "ทุ่งสองห้อง", shortName: "", location: "ทุ่งสองห้อง" },
-  { id: 21, name: "ศรีนครินทร์", shortName: "", location: "ศรีนครินทร์" },
-] as const;
-
-// 👥 User Roles Configuration
-// DEPRECATED: ใช้ API /api/v1/menu/roles แทน
-export const ROLES = [
-  { id: 1, name: "Super Admin", shortName: "SA", description: "สิทธิ์เต็ม" },
-  { id: 2, name: "Admin", shortName: "AD", description: "ผู้ดูแลระบบ" },
-  { id: 3, name: "Manager", shortName: "MG", description: "ผู้จัดการ" },
-  { id: 4, name: "Staff", shortName: "ST", description: "พนักงาน" },
-  { id: 5, name: "Viewer", shortName: "VW", description: "ดูข้อมูลอย่างเดียว" },
-] as const;
 
 // 👤 User Status Configuration
 export const USER_STATUS = {

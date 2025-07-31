@@ -479,3 +479,16 @@ export async function updateRole(
 export async function deleteRole(id: number): Promise<void> {
   await apiClient.delete(`/api/v1/roles/${id}`);
 }
+
+/**
+ * Menu/Dropdown Data API Functions
+ */
+export async function getMenuRoles() {
+  const response = await apiClient.get("/api/v1/menu/roles");
+  return response.data;
+}
+
+export async function getMenuBranches() {
+  const response = await apiClient.get("/api/v1/menu/branches");
+  return response.data;
+}
