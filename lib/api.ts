@@ -499,3 +499,41 @@ interface MenuPermission {
   description: string;
   menu?: string;
 }
+
+/**
+ * Menu/Dropdown Data API Functions
+ */
+export async function getMenuRoles() {
+  const response = await apiClient.get("/api/v1/menu/roles");
+  return response.data;
+}
+
+export async function getMenuBranches() {
+  const response = await apiClient.get("/api/v1/menu/branches");
+  return response.data;
+}
+
+/**
+ * ===================================
+ * 📊 ACTIVITY TRACKING API
+ * ===================================
+ */
+
+export interface MenuAccessData {
+  menuName: string;
+  menuPath: string;
+  menuId: string;
+  parentMenu?: string;
+}
+
+/**
+ * บันทึกการเข้าถึงเมนู
+ */
+export async function trackMenuAccess(data: MenuAccessData): Promise<void> {
+  try {
+    await apiClient.post("/api/v1/activity/menu-access", data);
+  } catch (error) {
+    // Log error แต่ไม่ throw เพื่อไม่ให้กระทบการทำงานของเมนู
+    console.error("Failed to track menu access:", error);
+  }
+}

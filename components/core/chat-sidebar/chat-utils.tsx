@@ -38,12 +38,21 @@ export const generateDynamicPrompts = (
     );
   }
 
-  if (widgetIds.includes("contract-transaction-summary")) {
+  if (widgetIds.includes("contract-transaction-type-summary")) {
     prompts.push(
       "ประเภทธุรกรรมไหนที่มีมากที่สุดวันนี้?",
       "จำนวนรายการทั้งหมดเป็นเท่าไร?",
       "การไถ่ถอนมีกี่รายการ?",
       "ธุรกรรมใหม่เทียบกับการต่อดอกเบี้ยอย่างไร?"
+    );
+  }
+
+  if (widgetIds.includes("contract-status-summary")) {
+    prompts.push(
+      "สถานะสัญญาไหนที่มีมากที่สุด?",
+      "มีสัญญาครบกำหนดกี่ราย?",
+      "สัญญาเกินกำหนดมีเท่าไร?",
+      "สัญญาปกติเป็นเปอร์เซ็นต์เท่าไร?"
     );
   }
 
@@ -109,7 +118,7 @@ export const generateDynamicPrompts = (
 
     if (
       widgetIds.includes("asset-type-summary") &&
-      widgetIds.includes("contract-transaction-summary")
+      widgetIds.includes("contract-transaction-type-summary")
     ) {
       prompts.push(
         "ประเภททรัพย์สินไหนที่มีการทำธุรกรรมมากที่สุด?",

@@ -127,16 +127,10 @@ export const GoldPriceCard = () => {
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
-            <div className="flex items-center space-x-2">
-              <div className="text-red-500">⚠️</div>
-              <div>
-                <p className="text-red-800 font-medium">
-                  ไม่สามารถโหลดข้อมูลได้
-                </p>
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            </div>
+          <div className="text-center text-gray-400 py-16">
+            <div className="text-4xl mb-2">📊</div>
+            <p className="text-sm">ไม่มีข้อมูลราคาทองคำอ้างอิง</p>
+            <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>
         )}
 

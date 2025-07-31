@@ -110,8 +110,6 @@ const getStatusColor = (status: string) => {
     case "ส่งดอกเบี้ย":
       return "bg-blue-100 text-blue-700";
     case "ไถ่ถอน":
-      return "bg-orange-100 text-orange-700";
-    case "หลุดจำนำ":
       return "bg-pink-100 text-pink-700";
     case "ผ่อนต้น":
       return "bg-teal-100 text-teal-700";
@@ -131,8 +129,6 @@ const getIconBgColor = (status: string) => {
     case "ส่งดอกเบี้ย":
       return "bg-blue-700";
     case "ไถ่ถอน":
-      return "bg-orange-700";
-    case "หลุดจำนำ":
       return "bg-pink-700";
     case "ผ่อนต้น":
       return "bg-teal-700";
@@ -149,7 +145,6 @@ type TransactionType =
   | "จำนำ"
   | "ส่งดอกเบี้ย"
   | "ไถ่ถอน"
-  | "หลุดจำนำ"
   | "ผ่อนต้น"
   | "เพิ่มต้น"
   | "แบ่งไถ่";
@@ -158,7 +153,6 @@ const statusIconMap: Record<TransactionType, JSX.Element> = {
   จำนำ: <Ticket className="w-5 h-5 text-white" />,
   ส่งดอกเบี้ย: <TicketPercent className="w-5 h-5 text-white" />,
   ไถ่ถอน: <TicketMinus className="w-5 h-5 text-white" />,
-  หลุดจำนำ: <TicketX className="w-5 h-5 text-white" />,
   ผ่อนต้น: <TicketCheck className="w-5 h-5 text-white" />,
   เพิ่มต้น: <TicketPlus className="w-5 h-5 text-white" />,
   แบ่งไถ่: <Tickets className="w-5 h-5 text-white" />,
@@ -404,10 +398,9 @@ export default function ContractTransactionDetails({
         ) : (
           <>
             {/* ✅ Cards Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              {data?.summaries
-                .slice(0, 4)
-                .map((item: TransactionSummaryItem, index: number) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 border-b border-gray-100">
+              {data?.summaries.map(
+                (item: TransactionSummaryItem, index: number) => {
                   const icon = statusIconMap[item.type as TransactionType] || (
                     <SlidersHorizontal className="w-5 h-5" />
                   );
@@ -435,41 +428,8 @@ export default function ContractTransactionDetails({
                       </div>
                     </div>
                   );
-                })}
-            </div>
-
-            <div className="flex justify-center gap-4 flex-wrap">
-              {data?.summaries
-                .slice(4, 6)
-                .map((item: TransactionSummaryItem, index: number) => {
-                  const icon = statusIconMap[item.type as TransactionType] || (
-                    <SlidersHorizontal className="w-5 h-5" />
-                  );
-                  const bgClass = getStatusColor(item.type);
-                  const iconBg = getIconBgColor(item.type);
-
-                  return (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg shadow ${bgClass} flex flex-col justify-between w-full sm:w-[300px]`}
-                    >
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div
-                          className={`rounded-full w-9 h-9 ${iconBg} flex items-center justify-center`}
-                        >
-                          {icon}
-                        </div>
-                        <span className="font-semibold">{item.type}</span>
-                      </div>
-                      <div className="text-sm">
-                        รายการทั้งหมด: <b>{item.total.toLocaleString()}</b>
-                      </div>
-                      <div className="text-sm">
-                        จำนวนเงินรวม: <b>{item.value.toLocaleString()} บาท</b>
-                      </div>
-                    </div>
-                  );
-                })}
+                }
+              )}
             </div>
 
             {/* ✅ Search & Filter */}
