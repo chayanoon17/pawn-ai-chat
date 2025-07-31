@@ -17,6 +17,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
+import { useEffect } from "react";
 
 interface AppSidebarProps {
   currentPage: string;
@@ -47,6 +48,10 @@ export function AppSidebar() {
     { id: "/user", label: "จัดการข้อมูลผู้ใช้", icon: Users },
     { id: "/log", label: "ประวัติการใช้งาน", icon: Logs },
   ];
+
+  useEffect(() => {
+  console.log("📌 [AppSidebar] pathname:", pathname);
+}, [pathname]);
 
   return (
     <Sidebar className="border-r bg-white w-64">

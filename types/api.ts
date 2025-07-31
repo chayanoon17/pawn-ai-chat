@@ -1,3 +1,4 @@
+import { MenuName } from './common';
 /**
  * API Response Types
  * รวม interface สำหรับการตอบกลับจาก API ทั้งหมด
@@ -8,6 +9,7 @@
  * @template T - Type ของ data ที่ต้องการ
  */
 export interface ApiResponse<T = any> {
+  json(): unknown;
   success: boolean;
   message: string;
   data: T;
@@ -95,12 +97,14 @@ export interface ActivityLog {
   createdAt: string; // ISO string
   userId: number;
   metadata: {
+    [x: string]: string;
     email: string;
     ipAddress: string;
     loginTime: string;
     userAgent: string;
+    MenuName: string;
+    menuPath: string;
     // เพิ่ม location ถ้า backend มี
-    location?: string;
   };
   user: {
     id: number;
@@ -132,38 +136,41 @@ export type ActivityLogResponse = {
   };
 };
 
-export type ActivityLogExport = {
+export interface ActivityLogExport {
   id: number;
   activity: string;
   description: string;
-  ipAddress: string;
   createdAt: string;
-  userAgent: string;
-  sessionId: string | null;
-  success: boolean;
-  errorMessage: string | null;
-  userId: number;
-  metadata: {
-    date: string;
-    branchId: number;
-    filename: string;
-    ipAddress: string;
-    userAgent: string;
-    [key: string]: any;
-  };
   user: {
     id: number;
-    email: string;
     fullName: string;
-    role: {
-      id: number;
-      name: string;
-    };
+    email: string;
+    role: any;
     branch: any;
   };
-};
-
-
+  metadata?: {
+    date?: string;
+    branchId?: number;
+    filename?: string;
+    format?: string;
+    recordsCount?: number;
+    fileSize?: {
+      bytes: number;
+      kilobytes: number;
+      megabytes: number;
+    };
+    reportType?: string;
+    status?: string;
+    exportTime?: string;
+    error?: string;
+  };
+  success: boolean;
+  errorMessage?: string;
+  ipAddress: string;
+  sessionId?: string | null;
+  userAgent?: string;
+  status?: string;
+}
 
 
 export interface UserInfo {
@@ -175,14 +182,5 @@ export interface UserInfo {
     name: string;
   };
   branch: string; 
-}
-
-export interface LogMetadata {
-  [x: string]: string;
-  email: string;
-  ipAddress: string;
-  loginTime: string;
-  userAgent: string;
-  // เพิ่ม field อื่น ๆ ถ้า backend รองรับ เช่น location
 }
 

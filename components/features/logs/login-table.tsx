@@ -10,7 +10,6 @@ import {
   ActivityLogResponse
 } from "@/types/api"
 
-
 export function LoginTable() {
   const [page, setPage] = useState(1);
   const [getloguser, setGetloguser] = useState<ActivityLog[]>([]);
@@ -40,8 +39,6 @@ export function LoginTable() {
             <th className="px-4 py-2 text-left text-gray-700">การกระทำ</th>
             <th className="px-4 py-2 text-left text-gray-700 hidden md:table-cell">IP</th>
             <th className="px-4 py-2 text-left text-gray-700 hidden lg:table-cell">อุปกรณ์</th>
-            <th className="px-4 py-2 text-left text-gray-700 hidden lg:table-cell">Session</th>
-            <th className="px-4 py-2 text-left text-gray-700 hidden md:table-cell">ที่ตั้ง</th>
           </tr>
         </thead>
         <tbody>
@@ -53,8 +50,6 @@ export function LoginTable() {
               <td className="p-2">{item.activity}</td>
               <td className="p-2 hidden md:table-cell">{item.ipAddress}</td>
               <td className="p-2 hidden lg:table-cell">{item.userAgent}</td>
-              <td className="p-2 hidden lg:table-cell">{item.sessionId || "-"}</td>
-              <td className="p-2 hidden md:table-cell">{item.metadata?.location || "-"}</td>
             </tr>
           ))}
         </tbody>

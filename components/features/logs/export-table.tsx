@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getActivityLogexdport } from "@/lib/api";
-import { ActivityLogExport } from "@/types/api"
-
+import { ActivityLogExport } from "@/types/api";
 
 export function ExportTable() {
   const [page, setPage] = useState(1);
@@ -20,8 +19,8 @@ export function ExportTable() {
         (log: ActivityLogExport) => log.activity === "EXPORT_REPORT"
       );
 
-      setData(logs); 
-      console.log(exportLogs)
+      setData(exportLogs);
+      console.log(exportLogs);
     } catch (err) {
       console.error("เกิดข้อผิดพลาด:", err);
     } finally {
@@ -40,13 +39,12 @@ export function ExportTable() {
           <tr>
             <th className="px-4 py-2">ชื่อ</th>
             <th className="px-4 py-2">อีเมล</th>
-            <th className="px-4 py-2">ประเภทงาน</th>
+            <th className="px-4 py-2">ชื่อไฟล์</th>
             <th className="px-4 py-2">รูปแบบ</th>
             <th className="px-4 py-2">จำนวนระเบียน</th>
             <th className="px-4 py-2">ขนาดไฟล์</th>
             <th className="px-4 py-2">สถานะ</th>
             <th className="px-4 py-2">วันที่</th>
-            <th className="px-4 py-2">ดาวน์โหลด</th>
           </tr>
         </thead>
         <tbody>
@@ -67,57 +65,47 @@ export function ExportTable() {
               const {
                 id,
                 user,
+                description,
                 createdAt,
+                success,
                 metadata,
+                status,
               } = log;
 
               return (
                 <tr key={id} className="border-t">
-                  <td className="px-4 py-2">{user.fullName ?? "-"}</td>
+                  <td className="px-4 py-2">{user?.fullName ?? "-"}</td>
                   <td className="px-4 py-2">{user?.email ?? "-"}</td>
-                  <td className="px-4 py-2">xx</td>
-                  <td className="px-4 py-2">{metadata?.format ?? "-"}</td>
-                  <td className="px-4 py-2">{metadata?.totalRecords ?? "-"}</td>
+                  <td className="px-4 py-2">{description ?? "-"}</td>
+                  <td className="px-4 py-2">{metadata?.filename ?? "-"}</td>
+                  <td className="px-4 py-2">{metadata?.recordsCount ?? "-"}</td>
+
                   <td className="px-4 py-2">
-                    {metadata?.fileSize?.toFixed(2) ?? "-"} MB
+                    {metadata?.fileSize
+                      ? metadata.fileSize.megabytes >= 1
+                        ? `${metadata.fileSize.megabytes.toFixed(2)} MB`
+                        : `${metadata.fileSize.kilobytes.toFixed(2)} KB`
+                      : "-"}
                   </td>
+
+                  {/* ✅ ฟิลด์ success */}
                   <td className="px-4 py-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        status === "COMPLETED"
-                          ? "bg-green-100 text-green-700"
-                          : status === "FAILED"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {status}
-                    </span>
+                    {success ? (
+                      <span className="text-green-600 font-medium">สำเร็จ</span>
+                    ) : (
+                      <span className="text-red-600 font-medium">ล้มเหลว</span>
+                    )}
                   </td>
                   <td className="px-4 py-2">
                     {new Date(createdAt).toLocaleString("th-TH")}
                   </td>
-                  <td className="px-4 py-2">
-                    {status === "COMPLETED" && metadata?.filename ? (
-                      <a
-                        href={`/exports/${metadata.filename}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        ดาวน์โหลด
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
                 </tr>
+
               );
             })
           )}
         </tbody>
       </table>
-
     </div>
   );
 }

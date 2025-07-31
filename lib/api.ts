@@ -1,3 +1,4 @@
+
 /**
  * HTTP API Client
  * จัดการการเชื่อมต่อกับ Backend API พร้อม httpOnly Cookies และ Security Features
@@ -8,9 +9,10 @@ import {
    ApiErrorResponse,
    Message,
    ActivityLog,
-   ActivityLogResponse
+   ActivityLogResponse,
     } from "@/types/api";
 import {ConversationListResponse} from "@/types/api";
+
 
 /**
  * Get base URL from environment variable
@@ -156,7 +158,7 @@ export async function getActivityLogs(page = 1, limit = 10) {
 
   return res.data;
 }
-
+// export table
 export async function getActivityLogexdport(page = 1,  limit = 10) {
   const res = await  apiClient.get<ActivityLogResponse>(
   `/api/v1/activity/logs?page${page}&limit=${limit}`
@@ -166,6 +168,32 @@ export async function getActivityLogexdport(page = 1,  limit = 10) {
   
 } 
 
+interface MenuAccessPayload {
+  menuId: string;
+  menuName: string;
+  menuPath: string;
+  parentMenu?: string;
+}
+
+export async function logMenuAccess({
+  menuId,
+  menuName,
+  menuPath,
+  parentMenu = "",
+}: MenuAccessPayload): Promise<void> {
+  console.log("📤 Sending logMenuAccess:", { menuId, menuName, menuPath });
+  try {
+    await apiClient.post("/api/v1/activity/menu-access", {
+      menuId,
+      menuName,
+      menuPath,
+      parentMenu,
+    });
+    console.log("✅ Log menu access success:", menuName);
+  } catch (error) {
+    console.error("❌ Error logging menu access:", error);
+  }
+}
 
 // Types สำหรับ fetch API
 interface FetchConfig extends RequestInit {
@@ -406,30 +434,25 @@ const apiClient = new ApiClient();
 
 export default apiClient;
 
-// Types for API functions
-import type {
-  Permission,
-  MenuPermission,
-  Role,
-  CreateRoleData,
-  UpdateRoleData,
-} from "@/types/role";
-
-/**
- * ===================================
- * 🔐 PERMISSIONS & MENU PERMISSIONS API
- * ===================================
- */
-
 /**
  * Get permissions for dropdown/menu
  */
 export async function getPermissions(): Promise<Permission[]> {
   try {
-    const response = await apiClient.get<Permission[]>(
-      "/api/v1/menu/permissions"
-    );
-    return response.data;
+    const response = await fetch(getApiUrl("/menu/permissions"), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch permissions: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
     console.error("Error fetching permissions:", error);
     return [];
@@ -441,89 +464,38 @@ export async function getPermissions(): Promise<Permission[]> {
  */
 export async function getMenuPermissions(): Promise<MenuPermission[]> {
   try {
-    const response = await apiClient.get<MenuPermission[]>(
-      "/api/v1/menu/menu-permissions"
-    );
-    return response.data;
+    const response = await fetch(getApiUrl("/menu/menu-permissions"), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch menu permissions: ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
     console.error("Error fetching menu permissions:", error);
     return [];
   }
 }
 
-/**
- * ===================================
- * 👥 ROLE MANAGEMENT API
- * ===================================
- */
-
-export interface RoleListResponse {
-  roles: Role[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+// Types for API functions
+interface Permission {
+  id: number;
+  name: string;
+  description: string;
 }
 
-export interface GetRolesParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
-
-/**
- * ดึงรายการ Roles ทั้งหมด
- */
-export async function getRoles(
-  params?: GetRolesParams
-): Promise<RoleListResponse> {
-  const queryParams = new URLSearchParams();
-
-  if (params?.page) queryParams.append("page", params.page.toString());
-  if (params?.limit) queryParams.append("limit", params.limit.toString());
-  if (params?.search) queryParams.append("search", params.search);
-
-  const url = `/api/v1/roles${
-    queryParams.toString() ? `?${queryParams.toString()}` : ""
-  }`;
-
-  const response = await apiClient.get<RoleListResponse>(url);
-  return response.data;
-}
-
-/**
- * ดึงข้อมูล Role ตาม ID
- */
-export async function getRoleById(id: number): Promise<Role> {
-  const response = await apiClient.get<{ role: Role }>(`/api/v1/roles/${id}`);
-  return response.data.role;
-}
-
-/**
- * สร้าง Role ใหม่
- */
-export async function createRole(data: CreateRoleData): Promise<Role> {
-  const response = await apiClient.post<{ role: Role }>("/api/v1/roles", data);
-  return response.data.role;
-}
-
-/**
- * อัปเดตข้อมูล Role
- */
-export async function updateRole(
-  id: number,
-  data: UpdateRoleData
-): Promise<Role> {
-  const response = await apiClient.put<{ role: Role }>(
-    `/api/v1/roles/${id}`,
-    data
-  );
-  return response.data.role;
-}
-
-/**
- * ลบ Role
- */
-export async function deleteRole(id: number): Promise<void> {
-  await apiClient.delete(`/api/v1/roles/${id}`);
+interface MenuPermission {
+  id: number;
+  name: string;
+  description: string;
+  menu?: string;
 }

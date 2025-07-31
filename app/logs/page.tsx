@@ -10,45 +10,10 @@ import {
   type LoginRow,
   type ExportRow,
 } from "@/components/features/logs";
-<<<<<<< HEAD:app/log/page.tsx
-import ChatLogPage from "@/components/chatlogpage";
-
-// const exportData: ExportRow[] = [
-//   {
-//     name: "จันทร์เพ็ญ ใจดี",
-//     email: "janpen@example.com",
-//     type: "รายงานตั๋วรับจำนำ",
-//     format: "Excel",
-//     records: 150,
-//     size: "2.5 MB",
-//     status: "สำเร็จ",
-//     datetime: "2024-01-15 14:30:00",
-//   },
-//   {
-//     name: "สมชาย รักงาน",
-//     email: "somchai@example.com",
-//     type: "รายงานประเภททรัพย์",
-//     format: "PDF",
-//     records: 75,
-//     size: "1.8 MB",
-//     status: "กำลังดำเนินการ",
-//     datetime: "2024-01-15 13:15:00",
-//   },
-//   {
-//     name: "วิชัย เทคโนโลยี",
-//     email: "wichai@example.com",
-//     type: "รายงานยอดขาย",
-//     format: "CSV",
-//     records: 200,
-//     size: "0.8 MB",
-//     status: "ล้มเหลว",
-//     datetime: "2024-01-15 12:00:00",
-//   },
-// ];
-=======
 import apiRequest from "@/lib/api";
 import { toast } from "sonner";
->>>>>>> origin/feat/admin:app/logs/page.tsx
+import ChatLogPage from "@/components/chatlogpage";
+import ViewTanle from "@/components/features/logs/view-table";
 
 export default function LogPage() {
 
@@ -137,14 +102,8 @@ export default function LogPage() {
         );
       case "view":
         return (
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">👁️</div>
-            <p className="text-lg font-medium">
-              ยังไม่มีข้อมูลประวัติการเข้าดู
-            </p>
-            <p className="text-sm mt-2">
-              ข้อมูลจะแสดงเมื่อมีการเข้าดูเมนูต่าง ๆ
-            </p>
+          <div className="text-center p-4 text-gray-500">
+            <ViewTanle />
           </div>
         );
       case "chat":
