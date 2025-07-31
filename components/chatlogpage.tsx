@@ -44,7 +44,8 @@ export default function ChatLogPage() {
 
   const fetchConversations = async () => {
     try {
-      const res = await getUserConversations(page, 10);
+      const res = await getUserConversations(page, 10)
+      console.log("📦 ได้ข้อมูล:", res);;
 
       const transformed: ConversationItem[] = res.conversations.map((item) => ({
         conversationId: item.conversationId,
@@ -54,7 +55,6 @@ export default function ChatLogPage() {
         email: item.email ?? "-",
         fullName: item.fullName ?? "-",
       }));
-
       setConversations(transformed);
     } catch (err) {
       console.error("ไม่สามารถโหลดบทสนทนาได้", err);
@@ -73,44 +73,47 @@ export default function ChatLogPage() {
   };
 
   const handleViewMessages = async (
-    id: string,
-    userQuestion: string,
-    aiResponse: string
-  ) => {
-    try {
-      const res = await getConversationMessages(id);
-      setMessages(res.data ?? []);
-      setSelectedTopic(`${userQuestion}|||${aiResponse}`);
-    } catch (err) {
-      console.error("ไม่สามารถโหลดข้อความ:", err);
-    }
-  };
+  id: string,
+  userQuestion: string,
+  aiResponse: string
+  
+) => {
+  try {
+    setSelectedTopic(`${userQuestion}|||${aiResponse}`); 
+    const res = await getConversationMessages(id);
+    setMessages(Array.isArray(res) ? res : []);
+  } catch (err) {
+    console.error("ไม่สามารถโหลดข้อความ:", err);
+  }
+};
+
 
   useEffect(() => {
     fetchConversations();
   }, [page]);
 
   return (
-    <div className="w-full">
+    <div className="rounded-lg border border-slate-200 overflow-hidden">
       <table className="w-full table-auto ">
         <thead className="bg-gray-100">
           <tr>
-            <th className="text-left p-2">คำถาม</th>
-            <th className="text-left p-2">email</th>
-            <th className="text-left p-2">ผู้ใช้</th>
-            <th className="text-left p-2">วันที่</th>
-            <th className="text-left p-2">การจัดการ</th>
+            <th className=" p-2">คำถาม</th>
+            <th className=" p-2">email</th>
+            <th className=" p-2">ผู้ใช้</th>
+            <th className=" p-2">วันที่</th>
+            <th className=" p-2">การจัดการ</th>
           </tr>
         </thead>
         <tbody>
           {conversations.map((conv) => (
-            <tr key={conv.conversationId} className="border-b hover:bg-gray-50">
-              <td className="p-2">
+            <tr key={conv.conversationId} className="border-b hover:bg-gray-50 ">
+              <td className="p-2 flex justify-start">
                 {conv.userQuestion.length > 30
                   ? conv.userQuestion.slice(0, 30) + "..."
                   : conv.userQuestion}
               </td>
-              <td className="p-2">{conv.email}</td>
+
+              <td className="p-2 ">{conv.email}</td>
               <td className="p-2">{conv.fullName}</td>
               <td className="p-2">
                 {new Date(conv.createdAt).toLocaleString("th-TH")}
@@ -148,9 +151,11 @@ export default function ChatLogPage() {
           onClose={() => {
             setMessages(null);
             setSelectedTopic(null);
+            
           }}
         />
       )}
+
     </div>
   );
 }

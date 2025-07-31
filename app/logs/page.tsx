@@ -125,9 +125,9 @@ export default function LogPage() {
       showFilter={false}
       className="bg-gray-50"
     >
-      <div className="space-y-8">
+      <div className="space-y-4">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white  p-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               📋 ประวัติการใช้งาน
@@ -167,8 +167,8 @@ export default function LogPage() {
           </div>
 
           {/* Tab Navigation */}
-          <LogTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+          <LogTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Content Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

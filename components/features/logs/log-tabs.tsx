@@ -9,7 +9,7 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
 
 export function LogTabs({ activeTab, onTabChange }: LogTabsProps) {
   return (
-    <div className="flex flex-wrap gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+    <div className="flex flex-wrap gap-2 p-2 rounded-xl  border-gray-200">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -19,7 +19,7 @@ export function LogTabs({ activeTab, onTabChange }: LogTabsProps) {
             ${
               activeTab === tab.id
                 ? "bg-white text-blue-600 shadow-md border border-blue-200 scale-105"
-                : "text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-sm"
+                : "text-gray-600 hover:text-gray-900 border hover:bg-white hover:shadow-sm"
             }
           `}
           aria-pressed={activeTab === tab.id}

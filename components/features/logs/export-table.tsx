@@ -41,7 +41,7 @@ export function ExportTable() {
             <th className="px-4 py-2">อีเมล</th>
             <th className="px-4 py-2">ชื่อไฟล์</th>
             <th className="px-4 py-2">รูปแบบ</th>
-            <th className="px-4 py-2">จำนวนระเบียน</th>
+            <th className="px-4 py-2">จำนวนข้อมูล</th>
             <th className="px-4 py-2">ขนาดไฟล์</th>
             <th className="px-4 py-2">สถานะ</th>
             <th className="px-4 py-2">วันที่</th>

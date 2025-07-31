@@ -5,7 +5,6 @@ import {
 import { useEffect, useState } from "react";
 import {
   UserInfo,
-  LogMetadata,
   ActivityLog,
   ActivityLogResponse
 } from "@/types/api"
@@ -39,6 +38,7 @@ export function LoginTable() {
             <th className="px-4 py-2 text-left text-gray-700">การกระทำ</th>
             <th className="px-4 py-2 text-left text-gray-700 hidden md:table-cell">IP</th>
             <th className="px-4 py-2 text-left text-gray-700 hidden lg:table-cell">อุปกรณ์</th>
+
           </tr>
         </thead>
         <tbody>
