@@ -7,7 +7,8 @@ import {
    ApiResponse,
    ApiErrorResponse,
    Message,
-   ActivityLog, 
+   ActivityLog,
+   ActivityLogResponse
     } from "@/types/api";
 import {ConversationListResponse} from "@/types/api";
 
@@ -147,7 +148,7 @@ export async function deleteConversation(conversationId: string) {
 }
 
 
-
+// get ประวัติผู้ใช้งาน
 export async function getActivityLogs(page = 1, limit = 10) {
   const res = await apiClient.get<ActivityLog>(
     `/api/v1/activity/logs?page=${page}&limit=${limit}`
@@ -155,6 +156,15 @@ export async function getActivityLogs(page = 1, limit = 10) {
 
   return res.data;
 }
+
+export async function getActivityLogexdport(page = 1,  limit = 10) {
+  const res = await  apiClient.get<ActivityLogResponse>(
+  `/api/v1/activity/logs?page${page}&limit=${limit}`
+  );
+
+  return res.data;
+  
+} 
 
 
 // Types สำหรับ fetch API

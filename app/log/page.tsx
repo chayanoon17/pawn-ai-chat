@@ -12,72 +12,38 @@ import {
 } from "@/components/features/logs";
 import ChatLogPage from "@/components/chatlogpage";
 
-// Mock Data
-// const loginData: LoginRow[] = [
+// const exportData: ExportRow[] = [
 //   {
 //     name: "จันทร์เพ็ญ ใจดี",
 //     email: "janpen@example.com",
-//     datetime: "2024-01-15 09:30:00",
-//     action: "เข้าสู่ระบบ",
-//     ip: "192.168.1.100",
-//     agent: "Chrome 120.0 (Windows)",
-//     session: "ses_abc123xyz",
-//     location: "กรุงเทพฯ, ไทย",
+//     type: "รายงานตั๋วรับจำนำ",
+//     format: "Excel",
+//     records: 150,
+//     size: "2.5 MB",
+//     status: "สำเร็จ",
+//     datetime: "2024-01-15 14:30:00",
 //   },
 //   {
 //     name: "สมชาย รักงาน",
 //     email: "somchai@example.com",
-//     datetime: "2024-01-15 08:45:00",
-//     action: "ออกจากระบบ",
-//     ip: "192.168.1.101",
-//     agent: "Firefox 121.0 (MacOS)",
-//     session: "ses_def456uvw",
-//     location: "เชียงใหม่, ไทย",
+//     type: "รายงานประเภททรัพย์",
+//     format: "PDF",
+//     records: 75,
+//     size: "1.8 MB",
+//     status: "กำลังดำเนินการ",
+//     datetime: "2024-01-15 13:15:00",
 //   },
 //   {
 //     name: "วิชัย เทคโนโลยี",
 //     email: "wichai@example.com",
-//     datetime: "2024-01-15 07:15:00",
-//     action: "เข้าสู่ระบบ",
-//     ip: "192.168.1.102",
-//     agent: "Safari 17.0 (iOS)",
-//     session: "ses_ghi789rst",
-//     location: "ภูเก็ต, ไทย",
+//     type: "รายงานยอดขาย",
+//     format: "CSV",
+//     records: 200,
+//     size: "0.8 MB",
+//     status: "ล้มเหลว",
+//     datetime: "2024-01-15 12:00:00",
 //   },
 // ];
-
-const exportData: ExportRow[] = [
-  {
-    name: "จันทร์เพ็ญ ใจดี",
-    email: "janpen@example.com",
-    type: "รายงานตั๋วรับจำนำ",
-    format: "Excel",
-    records: 150,
-    size: "2.5 MB",
-    status: "สำเร็จ",
-    datetime: "2024-01-15 14:30:00",
-  },
-  {
-    name: "สมชาย รักงาน",
-    email: "somchai@example.com",
-    type: "รายงานประเภททรัพย์",
-    format: "PDF",
-    records: 75,
-    size: "1.8 MB",
-    status: "กำลังดำเนินการ",
-    datetime: "2024-01-15 13:15:00",
-  },
-  {
-    name: "วิชัย เทคโนโลยี",
-    email: "wichai@example.com",
-    type: "รายงานยอดขาย",
-    format: "CSV",
-    records: 200,
-    size: "0.8 MB",
-    status: "ล้มเหลว",
-    datetime: "2024-01-15 12:00:00",
-  },
-];
 
 export default function LogPage() {
 
@@ -95,7 +61,7 @@ export default function LogPage() {
       case "export":
         return (
           <div className="p-4">
-            <ExportTable data={exportData} />
+            <ExportTable />
           </div>
         );
       case "view":

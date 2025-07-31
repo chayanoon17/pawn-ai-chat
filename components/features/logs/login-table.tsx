@@ -3,66 +3,21 @@ import {
   getActivityLogs,
 } from "@/lib/api";
 import { useEffect, useState } from "react";
-
-export interface UserInfo {
-  id: number;
-  email: string;
-  fullName: string;
-  role: {
-    id: number;
-    name: string;
-  };
-  branch: any; // หรือกำหนดให้เป็น object/null ตามจริง
-}
-
-export interface LogMetadata {
-  [x: string]: string;
-  email: string;
-  ipAddress: string;
-  loginTime: string;
-  userAgent: string;
-  // เพิ่ม field อื่น ๆ ถ้า backend รองรับ เช่น location
-}
-
-export interface ActivityLog {
-  id: number;
-  activity: string;
-  description: string;
-  metadata: LogMetadata;
-  ipAddress: string;
-  userAgent: string;
-  sessionId: string | null;
-  success: boolean;
-  errorMessage: string | null;
-  createdAt: string;
-  userId: number;
-  user: UserInfo;
-}
-
-export interface ActivityLogResponse {
-  status: string;
-  message: string;
-  data: {
-    activityLogs: ActivityLog[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
+import {
+  UserInfo,
+  LogMetadata,
+  ActivityLog,
+  ActivityLogResponse
+} from "@/types/api"
 
 
 export function LoginTable() {
   const [page, setPage] = useState(1);
   const [getloguser, setGetloguser] = useState<ActivityLog[]>([]);
 
-
   const fetchGetloguser = async () => {
     try {
       const res = await getActivityLogs(page, 10);
-      console.log("API Response:", res);
       const logs = res.activityLogs;
       setGetloguser(logs);
     } catch (err) {
@@ -73,7 +28,6 @@ export function LoginTable() {
   useEffect(() => {
     fetchGetloguser();
   }, [page]);
-
 
   return (
     <div className="overflow-x-auto">

@@ -81,7 +81,7 @@ export interface ConversationListResponse {
   text: string;
   time: string;
 }
-
+// ดึงข้อมูล ประวัติการเข้าใช้งาน 
 export interface ActivityLog {
   [x: string]: any;
   id: number;
@@ -116,3 +116,73 @@ export interface ActivityLog {
     } | null;
   };
 }
+
+export type ActivityLogResponse = {
+  [x: string]: any;
+  status: string; // "success"
+  message: string;
+  data: {
+    activityLogs: ActivityLog[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+};
+
+export type ActivityLogExport = {
+  id: number;
+  activity: string;
+  description: string;
+  ipAddress: string;
+  createdAt: string;
+  userAgent: string;
+  sessionId: string | null;
+  success: boolean;
+  errorMessage: string | null;
+  userId: number;
+  metadata: {
+    date: string;
+    branchId: number;
+    filename: string;
+    ipAddress: string;
+    userAgent: string;
+    [key: string]: any;
+  };
+  user: {
+    id: number;
+    email: string;
+    fullName: string;
+    role: {
+      id: number;
+      name: string;
+    };
+    branch: any;
+  };
+};
+
+
+
+
+export interface UserInfo {
+  id: number;
+  email: string;
+  fullName: string;
+  role: {
+    id: number;
+    name: string;
+  };
+  branch: string; 
+}
+
+export interface LogMetadata {
+  [x: string]: string;
+  email: string;
+  ipAddress: string;
+  loginTime: string;
+  userAgent: string;
+  // เพิ่ม field อื่น ๆ ถ้า backend รองรับ เช่น location
+}
+
