@@ -4,7 +4,6 @@
 
 import { useAuth } from "@/context/auth-context";
 import { useMemo } from "react";
-import type { MenuPermission } from "@/lib/permissions";
 
 /**
  * Hook สำหรับตรวจสอบ Permission ของผู้ใช้งาน
@@ -86,15 +85,13 @@ export function useMenuPermissions() {
   const userMenuPermissions = useMemo(() => {
     if (!user?.role?.menuPermissions) return [];
     // Backend response has 'menu' field, not 'menuName'
-    return user.role.menuPermissions.map(
-      (mp: any) => mp.menu as MenuPermission
-    );
+    return user.role.menuPermissions.map((mp: any) => mp.menu as String);
   }, [user?.role?.menuPermissions]);
 
   /**
    * ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงเมนูนี้หรือไม่
    */
-  const hasMenuPermission = (menuPermission: MenuPermission): boolean => {
+  const hasMenuPermission = (menuPermission: String): boolean => {
     if (!isAuthenticated || !user) return false;
     return userMenuPermissions.includes(menuPermission);
   };
@@ -102,7 +99,7 @@ export function useMenuPermissions() {
   /**
    * ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงเมนูใดๆ จาก array ที่กำหนด
    */
-  const hasAnyMenuPermission = (menuPermissions: MenuPermission[]): boolean => {
+  const hasAnyMenuPermission = (menuPermissions: String[]): boolean => {
     if (!isAuthenticated || !user) return false;
     return menuPermissions.some((permission) => hasMenuPermission(permission));
   };
@@ -110,9 +107,7 @@ export function useMenuPermissions() {
   /**
    * ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงเมนูทั้งหมดใน array หรือไม่
    */
-  const hasAllMenuPermissions = (
-    menuPermissions: MenuPermission[]
-  ): boolean => {
+  const hasAllMenuPermissions = (menuPermissions: String[]): boolean => {
     if (!isAuthenticated || !user) return false;
     return menuPermissions.every((permission) => hasMenuPermission(permission));
   };
@@ -120,14 +115,14 @@ export function useMenuPermissions() {
   /**
    * ดึงรายการเมนูที่ผู้ใช้มีสิทธิ์เข้าถึง
    */
-  const getAccessibleMenus = (): MenuPermission[] => {
+  const getAccessibleMenus = (): String[] => {
     return userMenuPermissions;
   };
 
   /**
    * ตรวจสอบว่าผู้ใช้สามารถเข้าถึงหน้านี้ได้หรือไม่ (alias)
    */
-  const canAccessPage = (menuPermission: MenuPermission): boolean => {
+  const canAccessPage = (menuPermission: String): boolean => {
     return hasMenuPermission(menuPermission);
   };
 
@@ -151,9 +146,7 @@ export function useMenuPermissions() {
 /**
  * Hook สำหรับป้องกันหน้าที่ต้องการ Menu Permission
  */
-export function useRequireMenuPermission(
-  requiredMenuPermission: MenuPermission
-) {
+export function useRequireMenuPermission(requiredMenuPermission: String) {
   const { hasMenuPermission, isAuthenticated } = useMenuPermissions();
 
   const canAccess = useMemo(() => {
@@ -166,6 +159,3 @@ export function useRequireMenuPermission(
     requiredMenuPermission,
   };
 }
-
-// Export types
-export type { MenuPermission };

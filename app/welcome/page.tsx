@@ -168,9 +168,9 @@ export default function WelcomePage() {
     redirectPath =
       firstMenu === "Asset Types"
         ? "/asset-types"
-        : firstMenu === "Users Management"
+        : firstMenu === "User Management"
         ? "/users"
-        : firstMenu === "Roles Management"
+        : firstMenu === "Role Management"
         ? "/roles"
         : firstMenu === "Activity Logs"
         ? "/logs"

@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
 import { useMenuPermissions } from "@/hooks/use-permissions";
-import { MenuPermission } from "@/lib/permissions";
 import { showConfirmation } from "@/lib/sweetalert";
 import { trackMenuAccess } from "@/lib/api";
 import { InlineLoading } from "@/components/ui/loading";
@@ -106,7 +105,7 @@ export function AppSidebar() {
       permission: "Asset Types",
     },
     {
-      id: "management",
+      id: "/management",
       menuId: "3",
       label: "การจัดการระบบ",
       icon: Settings,
@@ -117,14 +116,14 @@ export function AppSidebar() {
           menuId: "4",
           label: "จัดการผู้ใช้",
           icon: Users,
-          permission: "Users Management",
+          permission: "User Management",
         },
         {
           id: "/roles",
           menuId: "5",
           label: "จัดการตำแหน่ง",
           icon: UserCog,
-          permission: "Roles Management",
+          permission: "Role Management",
         },
       ],
     },
@@ -144,7 +143,7 @@ export function AppSidebar() {
       // For groups, filter children and only show group if it has visible children
       const visibleChildren =
         item.children?.filter((child) =>
-          hasMenuPermission(child.permission as MenuPermission)
+          hasMenuPermission(child.permission as String)
         ) || [];
 
       if (visibleChildren.length === 0) return false;
@@ -155,7 +154,7 @@ export function AppSidebar() {
     } else {
       // For single items, check permission
       return item.permission
-        ? hasMenuPermission(item.permission as MenuPermission)
+        ? hasMenuPermission(item.permission as String)
         : true;
     }
   });
