@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Clock } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -140,7 +140,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "ranking-by-period-asset-type",
-    "อันดับประเภททรัพย์สินรายช่วงเวลา",
+    "ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา",
     "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
     chartData.length > 0
       ? {
@@ -175,7 +175,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       <CardHeader className="px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-slate-100 rounded-lg">
-            <BarChart3 className="w-5 h-5 text-slate-600" />
+            <TrendingUp className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">
