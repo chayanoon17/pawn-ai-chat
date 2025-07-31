@@ -57,7 +57,8 @@ export const WidgetProvider = ({ children }: { children: ReactNode }) => {
           "weekly-operation-summary",
           "daily-operation-summary",
           "gold-price",
-          "contract-transaction-summary",
+          "contract-transaction-type-summary",
+          "contract-status-summary",
           "contract-transaction-details",
         ].includes(widget.id);
       } else if (route.includes("/asset-types")) {

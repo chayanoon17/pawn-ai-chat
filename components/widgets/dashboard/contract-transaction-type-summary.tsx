@@ -122,8 +122,8 @@ export const ContractTransactionSummary = ({
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
-    "contract-transaction-summary",
-    "สรุปสถานะตั๋วจำนำ",
+    "contract-transaction-type-summary",
+    "สรุปประเภทธุรกรรมตั๋วจำนำ",
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น ทำรายการใหม่ ต่อดอกเบี้ย ไถ่ถอน ประมูล",
     data.length > 0
       ? {
@@ -247,7 +247,7 @@ export const ContractTransactionSummary = ({
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">
-              ข้อมูลแสดงสถานะตั๋วจำนำ
+              ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ
             </CardTitle>
             <span className="text-sm text-slate-500">
               {isLoading

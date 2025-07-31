@@ -247,7 +247,7 @@ export const ContractStatusSummary = ({
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-800">
-              ข้อมูลสรุปสถานะสัญญาจำนำ
+              ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ
             </CardTitle>
             <span className="text-sm text-slate-500">
               {isLoading
@@ -359,7 +359,7 @@ export const ContractStatusSummary = ({
         {/* No Data State */}
         {data.length === 0 && !isLoading && !error && branchId !== "all" && (
           <div className="text-center text-slate-400 py-16">
-            <div className="text-4xl mb-2">📋</div>
+            <div className="text-4xl mb-2">📊</div>
             <p className="text-sm">ไม่มีข้อมูลสถานะสัญญาจำนำ</p>
             <p className="text-sm">สำหรับสาขาและวันที่ที่เลือก</p>
           </div>

@@ -16,6 +16,10 @@ import {
   PieChart,
   Table,
   TrendingUp,
+  Trophy,
+  TrendingDown,
+  FileCheck,
+  DollarSign,
 } from "lucide-react";
 import { useWidgetContext, WidgetData } from "@/context/widget-context";
 import { usePathname } from "next/navigation";
@@ -29,16 +33,26 @@ interface AddContextButtonProps {
 // 🎨 Widget Icons Mapping
 const getWidgetIcon = (id: string) => {
   switch (id) {
+    // Dashboard widgets
     case "weekly-operation-summary":
       return <BarChart3 className="w-4 h-4" />;
     case "daily-operation-summary":
       return <TrendingUp className="w-4 h-4" />;
-    case "contract-transaction-summary":
+    case "contract-transaction-type-summary":
       return <PieChart className="w-4 h-4" />;
+    case "contract-status-summary":
+      return <FileCheck className="w-4 h-4" />;
     case "contract-transaction-details":
       return <Table className="w-4 h-4" />;
     case "gold-price":
-      return <FileText className="w-4 h-4" />;
+      return <DollarSign className="w-4 h-4" />;
+    // Asset-type widgets
+    case "asset-type-summary":
+      return <PieChart className="w-4 h-4" />;
+    case "top-ranking-asset-type":
+      return <Trophy className="w-4 h-4" />;
+    case "ranking-by-period-asset-type":
+      return <TrendingDown className="w-4 h-4" />;
     default:
       return <FileText className="w-4 h-4" />;
   }
@@ -83,12 +97,12 @@ export const AddContextButton = ({
           className={`flex items-center gap-2 ${className}`}
         >
           <Plus className="w-4 h-4" />
-          Add Context
+          เพิ่มบริบท
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
         <div className="px-3 py-2 text-sm font-medium text-gray-700 border-b">
-          เลือก Widget เพื่อเพิ่มเป็น Context
+          เลือก Widget เพื่อเพิ่มเป็นบริบท
         </div>
         {widgets.map((widget, index) => {
           const isActive = isWidgetActive(widget.id);
