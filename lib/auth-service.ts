@@ -18,7 +18,7 @@ export async function createUser(data: {
   fullName: string;
   phoneNumber?: string;
   profileUrl?: string;
-  branchId?: number;
+  branchId?: number | null; // เพิ่ม null เพื่อให้สามารถไม่ระบุสาขาได้
   roleId: number;
   status: "ACTIVE" | "INACTIVE";
 }) {
@@ -62,7 +62,7 @@ export async function updateUser(
     phoneNumber?: string;
     profileUrl?: string;
     password?: string;
-    branchId?: number;
+    branchId?: number | null; // เพิ่ม null เพื่อให้สามารถเคลียร์ข้อมูลสาขาได้
     roleId?: number;
     status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   }
@@ -261,7 +261,7 @@ class AuthService {
    * ตรวจสอบว่าเป็น Admin หรือไม่
    */
   isAdmin(user: User | null): boolean {
-    return this.hasPermission(user, PERMISSION_ACTIONS.SYSTEM_ADMIN);
+    return user?.role?.name === "Super Admin" || user?.role?.name === "Admin";
   }
 
   /**

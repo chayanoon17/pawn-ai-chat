@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 import {
   Sidebar,
   SidebarContent,
@@ -25,18 +26,21 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
 import { useMenuPermissions } from "@/hooks/use-permissions";
-import { MenuPermission } from "@/lib/permissions";
 import { showConfirmation } from "@/lib/sweetalert";
 import { trackMenuAccess } from "@/lib/api";
 import { InlineLoading } from "@/components/ui/loading";
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { hasMenuPermission } = useMenuPermissions();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Default: expand ทุกกลุ่มไว้ ผู้ใช้สามารถ collapse ได้เอง
+  // หากมีการเพิ่มกลุ่มใหม่ ให้เพิ่ม ID ของกลุ่มนั้นที่นี่
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    "management",
+    "/management", // กลุ่มการจัดการระบบ
+    // เพิ่มกลุ่มอื่นๆ ได้ตรงนี้ เช่น: "/reports", "/settings" เป็นต้น
   ]);
 
   const toggleGroup = (groupId: string) => {
@@ -46,6 +50,29 @@ export function AppSidebar() {
         : [...prev, groupId]
     );
   };
+
+  // แสดง Loading state ขณะที่กำลังตรวจสอบ authentication
+  if (isLoading) {
+    return (
+      <Sidebar>
+        <SidebarHeader className="p-4">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </SidebarHeader>
+        <SidebarContent className="p-4">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-10 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
 
   const handleLogout = async () => {
     const result = await showConfirmation(
@@ -106,7 +133,7 @@ export function AppSidebar() {
       permission: "Asset Types",
     },
     {
-      id: "management",
+      id: "/management",
       menuId: "3",
       label: "การจัดการระบบ",
       icon: Settings,
@@ -117,14 +144,14 @@ export function AppSidebar() {
           menuId: "4",
           label: "จัดการผู้ใช้",
           icon: Users,
-          permission: "Users Management",
+          permission: "User Management",
         },
         {
           id: "/roles",
           menuId: "5",
           label: "จัดการตำแหน่ง",
           icon: UserCog,
-          permission: "Roles Management",
+          permission: "Role Management",
         },
       ],
     },
@@ -144,7 +171,7 @@ export function AppSidebar() {
       // For groups, filter children and only show group if it has visible children
       const visibleChildren =
         item.children?.filter((child) =>
-          hasMenuPermission(child.permission as MenuPermission)
+          hasMenuPermission(child.permission as string)
         ) || [];
 
       if (visibleChildren.length === 0) return false;
@@ -155,7 +182,7 @@ export function AppSidebar() {
     } else {
       // For single items, check permission
       return item.permission
-        ? hasMenuPermission(item.permission as MenuPermission)
+        ? hasMenuPermission(item.permission as string)
         : true;
     }
   });
@@ -166,8 +193,10 @@ export function AppSidebar() {
       <SidebarHeader className="flex items-center p-4">
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
-            <img
+            <Image
               src="/logo.png"
+              width={40}
+              height={40}
               alt="Pawn AI"
               className="w-full h-full object-cover"
             />

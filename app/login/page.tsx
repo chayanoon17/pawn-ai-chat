@@ -2,11 +2,13 @@
 
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { CookieConsent } from "@/components/features/auth";
 import { showLoginError, showSuccess, showError } from "@/lib/sweetalert";
-import { LoadingSpinner, ButtonLoading } from "@/components/ui/loading";
+import { ButtonLoading } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -82,19 +84,10 @@ export default function LoginPage() {
   // แสดง loading state เมื่อกำลังตรวจสอบสถานะหรือ redirecting
   if (isLoading || isRedirecting) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <LoadingSpinner size="xl" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
-          </h2>
-          <p className="text-gray-600">
-            {isRedirecting
-              ? "กรุณารอสักครู่..."
-              : "กำลังตรวจสอบข้อมูลผู้ใช้..."}
-          </p>
-        </div>
-      </div>
+      <LoadingScreen
+        message={isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
+        size="lg"
+      />
     );
   }
 
@@ -106,7 +99,13 @@ export default function LoginPage() {
         <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
           {/* Logo + Text aligned left */}
           <div className="bg-white p-6 rounded-md self-start">
-            <img src="/logo 1.png" alt="logo" className="h-24" />
+            <Image
+              src="/logo 1.png"
+              width={100}
+              height={100}
+              alt="logo"
+              className="h-24"
+            />
           </div>
           <h1 className="text-2xl font-bold mt-4 text-left">
             สำนักงานธนานุเคราะห์

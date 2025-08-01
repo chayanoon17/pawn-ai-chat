@@ -9,7 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatSidebar } from "@/components/core";
 import { WidgetFilterData } from "@/components/features/filters";
 import { WidgetProvider } from "@/context/widget-context";
-import { LoadingSpinner } from "@/components/ui/loading";
+import { FilterProvider, useFilter } from "@/context/filter-context";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface BasePageLayoutProps {
@@ -25,7 +26,8 @@ interface BasePageLayoutProps {
   onBack?: () => void;
 }
 
-export default function BasePageLayout({
+// Internal component that has access to FilterContext
+function BasePageLayoutContent({
   children,
   page,
   pageTitle,
@@ -33,18 +35,12 @@ export default function BasePageLayout({
   onFilterChange,
 }: BasePageLayoutProps) {
   const isMobile = useIsMobile();
+  const { filterData, setFilterData } = useFilter();
 
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
-  const { shouldRender, message, isLoading: authLoading } = useProtectedRoute();
+  const { shouldRender, message } = useProtectedRoute();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-
-  // 🎯 Default filter state
-  const [filterData, setFilterData] = useState<WidgetFilterData>({
-    branchId: "",
-    date: new Date().toISOString().split("T")[0],
-    isLoading: true,
-  });
 
   const onChatToggle = useCallback(() => {
     setIsChatOpen((prev) => !prev);
@@ -61,22 +57,12 @@ export default function BasePageLayout({
         console.log(`🎯 ${page} filter changed:`, data);
       }
     },
-    [page, onFilterChange]
+    [page, onFilterChange, setFilterData]
   );
 
   // 🔐 Guard - แสดง loading state with better UX
   if (!shouldRender) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <div className="mt-6 space-y-2">
-            <p className="text-lg font-medium text-gray-700">{message}</p>
-            <p className="text-sm text-gray-500">กรุณารอสักครู่...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message={message} size="lg" />;
   }
 
   return (
@@ -101,7 +87,7 @@ export default function BasePageLayout({
               aria-label={`${pageTitle || page} content`}
             >
               <div className="w-full">
-                {/* ส่งค่า filterData ไปให้ children */}
+                {/* ส่งค่า filterData ไปให้ children หรือ render children ปกติ */}
                 {typeof children === "function"
                   ? children(filterData)
                   : children}
@@ -137,5 +123,14 @@ export default function BasePageLayout({
         </div>
       </WidgetProvider>
     </SidebarProvider>
+  );
+}
+
+// Main export component with FilterProvider
+export default function BasePageLayout(props: BasePageLayoutProps) {
+  return (
+    <FilterProvider>
+      <BasePageLayoutContent {...props} />
+    </FilterProvider>
   );
 }

@@ -50,26 +50,49 @@ export const WidgetProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getWidgetsByRoute = (route: string): WidgetData[] => {
-    return Array.from(widgets.values()).filter((widget) => {
-      // กรองตาม route - แยกตาম widget id prefix
-      if (route.includes("/dashboard")) {
-        return [
-          "weekly-operation-summary",
-          "daily-operation-summary",
-          "gold-price",
-          "contract-transaction-type-summary",
-          "contract-status-summary",
-          "contract-transaction-details",
-        ].includes(widget.id);
-      } else if (route.includes("/asset-types")) {
-        return [
-          "asset-type-summary",
-          "top-ranking-asset-type",
-          "ranking-by-period-asset-type",
-        ].includes(widget.id);
-      }
-      return true; // แสดงทั้งหมดสำหรับ route อื่นๆ
-    });
+    return Array.from(widgets.values())
+      .filter((widget) => {
+        // กรองตาม route - แยกตาม widget id prefix และเรียงตามลำดับในหน้า
+        if (route.includes("/dashboard")) {
+          return [
+            "gold-price",
+            "daily-operation-summary",
+            "contract-status-summary",
+            "contract-transaction-type-summary",
+            "weekly-operation-summary",
+            "contract-transaction-details",
+          ].includes(widget.id);
+        } else if (route.includes("/asset-types")) {
+          return [
+            "top-ranking-asset-type",
+            "ranking-by-period-asset-type",
+            "asset-type-summary",
+          ].includes(widget.id);
+        }
+        return true; // แสดงทั้งหมดสำหรับ route อื่นๆ
+      })
+      .sort((a, b) => {
+        // เรียงลำดับ widgets ตามลำดับในหน้า
+        if (route.includes("/dashboard")) {
+          const dashboardOrder = [
+            "gold-price",
+            "daily-operation-summary",
+            "contract-status-summary",
+            "contract-transaction-type-summary",
+            "weekly-operation-summary",
+            "contract-transaction-details",
+          ];
+          return dashboardOrder.indexOf(a.id) - dashboardOrder.indexOf(b.id);
+        } else if (route.includes("/asset-types")) {
+          const assetTypesOrder = [
+            "top-ranking-asset-type",
+            "ranking-by-period-asset-type",
+            "asset-type-summary",
+          ];
+          return assetTypesOrder.indexOf(a.id) - assetTypesOrder.indexOf(b.id);
+        }
+        return 0;
+      });
   };
 
   return (

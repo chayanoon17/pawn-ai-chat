@@ -3,23 +3,21 @@
  */
 
 import React from "react";
-import {
-  useMenuPermissions,
-  type MenuPermission,
-} from "@/hooks/use-permissions";
+import { useMenuPermissions } from "@/hooks/use-permissions";
+import { useAuth } from "@/context/auth-context";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, ShieldX } from "lucide-react";
 
 interface MenuPermissionGuardProps {
   children: React.ReactNode;
-  requiredMenuPermission: MenuPermission;
+  requiredMenuPermission: string;
   fallback?: React.ReactNode;
   showAlert?: boolean;
 }
 
 interface AnyMenuPermissionGuardProps {
   children: React.ReactNode;
-  requiredMenuPermissions: MenuPermission[];
+  requiredMenuPermissions: string[];
   fallback?: React.ReactNode;
   showAlert?: boolean;
 }
@@ -34,6 +32,23 @@ export function MenuPermissionGuard({
   showAlert = true,
 }: MenuPermissionGuardProps) {
   const { hasMenuPermission, isAuthenticated } = useMenuPermissions();
+  const { isLoading } = useAuth();
+
+  // แสดง Loading state ขณะที่กำลังตรวจสอบ authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="w-full px-6 py-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">กำลังตรวจสอบสิทธิ์การเข้าถึง...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -77,6 +92,23 @@ export function AnyMenuPermissionGuard({
   showAlert = true,
 }: AnyMenuPermissionGuardProps) {
   const { hasAnyMenuPermission, isAuthenticated } = useMenuPermissions();
+  const { isLoading } = useAuth();
+
+  // แสดง Loading state ขณะที่กำลังตรวจสอบ authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="w-full px-6 py-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">กำลังตรวจสอบสิทธิ์การเข้าถึง...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

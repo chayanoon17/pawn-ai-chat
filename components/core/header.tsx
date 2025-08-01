@@ -2,6 +2,7 @@ import { Bot, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMenuPermissions } from "@/hooks/use-permissions";
 import { WidgetFilter, WidgetFilterData } from "@/components/features/filters";
 import { usePathname } from "next/navigation";
 import { PAGE_LABELS } from "@/lib/constants";
@@ -31,11 +32,11 @@ interface HeaderProps {
 export default function Header({
   selectedPage,
   onChatToggle,
-  isChatOpen,
   onFilterChange,
 }: HeaderProps) {
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const { hasMenuPermission } = useMenuPermissions();
 
   // 🎯 Check if current page should show filters and chat
   const shouldShowWidgetFilter =
@@ -77,7 +78,7 @@ export default function Header({
           )}
 
           {/* Pawn AI - แสดงเฉพาะหน้า dashboard และ asset-type */}
-          {shouldShowAIChat && (
+          {hasMenuPermission("AI Chat") && shouldShowAIChat && (
             <Button
               onClick={onChatToggle}
               variant="outline"

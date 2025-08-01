@@ -21,13 +21,12 @@ export const CHART_COLORS = [
 
 // 📄 Page Configuration
 export const PAGE_LABELS: Record<string, string> = {
-  dashboard: "Dashboard Overview",
-  "pawn-tickets": "ข้อมูลตั๋วรับจำนำ",
+  dashboard: "ข้อมูลตั๋วรับจำนำ",
   "asset-types": "ประเภททรัพย์และราคา",
   "user-management": "จัดการข้อมูลผู้ใช้",
   "role-management": "จัดการตำแหน่งและสิทธิ์",
   "log-management": "ประวัติการใช้งาน",
-  settings: "Settings",
+  settings: "การตั้งค่า",
 } as const;
 
 // 👤 User Status Configuration

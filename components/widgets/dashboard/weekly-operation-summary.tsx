@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
@@ -10,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import apiClient from "@/lib/api";
-import { Download, Upload, TrendingUp, Clock } from "lucide-react";
+import { Download, Upload, FileBarChart } from "lucide-react";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 interface WeeklyOperationData {
@@ -286,7 +287,7 @@ export const WeeklyOperationSummary = ({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "weekly-operation-summary",
-    "สรุปการดำเนินงานประจำสัปดาห์",
+    "ยอดรับจำนำและรายละเอียด",
     "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
     data
       ? {
@@ -329,7 +330,7 @@ export const WeeklyOperationSummary = ({
       <CardHeader className="px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-slate-100 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-slate-600" />
+            <FileBarChart className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">
@@ -402,8 +403,10 @@ export const WeeklyOperationSummary = ({
                 {cashInChange && (
                   <>
                     <span className={`${cashInChange.color} flex items-center`}>
-                      <img
+                      <Image
                         src={cashInChange.icon}
+                        width={16}
+                        height={16}
                         alt="trend"
                         className="w-4 h-4 mr-1 object-contain"
                       />
@@ -514,8 +517,10 @@ export const WeeklyOperationSummary = ({
                     <span
                       className={`${cashOutChange.color} flex items-center`}
                     >
-                      <img
+                      <Image
                         src={cashOutChange.icon}
+                        width={16}
+                        height={16}
                         alt="trend"
                         className="w-4 h-4 mr-1 object-contain"
                       />

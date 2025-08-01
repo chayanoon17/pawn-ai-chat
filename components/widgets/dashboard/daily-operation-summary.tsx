@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, BarChart3, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -75,8 +75,8 @@ export const DailyOperationSummary = ({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "daily-operation-summary",
-    "สรุปยอดสต็อกจำนำรายวัน",
-    "ข้อมูลยอดคงเหลือตอนเปิด-ปิด ทั้งจำนวนรายการและมูลค่า พร้อมการเปลี่ยนแปลง",
+    "รายงานผลการดำเนินงาน",
+    "ข้อมูลเปรียบเทียบผลการดำเนินงานรายวัน (ทรัพย์จำนำยกมาและทรัพย์จำนำปัจจุบัน)",
     summary
       ? {
           branchId: summary.branchId,

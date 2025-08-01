@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Clock } from "lucide-react";
+import { Trophy } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -81,7 +81,7 @@ export const TopRankingAssetType = ({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "top-ranking-asset-type",
-    "อันดับประเภททรัพย์สิน",
+    "10 อันดับ รายการประเภททรัพย์และราคา",
     "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
     rankings.length > 0
       ? {

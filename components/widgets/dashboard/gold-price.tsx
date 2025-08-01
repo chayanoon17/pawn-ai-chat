@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Coins, Info } from "lucide-react";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
@@ -115,12 +116,44 @@ export const GoldPriceCard = () => {
       <CardContent>
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-300 border-t-slate-600"></div>
-              <span className="text-slate-600 text-sm">
-                กำลังโหลดราคาทอง...
-              </span>
+          <div className="space-y-6">
+            {/* Price Cards Grid Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="bg-slate-50 border border-slate-200 rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <Skeleton className="h-6 w-20 rounded-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-baseline space-x-2">
+                      <Skeleton className="h-3 w-8" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                    <div className="flex items-baseline space-x-2">
+                      <Skeleton className="h-3 w-8" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Price Spread Skeleton */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <Skeleton className="h-5 w-32 mb-3" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
             </div>
           </div>
         )}

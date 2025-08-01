@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Clock } from "lucide-react";
+import { PieChartIcon } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -12,8 +12,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { useOptimizedMemo, usePerformanceMonitor } from "@/lib/performance";
-import { ChartLoading } from "@/components/ui/loading";
-import { LazyLoad } from "@/lib/performance";
 
 type AssetTypeSummary = {
   assetType: string;
@@ -52,8 +50,6 @@ const COLORS = [
   "#0ea5e9",
   "#22c55e",
 ];
-
-const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
 interface CustomLabelProps {
   cx?: number;
@@ -215,8 +211,8 @@ export const AssetTypesSummary = ({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
   useWidgetRegistration(
     "asset-type-summary",
-    "สรุปประเภททรัพย์สิน",
-    "ข้อมูลสรุปประเภททรัพย์สินที่รับจำนำ พร้อมจำนวนและเปอร์เซ็นต์",
+    "ข้อมูลประเภททรัพย์และจำนวน",
+    "ข้อมูลสรุปประเภททรัพย์และจำนวน พร้อมจำนวนและเปอร์เซ็นต์",
     data.length > 0
       ? {
           branchId: parseInt(branchId),
@@ -253,7 +249,7 @@ export const AssetTypesSummary = ({
       <CardHeader className="px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-slate-100 rounded-lg">
-            <Package className="w-5 h-5 text-slate-600" />
+            <PieChartIcon className="w-5 h-5 text-slate-600" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">

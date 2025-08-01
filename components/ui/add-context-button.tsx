@@ -12,14 +12,14 @@ import {
 import {
   Plus,
   FileText,
+  FileBarChart,
+  Coins,
   BarChart3,
   PieChart,
-  Table,
+  PieChartIcon,
+  TableIcon,
   TrendingUp,
   Trophy,
-  TrendingDown,
-  FileCheck,
-  DollarSign,
 } from "lucide-react";
 import { useWidgetContext, WidgetData } from "@/context/widget-context";
 import { usePathname } from "next/navigation";
@@ -35,24 +35,24 @@ const getWidgetIcon = (id: string) => {
   switch (id) {
     // Dashboard widgets
     case "weekly-operation-summary":
-      return <BarChart3 className="w-4 h-4" />;
+      return <FileBarChart className="w-4 h-4" />;
     case "daily-operation-summary":
-      return <TrendingUp className="w-4 h-4" />;
+      return <BarChart3 className="w-4 h-4" />;
     case "contract-transaction-type-summary":
       return <PieChart className="w-4 h-4" />;
     case "contract-status-summary":
-      return <FileCheck className="w-4 h-4" />;
+      return <PieChart className="w-4 h-4" />;
     case "contract-transaction-details":
-      return <Table className="w-4 h-4" />;
+      return <TableIcon className="w-4 h-4" />;
     case "gold-price":
-      return <DollarSign className="w-4 h-4" />;
+      return <Coins className="w-4 h-4" />;
     // Asset-type widgets
     case "asset-type-summary":
-      return <PieChart className="w-4 h-4" />;
+      return <PieChartIcon className="w-4 h-4" />;
     case "top-ranking-asset-type":
       return <Trophy className="w-4 h-4" />;
     case "ranking-by-period-asset-type":
-      return <TrendingDown className="w-4 h-4" />;
+      return <TrendingUp className="w-4 h-4" />;
     default:
       return <FileText className="w-4 h-4" />;
   }

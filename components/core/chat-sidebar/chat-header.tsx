@@ -30,7 +30,7 @@ export const ChatHeader = ({
           <AddContextButton
             onContextAdded={onContextAdded}
             activeContexts={activeContexts}
-            className="text-xs bg-white/20 hover:bg-white/30 text-white border-white/30"
+            className="text-xs bg-white/20 hover:bg-white/30 text-white hover:text-white border-white/30"
           />
           <Button
             variant="ghost"

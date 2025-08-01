@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, Calendar } from "lucide-react";
+import { Check, ChevronDown, Calendar, Lock } from "lucide-react";
 import apiClient from "@/lib/api";
 import { format } from "date-fns";
 import { useDebounce, useStableCallback } from "@/lib/performance";
 import { useIsMobile } from "@/hooks/use-mobile";
-
+import { useAuth } from "@/context/auth-context";
+import type { Branch } from "@/types/auth";
 import {
   Popover,
   PopoverContent,
@@ -22,13 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-type Branch = {
-  id: number;
-  name: string;
-  location: string;
-  shortName: string;
-};
-
 export type WidgetFilterData = {
   branchId: string;
   date: string;
@@ -42,9 +36,19 @@ interface WidgetFilterProps {
 export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const isMobile = useIsMobile();
+  const { user } = useAuth();
 
-  // 🔄 Load saved values from localStorage with session check
+  // 🔒 ตรวจสอบว่า user มี branch restriction หรือไม่
+  const isBranchRestricted = Boolean(user?.branchId && user.branchId > 0);
+  const userBranchId = user?.branchId?.toString() || "";
+
+  // 🔄 Load saved values from localStorage with session check and branch restriction
   const [selectedBranchId, setSelectedBranchId] = useState<string>(() => {
+    // 🔒 ถ้า user มี branch restriction ให้ใช้ branch ID ของ user เลย
+    if (isBranchRestricted) {
+      return userBranchId;
+    }
+
     if (typeof window !== "undefined") {
       // ตรวจสอบว่าเป็น session ใหม่หรือไม่
       const isNewSession = !sessionStorage.getItem("widgetFilter_session");
@@ -117,16 +121,20 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
 
         // เฉพาะกรณีที่ยังไม่มีการเลือกสาขา (ครั้งแรกที่โหลด)
         if (response.data.length > 0 && !selectedBranchId) {
-          const firstBranchId = response.data[0].id.toString();
-          setSelectedBranchId(firstBranchId);
+          // 🔒 ถ้า user มี branch restriction ใช้ branch ของ user
+          const defaultBranchId = isBranchRestricted
+            ? userBranchId
+            : response.data[0].id.toString();
 
-          // 💾 Save to localStorage
-          if (typeof window !== "undefined") {
-            localStorage.setItem("widgetFilter_branchId", firstBranchId);
+          setSelectedBranchId(defaultBranchId);
+
+          // 💾 Save to localStorage (เฉพาะ user ที่ไม่มี restriction)
+          if (typeof window !== "undefined" && !isBranchRestricted) {
+            localStorage.setItem("widgetFilter_branchId", defaultBranchId);
           }
 
           onFilterChange?.({
-            branchId: firstBranchId,
+            branchId: defaultBranchId,
             date: selectedDate
               ? formatDateForAPI(selectedDate)
               : formatDateForAPI(new Date()),
@@ -160,6 +168,11 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
   }, []);
 
   const handleBranchChange = (branchId: string) => {
+    // 🔒 ป้องกันไม่ให้ user ที่มี branch restriction เปลี่ยนสาขา
+    if (isBranchRestricted) {
+      return;
+    }
+
     setSelectedBranchId(branchId);
 
     // 💾 Save to localStorage
@@ -210,66 +223,87 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
       }`}
     >
       {/* 🔎 Branch Select with Search */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={`${
-              isMobile
-                ? "w-full sm:w-[140px] text-xs sm:text-sm h-[32px] sm:h-[36px]"
-                : "w-[180px] text-sm h-[36px]"
-            } justify-between`}
-            disabled={isLoading || branches.length === 0}
-          >
-            <span className="truncate">
-              {(() => {
-                const selectedBranch = branches.find(
-                  (b) => b.id.toString() === selectedBranchId
-                );
-                if (selectedBranch) {
-                  // แสดงแค่ชื่อสั้นใน mobile
-                  return isMobile
-                    ? selectedBranch.shortName
-                    : `${selectedBranch.location} (${selectedBranch.shortName})`;
-                }
-                return isMobile ? "สาขา" : "เลือกสาขา";
-              })()}
-            </span>
-            <ChevronDown
-              className={`ml-1 ${isMobile ? "h-3 w-3" : "h-4 w-4"} opacity-50`}
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className={`p-0 ${
-            isMobile ? "w-[160px]" : "w-[200px]"
-          } max-h-[300px] overflow-y-auto`}
-        >
-          <Command>
-            <CommandInput placeholder="ค้นหาสาขา..." className="h-9" />
-            <CommandEmpty>ไม่พบสาขา</CommandEmpty>
-            <CommandGroup>
-              {branches.map((branch) => (
-                <CommandItem
-                  key={branch.id}
-                  value={branch.location}
-                  onSelect={() => handleBranchChange(branch.id.toString())}
-                  className={isMobile ? "text-xs" : ""}
-                >
-                  {isMobile
-                    ? `${branch.shortName} - ${branch.location}`
-                    : `${branch.location} (${branch.shortName})`}
-                  {branch.id.toString() === selectedBranchId && (
-                    <Check
-                      className={`ml-auto ${isMobile ? "h-3 w-3" : "h-4 w-4"}`}
-                    />
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <div className="relative">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={`${
+                isMobile
+                  ? "w-full sm:w-[140px] text-xs sm:text-sm h-[32px] sm:h-[36px]"
+                  : "w-[180px] text-sm h-[36px]"
+              } justify-between ${
+                isBranchRestricted ? "cursor-not-allowed opacity-75" : ""
+              }`}
+              disabled={
+                isLoading || branches.length === 0 || isBranchRestricted
+              }
+            >
+              <span className="truncate flex items-center gap-2">
+                {isBranchRestricted && (
+                  <Lock
+                    className={`${
+                      isMobile ? "h-3 w-3" : "h-4 w-4"
+                    } text-gray-500`}
+                  />
+                )}
+                {(() => {
+                  const selectedBranch = branches.find(
+                    (b) => b.id.toString() === selectedBranchId
+                  );
+                  if (selectedBranch) {
+                    // แสดงแค่ชื่อสั้นใน mobile
+                    return isMobile
+                      ? selectedBranch.shortName
+                      : `${selectedBranch.location} (${selectedBranch.shortName})`;
+                  }
+                  return isMobile ? "สาขา" : "เลือกสาขา";
+                })()}
+              </span>
+              {!isBranchRestricted && (
+                <ChevronDown
+                  className={`ml-1 ${
+                    isMobile ? "h-3 w-3" : "h-4 w-4"
+                  } opacity-50`}
+                />
+              )}
+            </Button>
+          </PopoverTrigger>
+          {!isBranchRestricted && (
+            <PopoverContent
+              className={`p-0 ${
+                isMobile ? "w-[160px]" : "w-[200px]"
+              } max-h-[300px] overflow-y-auto`}
+            >
+              <Command>
+                <CommandInput placeholder="ค้นหาสาขา..." className="h-9" />
+                <CommandEmpty>ไม่พบสาขา</CommandEmpty>
+                <CommandGroup>
+                  {branches.map((branch) => (
+                    <CommandItem
+                      key={branch.id}
+                      value={branch.location}
+                      onSelect={() => handleBranchChange(branch.id.toString())}
+                      className={isMobile ? "text-xs" : ""}
+                    >
+                      {isMobile
+                        ? `${branch.shortName} - ${branch.location}`
+                        : `${branch.location} (${branch.shortName})`}
+                      {branch.id.toString() === selectedBranchId && (
+                        <Check
+                          className={`ml-auto ${
+                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                          }`}
+                        />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          )}
+        </Popover>
+      </div>
 
       {/* 📅 Custom Date Picker (แสดง dd/mm/yyyy แต่ใช้ yyyy-mm-dd) */}
       <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
