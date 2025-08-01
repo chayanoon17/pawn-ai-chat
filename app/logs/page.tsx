@@ -12,8 +12,11 @@ import {
 } from "@/components/features/logs";
 import apiRequest from "@/lib/api";
 import { toast } from "sonner";
+import ChatLogPage from "@/components/chatlogpage";
+import ViewTanle from "@/components/features/logs/view-table";
 
 export default function LogPage() {
+
   const [activeTab, setActiveTab] = useState<Tab>("login");
   const [isLoading, setIsLoading] = useState(false);
   const [loginData, setLoginData] = useState<LoginRow[]>([]);
@@ -87,33 +90,27 @@ export default function LogPage() {
       case "login":
         return (
           <div className="p-4">
-            <LoginTable data={loginData} />
+            <LoginTable
+             />
           </div>
         );
       case "export":
         return (
           <div className="p-4">
-            <ExportTable data={exportData} />
+            <ExportTable />
           </div>
         );
       case "view":
         return (
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">👁️</div>
-            <p className="text-lg font-medium">
-              ยังไม่มีข้อมูลประวัติการเข้าดู
-            </p>
-            <p className="text-sm mt-2">
-              ข้อมูลจะแสดงเมื่อมีการเข้าดูเมนูต่าง ๆ
-            </p>
+          <div className="text-center p-4 text-gray-500">
+            <ViewTanle />
           </div>
         );
       case "chat":
         return (
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">💬</div>
-            <p className="text-lg font-medium">ยังไม่มีข้อมูลประวัติการสนทนา</p>
-            <p className="text-sm mt-2">ข้อมูลจะแสดงเมื่อมีการใช้งาน AI Chat</p>
+          <div className="text-center p-4">
+            <ChatLogPage
+            />
           </div>
         );
       default:
@@ -128,9 +125,9 @@ export default function LogPage() {
       showFilter={false}
       className="bg-gray-50"
     >
-      <div className="space-y-8">
+      <div className="space-y-4">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white  p-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               📋 ประวัติการใช้งาน
@@ -170,8 +167,8 @@ export default function LogPage() {
           </div>
 
           {/* Tab Navigation */}
-          <LogTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+          <LogTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Content Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
