@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Calendar as CalendarIcon,
+  CalendarIcon,
   Logs,
   Users,
   Activity,
   TrendingUp,
+  FileChartColumn,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -22,17 +23,32 @@ import { getActivitySummary, ActivitySummaryResponse } from "@/lib/api";
 import { useAuth } from "@/context/auth-context";
 import { usePermissions } from "@/hooks/use-permissions";
 
-export function LogsSummary() {
+export function LogsSummary({
+  startDate,
+  endDate,
+  onDateChange,
+}: {
+  startDate?: Date;
+  endDate?: Date;
+  onDateChange?: (
+    startDate: Date | undefined,
+    endDate: Date | undefined
+  ) => void;
+}) {
   const { user } = useAuth();
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<ActivitySummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Date states - default to today
+  // Date states - use props as initial values or default to today
   const today = new Date();
-  const [startDate, setStartDate] = useState<Date | undefined>(today);
-  const [endDate, setEndDate] = useState<Date | undefined>(today);
+  const [localStartDate, setLocalStartDate] = useState<Date | undefined>(
+    startDate || today
+  );
+  const [localEndDate, setLocalEndDate] = useState<Date | undefined>(
+    endDate || today
+  );
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);
   const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
@@ -42,7 +58,11 @@ export function LogsSummary() {
 
   // Helper function to format date for API
   const formatDateForAPI = (date: Date): string => {
-    return format(date, "yyyy-MM-dd");
+    // ใช้ UTC เพื่อป้องกันปัญหา timezone ที่ทำให้วันที่ลดลง 1 วัน
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   // Helper function to format date for display
@@ -51,7 +71,7 @@ export function LogsSummary() {
   };
 
   const fetchSummary = async () => {
-    if (!startDate || !endDate) return;
+    if (!localStartDate || !localEndDate) return;
 
     try {
       setIsLoading(true);
@@ -66,8 +86,8 @@ export function LogsSummary() {
         : null;
 
       const params = {
-        startDate: formatDateForAPI(startDate),
-        endDate: formatDateForAPI(endDate),
+        startDate: formatDateForAPI(localStartDate),
+        endDate: formatDateForAPI(localEndDate),
         userId: targetUserId,
       };
 
@@ -89,16 +109,28 @@ export function LogsSummary() {
 
   useEffect(() => {
     fetchSummary();
-  }, [startDate, endDate, user?.id, isUserSuperAdmin, isUserAdmin]);
+  }, [localStartDate, localEndDate, user?.id, isUserSuperAdmin, isUserAdmin]);
+
+  // Update local state when props change
+  useEffect(() => {
+    if (startDate) setLocalStartDate(startDate);
+    if (endDate) setLocalEndDate(endDate);
+  }, [startDate, endDate]);
 
   const handleStartDateSelect = (date: Date | undefined) => {
-    setStartDate(date);
+    setLocalStartDate(date);
     setIsStartDateOpen(false);
+    if (onDateChange) {
+      onDateChange(date, localEndDate);
+    }
   };
 
   const handleEndDateSelect = (date: Date | undefined) => {
-    setEndDate(date);
+    setLocalEndDate(date);
     setIsEndDateOpen(false);
+    if (onDateChange) {
+      onDateChange(localStartDate, date);
+    }
   };
 
   // แมป activity เป็นชื่อที่อ่านง่าย
@@ -126,192 +158,192 @@ export function LogsSummary() {
     <div className="space-y-6">
       {/* Date Range Selector */}
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="px-6 py-4 border-b border-gray-100">
+        <CardHeader className="px-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <CalendarIcon className="w-4 h-4 text-blue-600" />
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <CalendarIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold text-slate-800">
+                <CardTitle className="text-lg font-semibold text-slate-800">
                   ช่วงวันที่
                 </CardTitle>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm text-slate-500">
                   เลือกช่วงวันที่สำหรับดูข้อมูลสรุป
                 </p>
               </div>
             </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Start Date Picker */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700">จาก:</span>
+                <Popover
+                  open={isStartDateOpen}
+                  onOpenChange={setIsStartDateOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-[140px] text-sm h-[36px] justify-between"
+                    >
+                      {localStartDate
+                        ? formatDateForDisplay(localStartDate)
+                        : "เลือกวันที่"}
+                      <CalendarIcon className="ml-1 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={localStartDate}
+                      onSelect={handleStartDateSelect}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* End Date Picker */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700">ถึง:</span>
+                <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-[140px] text-sm h-[36px] justify-between"
+                    >
+                      {localEndDate
+                        ? formatDateForDisplay(localEndDate)
+                        : "เลือกวันที่"}
+                      <CalendarIcon className="ml-1 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={localEndDate}
+                      onSelect={handleEndDateSelect}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
           </div>
         </CardHeader>
+
         <CardContent className="px-6 py-4">
-          <div className="flex items-center gap-4">
-            {/* Start Date Picker */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-700">จาก:</span>
-              <Popover open={isStartDateOpen} onOpenChange={setIsStartDateOpen}>
-                <PopoverTrigger asChild>
+          {/* Summary Cards */}
+          {error ? (
+            <Card className="bg-red-50 border border-red-200 shadow-sm">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className="text-red-600 font-medium">
+                    เกิดข้อผิดพลาดในการโหลดข้อมูล
+                  </p>
+                  <p className="text-red-500 text-sm mt-1">{error}</p>
                   <Button
+                    onClick={fetchSummary}
                     variant="outline"
-                    className="w-[140px] text-sm h-[36px] justify-between"
+                    size="sm"
+                    className="mt-3"
                   >
-                    {startDate
-                      ? formatDateForDisplay(startDate)
-                      : "เลือกวันที่"}
-                    <CalendarIcon className="ml-1 h-4 w-4 opacity-50" />
+                    ลองใหม่
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={handleStartDateSelect}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="p-4 space-y-4">
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-8 w-1/2" />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-600">
+                        ประวัติทั้งหมด
+                      </p>
+                      <Logs className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {summary?.summary.totalLogs?.toLocaleString() || 0}
+                    </p>
+                  </>
+                )}
+              </Card>
 
-            {/* End Date Picker */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-700">ถึง:</span>
-              <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-[140px] text-sm h-[36px] justify-between"
-                  >
-                    {endDate ? formatDateForDisplay(endDate) : "เลือกวันที่"}
-                    <CalendarIcon className="ml-1 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={handleEndDateSelect}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+              <Card className="p-4 space-y-4">
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-8 w-1/2" />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-600">
+                        Logs ในเดือนนี้
+                      </p>
+                      <Activity className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {summary?.summary.currentMonthLogs?.toLocaleString() || 0}
+                    </p>
+                  </>
+                )}
+              </Card>
 
-          {startDate &&
-            endDate &&
-            startDate.toDateString() === endDate.toDateString() &&
-            startDate.toDateString() === new Date().toDateString() && (
-              <p className="text-xs text-blue-600 mt-2 flex items-center space-x-1">
-                <TrendingUp className="w-3 h-3" />
-                <span>แสดงข้อมูลของวันนี้</span>
-              </p>
-            )}
+              <Card className="p-4 space-y-4">
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-8 w-1/2" />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-600">
+                        จำนวนผู้ใช้ที่ใช้งาน
+                      </p>
+                      <Users className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {summary?.summary.activeUsersCount || 0}
+                    </p>
+                  </>
+                )}
+              </Card>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
-      {error ? (
-        <Card className="bg-red-50 border border-red-200 shadow-sm">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-red-600 font-medium">
-                เกิดข้อผิดพลาดในการโหลดข้อมูล
-              </p>
-              <p className="text-red-500 text-sm mt-1">{error}</p>
-              <Button
-                onClick={fetchSummary}
-                variant="outline"
-                size="sm"
-                className="mt-3"
-              >
-                ลองใหม่
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-600">
-                      Logs ทั้งหมด
-                    </p>
-                    <Logs className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900 mt-2">
-                    {summary?.summary.totalLogs?.toLocaleString() || 0}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-600">
-                      Logs ในเดือนนี้
-                    </p>
-                    <Activity className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900 mt-2">
-                    {summary?.summary.currentMonthLogs?.toLocaleString() || 0}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-600">
-                      จำนวนผู้ใช้ที่ใช้งาน
-                    </p>
-                    <Users className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900 mt-2">
-                    {summary?.summary.activeUsersCount || 0}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Activity Stats Chart */}
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="px-6 py-4 border-b border-gray-100">
-          <CardTitle className="text-lg font-semibold text-slate-800">
-            ประเภทของ Log
-          </CardTitle>
-          <p className="text-sm text-slate-500">ประเภทของ Log ที่หมด</p>
+        <CardHeader className="px-6 border-b border-gray-100">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-slate-100 rounded-lg">
+              <FileChartColumn className="w-5 h-5 text-slate-600" />
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-lg font-semibold text-slate-800">
+                ประเภทของประวัติ
+              </CardTitle>
+              <p className="text-sm text-slate-500">
+                ภาพรวมประเภทของประวัติทั้งหมด
+              </p>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="px-6 py-6">
+
+        <CardContent>
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (

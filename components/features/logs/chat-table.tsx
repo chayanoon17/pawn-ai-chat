@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUserConversations } from "@/lib/api";
+import { getAllConversations } from "@/lib/api";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -37,7 +37,13 @@ import {
   User,
 } from "lucide-react";
 
-export default function ChatTable() {
+export default function ChatTable({
+  startDate,
+  endDate,
+}: {
+  startDate?: Date;
+  endDate?: Date;
+}) {
   const { user } = useAuth(); // เพิ่ม useAuth เพื่อเช็ค role
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -74,11 +80,31 @@ export default function ChatTable() {
           "isAdmin:",
           isAdminRole,
           "page:",
-          currentPage
+          currentPage,
+          "dateRange:",
+          { startDate, endDate }
         );
 
+        // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
+        const formatDateForAPI = (date?: Date): string | null => {
+          if (!date) return null;
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
         // ดึงข้อมูลตาม page ปัจจุบันและ itemsPerPage
-        const data = await getUserConversations(currentPage, itemsPerPage);
+        const data = await getAllConversations({
+          page: currentPage,
+          limit: itemsPerPage,
+          startDate: formatDateForAPI(startDate),
+          endDate: formatDateForAPI(endDate),
+          userId: isAdminRole ? null : user?.id ? String(user.id) : null,
+        });
+
+        console.log("🔍 Chat conversations data:", data);
+        console.log("🔍 First conversation:", data.conversations?.[0]);
 
         // ใช้ข้อมูลจาก API response โดยตรง
         const conversations = data.conversations || [];
@@ -96,7 +122,14 @@ export default function ChatTable() {
     };
 
     fetchConversations();
-  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]); // ใช้ boolean values และ user?.id แทน user object
+  }, [
+    currentPage,
+    user?.id,
+    isUserSuperAdmin,
+    isUserAdmin,
+    startDate,
+    endDate,
+  ]); // ใช้ boolean values และ user?.id แทน user object
 
   // Filter conversations based on search term
   const filteredConversations = conversations.filter(
@@ -636,14 +669,33 @@ export default function ChatTable() {
               {/* ส่วนแสดงประวัติการสนทนา */}
               <div className="border border-slate-200 rounded-lg max-h-96 overflow-y-auto">
                 <div className="p-4 space-y-4">
-                  {/* แสดงข้อความตัวอย่าง - ในภายหลังจะต้องดึงข้อมูลจาก API */}
-                  {selectedConversation.userQuestion && (
+                  {/* Debug: แสดงข้อมูลทั้งหมดของ selectedConversation */}
+                  {/* <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                    <details>
+                      <summary className="cursor-pointer text-yellow-800 font-medium">
+                        Debug: ข้อมูลทั้งหมด
+                      </summary>
+                      <pre className="mt-2 text-yellow-700 whitespace-pre-wrap overflow-auto">
+                        {JSON.stringify(selectedConversation, null, 2)}
+                      </pre>
+                    </details>
+                  </div> */}
+
+                  {/* ตรวจสอบ field ต่างๆ ที่อาจมีข้อมูล */}
+                  {(selectedConversation.userQuestion ||
+                    selectedConversation.userMessage ||
+                    selectedConversation.lastMessage ||
+                    selectedConversation.latestMessage) && (
                     <>
                       {/* ข้อความจากผู้ใช้ */}
                       <div className="flex justify-end">
                         <div className="max-w-[80%] bg-blue-600 text-white p-3 rounded-lg rounded-br-none">
                           <p className="text-sm">
-                            {selectedConversation.userQuestion}
+                            {selectedConversation.userQuestion ||
+                              selectedConversation.userMessage ||
+                              selectedConversation.lastMessage ||
+                              selectedConversation.latestMessage ||
+                              "ไม่พบข้อความ"}
                           </p>
                           <p className="text-xs text-blue-100 mt-1">
                             {new Date(
@@ -662,7 +714,6 @@ export default function ChatTable() {
                             <div className="flex items-center space-x-2 mb-2">
                               <MessageSquare className="w-4 h-4 text-slate-500" />
                               <span className="text-xs font-medium text-slate-500">
-                                {/* {selectedConversation.model || "AI"} */}
                                 Pawn AI
                               </span>
                             </div>
@@ -683,7 +734,12 @@ export default function ChatTable() {
                   )}
 
                   {/* แสดงข้อความเมื่อไม่มีข้อมูล */}
-                  {!selectedConversation.userQuestion && (
+                  {!(
+                    selectedConversation.userQuestion ||
+                    selectedConversation.userMessage ||
+                    selectedConversation.lastMessage ||
+                    selectedConversation.latestMessage
+                  ) && (
                     <div className="text-center py-8 text-slate-500">
                       <MessagesSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                       <p>ไม่มีข้อมูลการสนทนาในห้องนี้</p>

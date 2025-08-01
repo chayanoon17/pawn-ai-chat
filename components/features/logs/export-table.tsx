@@ -36,7 +36,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export function ExportTable() {
+export function ExportTable({
+  startDate,
+  endDate,
+}: {
+  startDate?: Date;
+  endDate?: Date;
+}) {
   const { user } = useAuth(); // เพิ่ม useAuth เพื่อเช็ค role
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -70,11 +76,22 @@ export function ExportTable() {
           ? String(user.id)
           : null;
 
+        // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
+        const formatDateForAPI = (date?: Date): string | null => {
+          if (!date) return null;
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
         console.log(
           "🔍 Fetching export logs for user:",
           targetUserId,
           "page:",
-          currentPage
+          currentPage,
+          "dateRange:",
+          { startDate, endDate }
         );
 
         // ดึงข้อมูลตาม page ปัจจุบันและ itemsPerPage
@@ -83,6 +100,8 @@ export function ExportTable() {
           limit: itemsPerPage,
           activity: "EXPORT_REPORT",
           userId: targetUserId,
+          startDate: formatDateForAPI(startDate),
+          endDate: formatDateForAPI(endDate),
         });
 
         // ใช้ข้อมูลจาก API response โดยตรง
@@ -101,7 +120,14 @@ export function ExportTable() {
     };
 
     fetchLogs();
-  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]); // ใช้ boolean values และ user?.id แทน user object
+  }, [
+    currentPage,
+    user?.id,
+    isUserSuperAdmin,
+    isUserAdmin,
+    startDate,
+    endDate,
+  ]); // ใช้ boolean values และ user?.id แทน user object
 
   // Helper function to get file size
   const getFileSize = (fileSize: unknown): number => {

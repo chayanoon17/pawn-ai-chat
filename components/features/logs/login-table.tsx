@@ -38,7 +38,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export function LoginTable() {
+export function LoginTable({
+  startDate,
+  endDate,
+}: {
+  startDate?: Date;
+  endDate?: Date;
+}) {
   const { user } = useAuth(); // เพิ่ม useAuth เพื่อเช็ค role
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -72,11 +78,22 @@ export function LoginTable() {
           ? String(user.id)
           : null;
 
+        // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
+        const formatDateForAPI = (date?: Date): string | null => {
+          if (!date) return null;
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
         console.log(
-          "🔍 Fetching logs for user:",
+          "🔍 Fetching login logs for user:",
           targetUserId,
           "page:",
-          currentPage
+          currentPage,
+          "dateRange:",
+          { startDate, endDate }
         );
 
         // ดึงข้อมูล LOGIN และ LOGOUT แยกกัน แต่ใช้ pagination
@@ -86,12 +103,16 @@ export function LoginTable() {
             limit: Math.ceil(itemsPerPage / 2), // แบ่งครึ่งเพื่อให้รวมกันได้ itemsPerPage
             activity: "LOGIN",
             userId: targetUserId,
+            startDate: formatDateForAPI(startDate),
+            endDate: formatDateForAPI(endDate),
           }),
           getActivityLogs({
             page: currentPage,
             limit: Math.ceil(itemsPerPage / 2),
             activity: "LOGOUT",
             userId: targetUserId,
+            startDate: formatDateForAPI(startDate),
+            endDate: formatDateForAPI(endDate),
           }),
         ]);
 
@@ -123,7 +144,14 @@ export function LoginTable() {
     };
 
     fetchLogs();
-  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]); // ใช้ boolean values และ user?.id แทน user object
+  }, [
+    currentPage,
+    user?.id,
+    isUserSuperAdmin,
+    isUserAdmin,
+    startDate,
+    endDate,
+  ]); // ใช้ boolean values และ user?.id แทน user object
 
   // Filter logs based on search term
   const filteredLogs = logs.filter(

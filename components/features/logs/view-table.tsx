@@ -41,7 +41,13 @@ import {
   UserCog,
 } from "lucide-react";
 
-export default function ViewTable() {
+export default function ViewTable({
+  startDate,
+  endDate,
+}: {
+  startDate?: Date;
+  endDate?: Date;
+}) {
   const { user } = useAuth();
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -89,12 +95,30 @@ export default function ViewTable() {
           ? String(user.id)
           : null;
 
+        // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
+        const formatDateForAPI = (date?: Date): string | null => {
+          if (!date) return null;
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        console.log("🔍 Fetching view logs with date range:", {
+          startDate,
+          endDate,
+        });
+
         const data = await getActivityLogs({
           page: currentPage,
           limit: itemsPerPage,
           activity: "MENU_ACCESS",
           userId: targetUserId,
+          startDate: formatDateForAPI(startDate),
+          endDate: formatDateForAPI(endDate),
         });
+
+        console.log("🔍 Raw API response:", data);
 
         const logs = data.activityLogs || [];
         const totalItems = data.total || 0;
@@ -111,7 +135,14 @@ export default function ViewTable() {
     };
 
     fetchLogs();
-  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]);
+  }, [
+    currentPage,
+    user?.id,
+    isUserSuperAdmin,
+    isUserAdmin,
+    startDate,
+    endDate,
+  ]);
 
   const filteredLogs = logs.filter(
     (log) =>

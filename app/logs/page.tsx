@@ -16,6 +16,19 @@ import { Logs, LogIn, Download, Eye, MessagesSquare } from "lucide-react";
 export default function LogManagementPage() {
   const [activeTab, setActiveTab] = useState("login");
 
+  // Shared date state for all components
+  const today = new Date();
+  const [startDate, setStartDate] = useState<Date | undefined>(today);
+  const [endDate, setEndDate] = useState<Date | undefined>(today);
+
+  const handleDateChange = (
+    newStartDate: Date | undefined,
+    newEndDate: Date | undefined
+  ) => {
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+  };
+
   return (
     <MenuPermissionGuard
       requiredMenuPermission="Activity Logs"
@@ -39,7 +52,11 @@ export default function LogManagementPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="space-y-6">
           {/* Logs Summary */}
-          <LogsSummary />
+          <LogsSummary
+            startDate={startDate}
+            endDate={endDate}
+            onDateChange={handleDateChange}
+          />
 
           {/* Logs Content */}
           <Card className="bg-white border border-gray-200 shadow-sm">
@@ -97,19 +114,19 @@ export default function LogManagementPage() {
                 </TabsList>
 
                 <TabsContent value="login">
-                  <LoginTable />
+                  <LoginTable startDate={startDate} endDate={endDate} />
                 </TabsContent>
 
                 <TabsContent value="export">
-                  <ExportTable />
+                  <ExportTable startDate={startDate} endDate={endDate} />
                 </TabsContent>
 
                 <TabsContent value="view">
-                  <ViewTable />
+                  <ViewTable startDate={startDate} endDate={endDate} />
                 </TabsContent>
 
                 <TabsContent value="chat">
-                  <ChatTable />
+                  <ChatTable startDate={startDate} endDate={endDate} />
                 </TabsContent>
               </Tabs>
             </CardContent>

@@ -225,7 +225,7 @@ export async function getActivityLogs({
   }
 
   const queryString = params.toString();
-  const res = await apiClient.get<ActivityLog>(
+  const res = await apiClient.get<ActivityLogResponse>(
     `/api/v1/activity/logs?${queryString}`
   );
 
