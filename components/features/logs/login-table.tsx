@@ -33,7 +33,6 @@ import {
   Calendar,
   MapPin,
   Monitor,
-  Shield,
   Globe,
   ChevronLeft,
   ChevronRight,
@@ -54,6 +53,10 @@ export function LoginTable() {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
+  // คำนวณ role status ก่อน useEffect
+  const isUserSuperAdmin = isSuperAdmin();
+  const isUserAdmin = isAdmin();
+
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -62,35 +65,38 @@ export function LoginTable() {
         // ตรวจสอบ role ของ user
         // ถ้าเป็น Super Admin หรือ Admin จะไม่ส่ง userId (ดูได้ทั้งหมด)
         // ถ้าไม่ใช่จะส่ง userId เพื่อดูแค่ข้อมูลของตัวเอง
-        const isAdminRole = isSuperAdmin() || isAdmin();
+        const isAdminRole = isUserSuperAdmin || isUserAdmin;
         const targetUserId = isAdminRole
           ? null
           : user?.id
           ? String(user.id)
           : null;
 
-        console.log("🔍 Fetching logs for user:", targetUserId);
+        console.log(
+          "🔍 Fetching logs for user:",
+          targetUserId,
+          "page:",
+          currentPage
+        );
 
-        // Fetch ข้อมูลทั้งหมดแล้วค่อย paginate ที่ frontend
-        // ใช้ page size ใหญ่เพื่อให้ได้ข้อมูลทั้งหมด
-        const pageSize = 100; // เพิ่มขนาดให้ใหญ่ขึ้นเพื่อให้ได้ข้อมูลทั้งหมด
+        // ดึงข้อมูล LOGIN และ LOGOUT แยกกัน แต่ใช้ pagination
         const [loginRes, logoutRes] = await Promise.all([
           getActivityLogs({
-            page: 1,
-            limit: pageSize,
+            page: currentPage,
+            limit: Math.ceil(itemsPerPage / 2), // แบ่งครึ่งเพื่อให้รวมกันได้ itemsPerPage
             activity: "LOGIN",
             userId: targetUserId,
           }),
           getActivityLogs({
-            page: 1,
-            limit: pageSize,
+            page: currentPage,
+            limit: Math.ceil(itemsPerPage / 2),
             activity: "LOGOUT",
             userId: targetUserId,
           }),
         ]);
 
         // รวมข้อมูล LOGIN และ LOGOUT แล้วเรียงตามวันที่
-        const allLogs = [
+        const combinedLogs = [
           ...loginRes.activityLogs,
           ...logoutRes.activityLogs,
         ].sort(
@@ -98,22 +104,17 @@ export function LoginTable() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
-        // ใช้ pagination info จาก API response
-        // รวม total จาก LOGIN และ LOGOUT
+        // คำนวณ total จากการรวม LOGIN + LOGOUT
         const totalCombinedItems =
           (loginRes.total || 0) + (logoutRes.total || 0);
-        const calculatedTotalPages = Math.ceil(
-          totalCombinedItems / itemsPerPage
-        );
+        const totalPages = Math.ceil(totalCombinedItems / itemsPerPage);
 
-        // Slice ข้อมูลตาม page ปัจจุบัน
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedLogs = allLogs.slice(startIndex, endIndex);
+        // ตัดให้เหลือแค่ itemsPerPage รายการ
+        const paginatedLogs = combinedLogs.slice(0, itemsPerPage);
 
-        setTotalItems(totalCombinedItems);
-        setTotalPages(calculatedTotalPages);
         setLogs(paginatedLogs);
+        setTotalItems(totalCombinedItems);
+        setTotalPages(totalPages);
       } catch (err) {
         console.error("Request failed", err);
       } finally {
@@ -122,7 +123,7 @@ export function LoginTable() {
     };
 
     fetchLogs();
-  }, [currentPage, user]); // เมื่อ currentPage หรือ user เปลี่ยนให้ fetch ข้อมูลใหม่
+  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]); // ใช้ boolean values และ user?.id แทน user object
 
   // Filter logs based on search term
   const filteredLogs = logs.filter(

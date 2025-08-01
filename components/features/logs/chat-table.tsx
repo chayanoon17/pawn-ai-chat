@@ -54,6 +54,10 @@ export default function ChatTable() {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
+  // คำนวณ role status ก่อน useEffect
+  const isUserSuperAdmin = isSuperAdmin();
+  const isUserAdmin = isAdmin();
+
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -62,47 +66,28 @@ export default function ChatTable() {
         // ตรวจสอบ role ของ user
         // ถ้าเป็น Super Admin หรือ Admin จะดูได้ทั้งหมด
         // ถ้าไม่ใช่จะดูแค่ข้อมูลของตัวเอง
-        const isAdminRole = isSuperAdmin() || isAdmin();
+        const isAdminRole = isUserSuperAdmin || isUserAdmin;
 
         console.log(
           "🔍 Fetching conversations for user:",
           user?.email,
           "isAdmin:",
-          isAdminRole
+          isAdminRole,
+          "page:",
+          currentPage
         );
 
-        // Fetch ข้อมูลทั้งหมดแล้วค่อย paginate ที่ frontend
-        // ใช้ page size ใหญ่เพื่อให้ได้ข้อมูลทั้งหมด
-        const pageSize = 100; // เพิ่มขนาดให้ใหญ่ขึ้นเพื่อให้ได้ข้อมูลทั้งหมด
+        // ดึงข้อมูลตาม page ปัจจุบันและ itemsPerPage
+        const data = await getUserConversations(currentPage, itemsPerPage);
 
-        // getUserConversations จะ filter ตาม email ของ user ที่ login อยู่แล้ว
-        // ยกเว้น Admin ที่จะเห็นได้ทั้งหมด
-        const data = await getUserConversations(1, pageSize);
+        // ใช้ข้อมูลจาก API response โดยตรง
+        const conversations = data.conversations || [];
+        const totalItems = data.total || 0;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        // เรียงตามวันที่ล่าสุด
-        const allConversations = (data.conversations || []).sort(
-          (a: ConversationItem, b: ConversationItem) =>
-            new Date(b.lastMessageAt || b.createdAt).getTime() -
-            new Date(a.lastMessageAt || a.createdAt).getTime()
-        );
-
-        // ใช้ข้อมูลจริงที่ได้มาคำนวณ pagination
-        const totalCombinedItems = data.total || allConversations.length;
-        const calculatedTotalPages = Math.ceil(
-          totalCombinedItems / itemsPerPage
-        );
-
-        // Slice ข้อมูลตาม page ปัจจุบัน
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedConversations = allConversations.slice(
-          startIndex,
-          endIndex
-        );
-
-        setTotalItems(totalCombinedItems);
-        setTotalPages(calculatedTotalPages);
-        setConversations(paginatedConversations);
+        setConversations(conversations);
+        setTotalItems(totalItems);
+        setTotalPages(totalPages);
       } catch (error) {
         console.error("Failed to fetch conversations:", error);
       } finally {
@@ -111,7 +96,7 @@ export default function ChatTable() {
     };
 
     fetchConversations();
-  }, [currentPage, user]); // เมื่อ currentPage หรือ user เปลี่ยนให้ fetch ข้อมูลใหม่
+  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]); // ใช้ boolean values และ user?.id แทน user object
 
   // Filter conversations based on search term
   const filteredConversations = conversations.filter(

@@ -33,10 +33,16 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  BarChart3,
+  FileText,
+  Users,
+  Logs,
+  Settings,
+  UserCog,
 } from "lucide-react";
 
 export default function ViewTable() {
-  const { user } = useAuth(); // เพิ่ม useAuth เพื่อเช็ค role
+  const { user } = useAuth();
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,53 +56,53 @@ export default function ViewTable() {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
+  // คำนวณ role status ก่อน useEffect
+  const isUserSuperAdmin = isSuperAdmin();
+  const isUserAdmin = isAdmin();
+
+  // Function สำหรับแมปไอคอนตามชื่อเมนู
+  const getMenuIcon = (menuName: string) => {
+    const menuIconMap: Record<
+      string,
+      React.ComponentType<React.SVGProps<SVGSVGElement>>
+    > = {
+      ข้อมูลตั๋วรับจำนำ: BarChart3,
+      ประเภททรัพย์และราคา: FileText,
+      จัดการผู้ใช้: Users,
+      จัดการตำแหน่ง: UserCog,
+      การจัดการระบบ: Settings,
+      ประวัติการใช้งาน: Logs,
+    };
+
+    return menuIconMap[menuName] || Menu;
+  };
+
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         setIsLoading(true);
 
-        // ตรวจสอบ role ของ user
-        // ถ้าเป็น Super Admin หรือ Admin จะไม่ส่ง userId (ดูได้ทั้งหมด)
-        // ถ้าไม่ใช่จะส่ง userId เพื่อดูแค่ข้อมูลของตัวเอง
-        const isAdminRole = isSuperAdmin() || isAdmin();
+        const isAdminRole = isUserSuperAdmin || isUserAdmin;
         const targetUserId = isAdminRole
           ? null
           : user?.id
           ? String(user.id)
           : null;
 
-        console.log("🔍 Fetching view logs for user:", targetUserId);
-
-        // Fetch ข้อมูลทั้งหมดแล้วค่อย paginate ที่ frontend
-        // ใช้ page size ใหญ่เพื่อให้ได้ข้อมูลทั้งหมด
-        const pageSize = 100; // เพิ่มขนาดให้ใหญ่ขึ้นเพื่อให้ได้ข้อมูลทั้งหมด
         const data = await getActivityLogs({
-          page: 1,
-          limit: pageSize,
+          page: currentPage,
+          limit: itemsPerPage,
           activity: "MENU_ACCESS",
           userId: targetUserId,
         });
 
-        // เรียงตามวันที่ล่าสุด
-        const allLogs = (data.activityLogs || []).sort(
-          (a: ActivityLog, b: ActivityLog) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        const logs = data.activityLogs || [];
+        const totalItems = data.total || 0;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        // ใช้ข้อมูลจริงที่ได้มาคำนวณ pagination
-        const totalCombinedItems = data.total || 0;
-        const calculatedTotalPages = Math.ceil(
-          totalCombinedItems / itemsPerPage
-        );
-
-        // Slice ข้อมูลตาม page ปัจจุบัน
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedLogs = allLogs.slice(startIndex, endIndex);
-
-        setTotalItems(totalCombinedItems);
-        setTotalPages(calculatedTotalPages);
-        setLogs(paginatedLogs);
+        setLogs(logs);
+        setTotalItems(totalItems);
+        setTotalPages(totalPages);
       } catch (error) {
         console.error("Failed to fetch logs:", error);
       } finally {
@@ -105,9 +111,8 @@ export default function ViewTable() {
     };
 
     fetchLogs();
-  }, [currentPage, user]); // เมื่อ currentPage หรือ user เปลี่ยนให้ fetch ข้อมูลใหม่
+  }, [currentPage, user?.id, isUserSuperAdmin, isUserAdmin]);
 
-  // Filter logs based on search term
   const filteredLogs = logs.filter(
     (log) =>
       log.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,7 +122,6 @@ export default function ViewTable() {
 
   return (
     <>
-      {/* Main Card */}
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader className="px-6 border-b border-gray-100">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
@@ -152,7 +156,6 @@ export default function ViewTable() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-4">
-              {/* Table Header Skeleton */}
               <div className="rounded-lg border border-slate-200 overflow-hidden">
                 <div className="bg-slate-50 p-4">
                   <div className="grid grid-cols-6 gap-4">
@@ -164,7 +167,6 @@ export default function ViewTable() {
                     <Skeleton className="h-4 w-16" />
                   </div>
                 </div>
-                {/* Table Rows Skeleton */}
                 <div className="divide-y divide-slate-100">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                     <div key={i} className="p-4">
@@ -180,8 +182,6 @@ export default function ViewTable() {
                   ))}
                 </div>
               </div>
-
-              {/* Pagination Skeleton */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                 <Skeleton className="h-4 w-48" />
                 <div className="flex items-center space-x-2">
@@ -229,56 +229,60 @@ export default function ViewTable() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredLogs.map((log) => (
-                      <TableRow key={log.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium text-slate-800">
-                          {log.user.fullName}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-slate-600">
-                          {log.user?.email}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 border-blue-200"
-                          >
-                            <Menu className="w-3 h-3 mr-1" />
-                            {log.metadata?.menuName || "ไม่ระบุ"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-slate-600 font-mono text-sm">
-                          {log.metadata?.path || "-"}
-                        </TableCell>
-                        <TableCell className="text-slate-600">
-                          {new Date(log.createdAt).toLocaleString("th-TH", {
-                            dateStyle: "short",
-                            timeStyle: "medium",
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedLog(log);
-                                setIsViewDialogOpen(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
+                    filteredLogs.map((log) => {
+                      const IconComponent = getMenuIcon(
+                        log.metadata?.menuName || ""
+                      );
+                      return (
+                        <TableRow key={log.id} className="hover:bg-slate-50">
+                          <TableCell className="font-medium text-slate-800">
+                            {log.user.fullName}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell text-slate-600">
+                            {log.user?.email}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                              <IconComponent className="w-3 h-3 mr-1" />
+                              {log.metadata?.menuName || "ไม่ระบุ"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-slate-600 font-mono text-sm">
+                            {log.metadata?.path || "-"}
+                          </TableCell>
+                          <TableCell className="text-slate-600">
+                            {new Date(log.createdAt).toLocaleString("th-TH", {
+                              dateStyle: "short",
+                              timeStyle: "medium",
+                            })}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedLog(log);
+                                  setIsViewDialogOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
             </div>
           )}
 
-          {/* Pagination */}
           {!isLoading && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
               <div className="text-sm text-slate-500">
@@ -356,7 +360,6 @@ export default function ViewTable() {
         </CardContent>
       </Card>
 
-      {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -371,7 +374,6 @@ export default function ViewTable() {
 
           {selectedLog && (
             <div className="space-y-4">
-              {/* ข้อมูลผู้ใช้ */}
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                 <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
                   <User className="w-4 h-4 text-slate-500" />
@@ -397,7 +399,6 @@ export default function ViewTable() {
                 </div>
               </div>
 
-              {/* ข้อมูลเมนู */}
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                 <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
                   <Menu className="w-4 h-4 text-slate-500" />
@@ -432,7 +433,6 @@ export default function ViewTable() {
                 </div>
               </div>
 
-              {/* ข้อมูลเพิ่มเติม */}
               {selectedLog.metadata &&
                 Object.keys(selectedLog.metadata).length > 2 && (
                   <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">

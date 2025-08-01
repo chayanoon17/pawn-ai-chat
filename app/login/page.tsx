@@ -100,7 +100,13 @@ export default function LoginPage() {
         <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
           {/* Logo + Text aligned left */}
           <div className="bg-white p-6 rounded-md self-start">
-            <Image src="/logo 1.png" alt="logo" className="h-24" />
+            <Image
+              src="/logo 1.png"
+              width={100}
+              height={100}
+              alt="logo"
+              className="h-24"
+            />
           </div>
           <h1 className="text-2xl font-bold mt-4 text-left">
             สำนักงานธนานุเคราะห์

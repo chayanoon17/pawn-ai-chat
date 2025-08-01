@@ -81,7 +81,7 @@ export default function LogManagementPage() {
                     className="flex items-center space-x-2"
                   >
                     <Eye className="w-4 h-4" />
-                    <span>ประวัติการเข้าดู (เมนู)</span>
+                    <span>ประวัติการเข้าดู</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="chat"
