@@ -51,8 +51,6 @@ const COLORS = [
   "#22c55e",
 ];
 
-const formatNumber = (num: number): string => num.toLocaleString("th-TH");
-
 interface CustomLabelProps {
   cx?: number;
   cy?: number;

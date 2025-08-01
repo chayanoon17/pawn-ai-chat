@@ -70,13 +70,13 @@ export default function UserManagementPage() {
   }, []);
 
   // 🎯 Handle user creation
-  const handleUserCreated = async (newUser: User) => {
+  const handleUserCreated = async () => {
     // Refresh ข้อมูลจาก API เพื่อให้แน่ใจว่าได้ข้อมูลที่ครบถ้วน
     await loadData(false); // ไม่แสดง loading state
   };
 
   // 🎯 Handle user update
-  const handleUserUpdated = async (updatedUser: User) => {
+  const handleUserUpdated = async () => {
     // Refresh ข้อมูลจาก API เพื่อให้แน่ใจว่าได้ข้อมูลที่ครบถ้วน
     await loadData(false); // ไม่แสดง loading state
   };

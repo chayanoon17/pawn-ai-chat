@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Clock } from "lucide-react";
+import { Trophy } from "lucide-react";
 import {
   Table,
   TableBody,

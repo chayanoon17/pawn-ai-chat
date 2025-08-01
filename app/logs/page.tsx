@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -10,58 +10,10 @@ import {
   ChatTable,
 } from "@/components/features/logs";
 import { MenuPermissionGuard } from "@/components/core/permission-guard";
-import { getActivityLogs } from "@/lib/api";
-import { Logs, LogIn, Download, Eye, MessageSquare } from "lucide-react";
+import { Logs, LogIn, Download, Eye, MessagesSquare } from "lucide-react";
 
 export default function LogManagementPage() {
   const [activeTab, setActiveTab] = useState("login");
-  const [totalLogs, setTotalLogs] = useState(0);
-  const [activeUsers, setActiveUsers] = useState(0);
-  const [monthlyActivity, setMonthlyActivity] = useState(0);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-
-  // Load stats data
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setIsLoadingStats(true);
-        const response = await getActivityLogs({
-          page: 1,
-          limit: 100,
-        }); // Get recent logs
-        const logs = response.activityLogs || [];
-
-        // Calculate total logs
-        setTotalLogs(logs.length);
-
-        // Calculate unique active users
-        const uniqueUsers = new Set(
-          logs
-            .map((log: { user?: { email?: string } }) => log.user?.email)
-            .filter(Boolean)
-        );
-        setActiveUsers(uniqueUsers.size);
-
-        // Calculate monthly activity (current month)
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const monthlyCount = logs.filter((log: { createdAt: string }) => {
-          const logDate = new Date(log.createdAt);
-          return (
-            logDate.getMonth() === currentMonth &&
-            logDate.getFullYear() === currentYear
-          );
-        }).length;
-        setMonthlyActivity(monthlyCount);
-      } catch (error) {
-        console.error("Failed to load stats:", error);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    loadStats();
-  }, []);
 
   return (
     <MenuPermissionGuard
@@ -135,7 +87,7 @@ export default function LogManagementPage() {
                     value="chat"
                     className="flex items-center space-x-2"
                   >
-                    <MessageSquare className="w-4 h-4" />
+                    <MessagesSquare className="w-4 h-4" />
                     <span>ประวัติการสนทนา</span>
                   </TabsTrigger>
                 </TabsList>

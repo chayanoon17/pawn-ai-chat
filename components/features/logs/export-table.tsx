@@ -31,9 +31,6 @@ import {
   User,
   Calendar,
   FileText,
-  HardDrive,
-  CheckCircle,
-  XCircle,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -162,7 +159,7 @@ export function ExportTable() {
       {/* 🔍 Search and Filter Section */}
       <Card className="bg-white border border-slate-200 shadow-sm">
         <CardHeader className="px-6 border-b border-gray-100">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between space-y-4 lg:space-y-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-slate-100 rounded-lg">
                 <Download className="w-5 h-5 text-slate-600" />

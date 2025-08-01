@@ -1,9 +1,17 @@
-"use client";
+import BasePageLayout from "@/components/layouts/base-page-layout";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="w-full h-full font-sans">{children}</div>;
+  return (
+    <BasePageLayout
+      page="dashboard"
+      pageTitle="ข้อมูลตั๋วรับจำนำ"
+      showFilter={true}
+    >
+      {children}
+    </BasePageLayout>
+  );
 }

@@ -2,6 +2,7 @@
 
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { CookieConsent } from "@/components/features/auth";
@@ -99,7 +100,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
           {/* Logo + Text aligned left */}
           <div className="bg-white p-6 rounded-md self-start">
-            <img src="/logo 1.png" alt="logo" className="h-24" />
+            <Image src="/logo 1.png" alt="logo" className="h-24" />
           </div>
           <h1 className="text-2xl font-bold mt-4 text-left">
             สำนักงานธนานุเคราะห์

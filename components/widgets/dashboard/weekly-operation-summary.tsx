@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
@@ -402,8 +403,10 @@ export const WeeklyOperationSummary = ({
                 {cashInChange && (
                   <>
                     <span className={`${cashInChange.color} flex items-center`}>
-                      <img
+                      <Image
                         src={cashInChange.icon}
+                        width={16}
+                        height={16}
                         alt="trend"
                         className="w-4 h-4 mr-1 object-contain"
                       />
@@ -514,8 +517,10 @@ export const WeeklyOperationSummary = ({
                     <span
                       className={`${cashOutChange.color} flex items-center`}
                     >
-                      <img
+                      <Image
                         src={cashOutChange.icon}
+                        width={16}
+                        height={16}
                         alt="trend"
                         className="w-4 h-4 mr-1 object-contain"
                       />

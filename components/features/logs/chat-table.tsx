@@ -28,9 +28,8 @@ import {
   Search,
   Eye,
   MessageSquare,
+  MessagesSquare,
   Calendar,
-  Send,
-  MessageCircle,
   ChevronLeft,
   ChevronRight,
   History,
@@ -124,57 +123,41 @@ export default function ChatTable() {
       conversation.model?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate stats
-  const totalConversations = conversations.length;
-  const activeConversations = conversations.filter((conv) => {
-    const count =
-      typeof conv.messageCount === "number"
-        ? conv.messageCount
-        : parseInt(String(conv.messageCount || 0));
-    return count > 0;
-  }).length;
-  const totalMessages = conversations.reduce((total, conv) => {
-    const count =
-      typeof conv.messageCount === "number"
-        ? conv.messageCount
-        : parseInt(String(conv.messageCount || 0));
-    return total + count;
-  }, 0);
-
   return (
     <>
       {/* Main Card */}
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader className="px-6 border-b border-gray-100">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-slate-100 rounded-lg">
-              <MessageSquare className="w-5 h-5 text-slate-600" />
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <MessagesSquare className="w-5 h-5 text-slate-600" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg font-semibold text-slate-800">
+                  ประวัติการสนทนา
+                </CardTitle>
+                <p className="text-sm text-slate-500">
+                  ติดตามบทสนทนาระหว่างผู้ใช้กับ Pawn AI
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <CardTitle className="text-lg font-semibold text-slate-80">
-                ประวัติการสนทนา
-              </CardTitle>
-              <span className="text-sm text-slate-500">
-                ติดตามบทสนทนาระหว่างผู้ใช้กับ Pawn AI
-              </span>
+
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="ค้นหาผู้ใช้, อีเมล, ID การสนทนา..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Search */}
-          <div className="flex items-center space-x-2 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input
-                placeholder="ค้นหาผู้ใช้, อีเมล, ID การสนทนา หรือโมเดล..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-              />
-            </div>
-          </div>
-
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-slate-500">กำลังโหลด...</div>
@@ -186,6 +169,9 @@ export default function ChatTable() {
                   <TableRow>
                     <TableHead className="font-semibold text-slate-700">
                       ผู้ใช้
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700 hidden sm:table-cell">
+                      อีเมล
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700 hidden sm:table-cell">
                       ID การสนทนา
@@ -221,19 +207,10 @@ export default function ChatTable() {
                         className="hover:bg-slate-50"
                       >
                         <TableCell className="font-medium text-slate-800">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-purple-600" />
-                            </div>
-                            <div>
-                              <div className="font-medium text-slate-900">
-                                {conversation.fullName}
-                              </div>
-                              <div className="text-sm text-slate-500">
-                                {conversation.email}
-                              </div>
-                            </div>
-                          </div>
+                          {conversation.fullName}
+                        </TableCell>
+                        <TableCell className="text-slate-600 hidden sm:table-cell">
+                          {conversation.email}
                         </TableCell>
                         <TableCell className="text-slate-600 hidden sm:table-cell">
                           <div className="text-sm font-mono max-w-xs truncate">
@@ -253,7 +230,8 @@ export default function ChatTable() {
                             variant="secondary"
                             className="bg-slate-100 text-slate-700"
                           >
-                            {conversation.model || "ไม่ระบุ"}
+                            {/* {conversation.model || "ไม่ระบุ"} */}
+                            pawn-ai
                           </Badge>
                         </TableCell>
                         <TableCell className="text-slate-600">
@@ -285,7 +263,7 @@ export default function ChatTable() {
                                 setSelectedConversation(conversation);
                                 setIsChatHistoryDialogOpen(true);
                               }}
-                              className="text-green-600 hover:text-green-800 hover:bg-slate-100"
+                              className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                               title="ดูประวัติการสนทนา"
                             >
                               <History className="w-4 h-4" />
@@ -383,7 +361,7 @@ export default function ChatTable() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-blue-600" />
+              <MessagesSquare className="w-4 h-4 text-slate-500" />
               <span>รายละเอียดห้องแชท</span>
             </DialogTitle>
             <DialogDescription>ข้อมูลรายละเอียดของห้องสนทนา</DialogDescription>
@@ -437,7 +415,8 @@ export default function ChatTable() {
                       โมเดล AI
                     </label>
                     <p className="text-sm text-slate-800 mt-1">
-                      {selectedConversation.model || "ไม่ระบุ"}
+                      pawn-ai
+                      {/* {selectedConversation.model || "ไม่ระบุ"} */}
                     </p>
                   </div>
                   <div>
@@ -488,7 +467,7 @@ export default function ChatTable() {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <History className="w-5 h-5 text-green-600" />
+              <History className="w-4 h-4 text-slate-500" />
               <span>ประวัติการสนทนา</span>
             </DialogTitle>
             <DialogDescription>
@@ -498,28 +477,127 @@ export default function ChatTable() {
 
           {selectedConversation && (
             <div className="space-y-4">
-              {/* ข้อมูลห้องแชท */}
-              <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-purple-600" />
-                    </div>
+              {/* ข้อมูลส่วนบน - ข้อมูลผู้ใช้และห้องแชท */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* ข้อมูลผู้ใช้ */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-900 mb-3 flex items-center space-x-2">
+                    <User className="w-4 h-4 text-slate-600" />
+                    <span>ข้อมูลผู้ใช้</span>
+                  </h3>
+                  <div className="space-y-2">
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                        ชื่อผู้ใช้
+                      </label>
+                      <p className="text-sm text-slate-900 font-medium">
                         {selectedConversation.fullName}
                       </p>
-                      <p className="text-sm text-slate-500">
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                        อีเมล
+                      </label>
+                      <p className="text-sm text-slate-800">
                         {selectedConversation.email}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">
-                      ID: {selectedConversation.conversationId}
+                </div>
+
+                {/* ข้อมูลห้องแชท */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                  <h3 className="font-medium text-slate-900 mb-3 flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4 text-slate-600" />
+                    <span>ข้อมูลห้องแชท</span>
+                  </h3>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                        ID ห้องแชท
+                      </label>
+                      <p className="text-xs text-slate-800 font-mono bg-slate-200 px-2 py-1 rounded">
+                        {selectedConversation.conversationId}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                          จำนวนข้อความ
+                        </label>
+                        <p className="text-sm text-slate-900 font-semibold">
+                          {selectedConversation.messageCount || 0} ข้อความ
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                          โมเดล AI
+                        </label>
+                        <p className="text-sm text-slate-900">Pawn AI</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ข้อมูลส่วนบน - วันที่และเวลา */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3 flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-slate-600" />
+                  <span>ข้อมูลเวลาและสถิติ</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                      เริ่มการสนทนา
+                    </label>
+                    <p className="text-sm text-slate-900">
+                      {new Date(selectedConversation.createdAt).toLocaleString(
+                        "th-TH",
+                        {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }
+                      )}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {selectedConversation.messageCount || 0} ข้อความ
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                      ข้อความล่าสุด
+                    </label>
+                    <p className="text-sm text-slate-900">
+                      {new Date(
+                        selectedConversation.lastMessageAt ||
+                          selectedConversation.createdAt
+                      ).toLocaleString("th-TH", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+                      ระยะเวลาการสนทนา
+                    </label>
+                    <p className="text-sm text-slate-900">
+                      {(() => {
+                        const start = new Date(selectedConversation.createdAt);
+                        const end = new Date(
+                          selectedConversation.lastMessageAt ||
+                            selectedConversation.createdAt
+                        );
+                        const diffMinutes = Math.floor(
+                          (end.getTime() - start.getTime()) / (1000 * 60)
+                        );
+                        if (diffMinutes < 60) return `${diffMinutes} นาที`;
+                        const diffHours = Math.floor(diffMinutes / 60);
+                        if (diffHours < 24)
+                          return `${diffHours} ชั่วโมง ${
+                            diffMinutes % 60
+                          } นาที`;
+                        const diffDays = Math.floor(diffHours / 24);
+                        return `${diffDays} วัน ${diffHours % 24} ชั่วโมง`;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -554,7 +632,8 @@ export default function ChatTable() {
                             <div className="flex items-center space-x-2 mb-2">
                               <MessageSquare className="w-4 h-4 text-slate-500" />
                               <span className="text-xs font-medium text-slate-500">
-                                {selectedConversation.model || "AI"}
+                                {/* {selectedConversation.model || "AI"} */}
+                                Pawn AI
                               </span>
                             </div>
                             <p className="text-sm whitespace-pre-wrap">
@@ -576,7 +655,7 @@ export default function ChatTable() {
                   {/* แสดงข้อความเมื่อไม่มีข้อมูล */}
                   {!selectedConversation.userQuestion && (
                     <div className="text-center py-8 text-slate-500">
-                      <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <MessagesSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                       <p>ไม่มีข้อมูลการสนทนาในห้องนี้</p>
                       <p className="text-sm">
                         อาจเป็นห้องแชทที่ยังไม่ได้เริ่มการสนทนา
@@ -584,14 +663,6 @@ export default function ChatTable() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* ปุ่มดูข้อมูลเพิ่มเติม */}
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" size="sm" className="text-slate-600">
-                  <History className="w-4 h-4 mr-2" />
-                  โหลดข้อความเพิ่มเติม
-                </Button>
               </div>
             </div>
           )}

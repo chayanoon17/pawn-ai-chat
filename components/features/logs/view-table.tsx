@@ -119,35 +119,36 @@ export default function ViewTable() {
       {/* Main Card */}
       <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader className="px-6 border-b border-gray-100">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-slate-100 rounded-lg">
-              <Eye className="w-5 h-5 text-slate-600" />
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <Eye className="w-5 h-5 text-slate-600" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg font-semibold text-slate-800">
+                  ประวัติการเข้าดู
+                </CardTitle>
+                <p className="text-sm text-slate-500">
+                  ติดตามการเข้าถึงเมนูต่างๆ ในระบบ
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <CardTitle className="text-lg font-semibold text-slate-80">
-                ประวัติการเข้าดู (เมนู)
-              </CardTitle>
-              <span className="text-sm text-slate-500">
-                ติดตามการเข้าถึงเมนูต่างๆ ในระบบ
-              </span>
+
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="ค้นหาผู้ใช้หรือเมนู..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Search */}
-          <div className="flex items-center space-x-2 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input
-                placeholder="ค้นหาผู้ใช้, อีเมล, หรือเมนู..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-slate-200 focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-              />
-            </div>
-          </div>
-
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-slate-500">กำลังโหลด...</div>
@@ -190,15 +191,8 @@ export default function ViewTable() {
                   ) : (
                     filteredLogs.map((log) => (
                       <TableRow key={log.id} className="hover:bg-slate-50">
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-slate-600" />
-                            </div>
-                            <span className="font-medium text-slate-900">
-                              {log.user?.fullName}
-                            </span>
-                          </div>
+                        <TableCell className="font-medium text-slate-800">
+                          {log.user.fullName}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-slate-600">
                           {log.user?.email}

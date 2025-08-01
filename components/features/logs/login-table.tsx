@@ -155,7 +155,7 @@ export function LoginTable() {
       {/* 🔍 Search and Filter Section */}
       <Card className="bg-white border border-slate-200 shadow-sm">
         <CardHeader className="px-6 border-b border-gray-100">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between space-y-4 lg:space-y-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-slate-100 rounded-lg">
                 <LogIn className="w-5 h-5 text-slate-600" />

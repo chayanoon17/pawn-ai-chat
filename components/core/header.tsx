@@ -32,7 +32,6 @@ interface HeaderProps {
 export default function Header({
   selectedPage,
   onChatToggle,
-  isChatOpen,
   onFilterChange,
 }: HeaderProps) {
   const isMobile = useIsMobile();
