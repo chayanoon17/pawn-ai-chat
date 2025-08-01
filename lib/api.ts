@@ -128,6 +128,44 @@ export async function sendChatMessageStream(
   }
 }
 
+export async function getAllConversations({
+  page = 1,
+  limit = 10,
+  startDate = null,
+  endDate = null,
+  userId = null,
+}: {
+  page: number;
+  limit: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  userId?: string | null;
+}) {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+
+  if (startDate) {
+    params.append("startDate", startDate);
+  }
+
+  if (endDate) {
+    params.append("endDate", endDate);
+  }
+
+  if (userId) {
+    params.append("userId", userId);
+  }
+
+  const queryString = params.toString();
+  const res = await apiClient.get<ConversationListResponse>(
+    `/api/v1/chat/conversations/all?${queryString}`
+  );
+
+  return res.data;
+}
+
 // ดึงข้อมูลประวัติของผู้ใช้ในหน้า log เพื่่อดููบทสนทนาที่ผู็ใช้สนมนา
 export async function getUserConversations(page = 1, limit = 10) {
   const res = await apiClient.get<ConversationListResponse>(
@@ -154,11 +192,15 @@ export async function getActivityLogs({
   page = 1,
   limit = 10,
   activity = null,
+  startDate = null,
+  endDate = null,
   userId = null,
 }: {
   page: number;
   limit: number;
   activity?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   userId?: string | null;
 }) {
   const params = new URLSearchParams();
@@ -168,6 +210,14 @@ export async function getActivityLogs({
 
   if (activity) {
     params.append("activity", activity);
+  }
+
+  if (startDate) {
+    params.append("startDate", startDate);
+  }
+
+  if (endDate) {
+    params.append("endDate", endDate);
   }
 
   if (userId) {
@@ -671,9 +721,9 @@ export async function getActivitySummary(
     searchParams.append("userId", params.userId);
   }
 
-  const response = await apiClient.get<{ data: ActivitySummaryResponse }>(
+  const response = await apiClient.get<ActivitySummaryResponse>(
     `/api/v1/activity/logs/summary?${searchParams.toString()}`
   );
 
-  return response.data.data;
+  return response.data;
 }
