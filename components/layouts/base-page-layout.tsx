@@ -62,13 +62,7 @@ function BasePageLayoutContent({
 
   // 🔐 Guard - แสดง loading state with better UX
   if (!shouldRender) {
-    return (
-      <LoadingScreen
-        message={message}
-        size="lg"
-        className="bg-gradient-to-br from-gray-50 to-gray-100"
-      />
-    );
+    return <LoadingScreen message={message} size="lg" />;
   }
 
   return (

@@ -87,7 +87,6 @@ export default function LoginPage() {
       <LoadingScreen
         message={isRedirecting ? "กำลังเข้าสู่ระบบ..." : "กำลังตรวจสอบสถานะ..."}
         size="lg"
-        className="bg-gradient-to-br from-blue-50 to-indigo-100"
       />
     );
   }

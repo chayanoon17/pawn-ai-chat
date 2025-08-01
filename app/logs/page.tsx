@@ -8,6 +8,7 @@ import {
   ExportTable,
   ViewTable,
   ChatTable,
+  LogsSummary,
 } from "@/components/features/logs";
 import { MenuPermissionGuard } from "@/components/core/permission-guard";
 import { Logs, LogIn, Download, Eye, MessagesSquare } from "lucide-react";
@@ -36,7 +37,10 @@ export default function LogManagementPage() {
       }
     >
       <div className="min-h-screen bg-slate-50">
-        <div>
+        <div className="space-y-6">
+          {/* Logs Summary */}
+          <LogsSummary />
+
           {/* Logs Content */}
           <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="px-6 border-b border-gray-100">

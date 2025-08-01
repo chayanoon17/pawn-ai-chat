@@ -637,3 +637,43 @@ export async function trackMenuAccess(data: MenuAccessData): Promise<void> {
     console.error("Failed to track menu access:", error);
   }
 }
+
+/**
+ * ดึงข้อมูลสรุป Activity Logs
+ */
+export interface ActivitySummaryParams {
+  startDate: string; // YYYY-MM-DD format
+  endDate: string; // YYYY-MM-DD format
+  userId?: string | null; // Optional, for admin/super admin
+}
+
+export interface ActivitySummaryResponse {
+  summary: {
+    totalLogs: number;
+    currentMonthLogs: number;
+    activeUsersCount: number;
+  };
+  activityStats: Array<{
+    activity: string;
+    count: number;
+  }>;
+}
+
+export async function getActivitySummary(
+  params: ActivitySummaryParams
+): Promise<ActivitySummaryResponse> {
+  const searchParams = new URLSearchParams({
+    startDate: params.startDate,
+    endDate: params.endDate,
+  });
+
+  if (params.userId) {
+    searchParams.append("userId", params.userId);
+  }
+
+  const response = await apiClient.get<{ data: ActivitySummaryResponse }>(
+    `/api/v1/activity/logs/summary?${searchParams.toString()}`
+  );
+
+  return response.data.data;
+}
