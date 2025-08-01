@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search,
   Eye,
@@ -150,8 +151,47 @@ export default function ViewTable() {
 
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-slate-500">กำลังโหลด...</div>
+            <div className="space-y-4">
+              {/* Table Header Skeleton */}
+              <div className="rounded-lg border border-slate-200 overflow-hidden">
+                <div className="bg-slate-50 p-4">
+                  <div className="grid grid-cols-6 gap-4">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+                {/* Table Rows Skeleton */}
+                <div className="divide-y divide-slate-100">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <div key={i} className="p-4">
+                      <div className="grid grid-cols-6 gap-4 items-center">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-8 w-8 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pagination Skeleton */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                <Skeleton className="h-4 w-48" />
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="rounded-lg border border-slate-200 overflow-hidden">
