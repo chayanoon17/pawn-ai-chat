@@ -35,7 +35,7 @@ export function usePermissions() {
    * ตรวจสอบว่าผู้ใช้เป็น Admin (Super Admin หรือ Admin) หรือไม่
    */
   const isAdmin = (): boolean => {
-    return user?.role?.name === "Super Admin" || user?.role?.name === "Admin";
+    return user?.role?.name === "Admin";
   };
 
   /**

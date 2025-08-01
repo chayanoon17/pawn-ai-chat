@@ -1,180 +1,165 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import BasePageLayout from "@/components/layouts/base-page-layout";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LoginTable,
   ExportTable,
-  LogTabs,
-  type Tab,
-  type LoginRow,
-  type ExportRow,
+  ViewTable,
+  ChatTable,
 } from "@/components/features/logs";
-import apiRequest from "@/lib/api";
-import { toast } from "sonner";
-import ChatLogPage from "@/components/chatlogpage";
-import ViewTanle from "@/components/features/logs/view-table";
+import { MenuPermissionGuard } from "@/components/core/permission-guard";
+import { getActivityLogs } from "@/lib/api";
+import { Logs, LogIn, Download, Eye, MessageSquare } from "lucide-react";
 
-export default function LogPage() {
+export default function LogManagementPage() {
+  const [activeTab, setActiveTab] = useState("login");
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [monthlyActivity, setMonthlyActivity] = useState(0);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<Tab>("login");
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginData, setLoginData] = useState<LoginRow[]>([]);
-  const [exportData, setExportData] = useState<ExportRow[]>([]);
-
-  // Load data when tab changes
+  // Load stats data
   useEffect(() => {
-    loadTabData(activeTab);
-  }, [activeTab]);
+    const loadStats = async () => {
+      try {
+        setIsLoadingStats(true);
+        const response = await getActivityLogs({
+          page: 1,
+          limit: 100,
+        }); // Get recent logs
+        const logs = response.activityLogs || [];
 
-  const loadTabData = async (tab: Tab) => {
-    setIsLoading(true);
-    try {
-      switch (tab) {
-        case "login":
-          await loadLoginData();
-          break;
-        case "export":
-          await loadExportData();
-          break;
-        default:
-          break;
+        // Calculate total logs
+        setTotalLogs(logs.length);
+
+        // Calculate unique active users
+        const uniqueUsers = new Set(
+          logs
+            .map((log: { user?: { email?: string } }) => log.user?.email)
+            .filter(Boolean)
+        );
+        setActiveUsers(uniqueUsers.size);
+
+        // Calculate monthly activity (current month)
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthlyCount = logs.filter((log: { createdAt: string }) => {
+          const logDate = new Date(log.createdAt);
+          return (
+            logDate.getMonth() === currentMonth &&
+            logDate.getFullYear() === currentYear
+          );
+        }).length;
+        setMonthlyActivity(monthlyCount);
+      } catch (error) {
+        console.error("Failed to load stats:", error);
+      } finally {
+        setIsLoadingStats(false);
       }
-    } catch (error) {
-      console.error('Error loading log data:', error);
-      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const loadLoginData = async () => {
-    try {
-      const response = await apiRequest.get('/api/v1/logs/login');
-      if (response.success) {
-        setLoginData(response.data as LoginRow[]);
-      }
-    } catch (error) {
-      console.error('Error loading login logs:', error);
-      // Fallback to empty array if API fails
-      setLoginData([]);
-    }
-  };
-
-  const loadExportData = async () => {
-    try {
-      const response = await apiRequest.get('/api/v1/logs/export');
-      if (response.success) {
-        setExportData(response.data as ExportRow[]);
-      }
-    } catch (error) {
-      console.error('Error loading export logs:', error);
-      // Fallback to empty array if API fails
-      setExportData([]);
-    }
-  };
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
-          </div>
-        </div>
-      );
-    }
-
-    switch (activeTab) {
-      case "login":
-        return (
-          <div className="p-4">
-            <LoginTable
-             />
-          </div>
-        );
-      case "export":
-        return (
-          <div className="p-4">
-            <ExportTable />
-          </div>
-        );
-      case "view":
-        return (
-          <div className="text-center p-4 text-gray-500">
-            <ViewTanle />
-          </div>
-        );
-      case "chat":
-        return (
-          <div className="text-center p-4">
-            <ChatLogPage
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+    loadStats();
+  }, []);
 
   return (
-    <BasePageLayout
-      page="log-management"
-      pageTitle="ประวัติการใช้งาน"
-      showFilter={false}
-      className="bg-gray-50"
-    >
-      <div className="space-y-4">
-        {/* Header Section */}
-        <div className="bg-white  p-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              📋 ประวัติการใช้งาน
-            </h1>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              ติดตามและตรวจสอบกิจกรรมของผู้ใช้ในระบบ
-            </p>
-          </div>
-
-          {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
-              <div className="text-blue-700 text-sm font-semibold mb-2">
-                Total Logs
-              </div>
-              <div className="text-3xl font-bold text-blue-900">1,247</div>
-              <div className="text-xs text-blue-600 mt-1">รายการทั้งหมด</div>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
-              <div className="text-green-700 text-sm font-semibold mb-2">
-                Active Users
-              </div>
-              <div className="text-3xl font-bold text-green-900">45</div>
-              <div className="text-xs text-green-600 mt-1">
-                ผู้ใช้งานปัจจุบัน
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
-              <div className="text-purple-700 text-sm font-semibold mb-2">
-                This Month
-              </div>
-              <div className="text-3xl font-bold text-purple-900">328</div>
-              <div className="text-xs text-purple-600 mt-1">
-                กิจกรรมเดือนนี้
+    <MenuPermissionGuard
+      requiredMenuPermission="Activity Logs"
+      fallback={
+        <div className="min-h-screen bg-slate-50">
+          <div className="w-full px-6 py-6">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                  ไม่มีสิทธิ์เข้าถึง
+                </h2>
+                <p className="text-gray-600">
+                  คุณไม่มีสิทธิ์ในการเข้าถึงหน้าประวัติการใช้งาน
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Tab Navigation */}
         </div>
-          <LogTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      }
+    >
+      <div className="min-h-screen bg-slate-50">
+        <div>
+          {/* Logs Content */}
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardHeader className="px-6 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-slate-100 rounded-lg">
+                  <Logs className="w-5 h-5 text-slate-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg font-semibold text-slate-80">
+                    ประวัติการใช้งาน
+                  </CardTitle>
+                  <span className="text-sm text-slate-500">
+                    ติดตามและตรวจสอบกิจกรรมของผู้ใช้ในระบบ
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
 
-        {/* Content Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {renderContent()}
+            <CardContent>
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-4 mb-6">
+                  <TabsTrigger
+                    value="login"
+                    className="flex items-center space-x-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>ประวัติการเข้าใช้งาน</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="export"
+                    className="flex items-center space-x-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>ประวัติการส่งออกไฟล์</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="view"
+                    className="flex items-center space-x-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>ประวัติการเข้าดู (เมนู)</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="chat"
+                    className="flex items-center space-x-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>ประวัติการสนทนา</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <LoginTable />
+                </TabsContent>
+
+                <TabsContent value="export">
+                  <ExportTable />
+                </TabsContent>
+
+                <TabsContent value="view">
+                  <ViewTable />
+                </TabsContent>
+
+                <TabsContent value="chat">
+                  <ChatTable />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </BasePageLayout>
+    </MenuPermissionGuard>
   );
 }

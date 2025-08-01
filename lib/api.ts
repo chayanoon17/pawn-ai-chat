@@ -150,13 +150,38 @@ export async function deleteConversation(conversationId: string) {
 }
 
 // get ประวัติผู้ใช้งาน
-export async function getActivityLogs(page = 1, limit = 10) {
+export async function getActivityLogs({
+  page = 1,
+  limit = 10,
+  activity = null,
+  userId = null,
+}: {
+  page: number;
+  limit: number;
+  activity?: string | null;
+  userId?: string | null;
+}) {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+
+  if (activity) {
+    params.append("activity", activity);
+  }
+
+  if (userId) {
+    params.append("userId", userId);
+  }
+
+  const queryString = params.toString();
   const res = await apiClient.get<ActivityLog>(
-    `/api/v1/activity/logs?page=${page}&limit=${limit}`
+    `/api/v1/activity/logs?${queryString}`
   );
 
   return res.data;
 }
+
 // export table
 export async function getActivityLogexdport(page = 1, limit = 10) {
   const res = await apiClient.get<ActivityLogResponse>(
