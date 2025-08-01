@@ -118,6 +118,12 @@ export function EditUserDialog({
       return;
     }
 
+    // Branch validation - ถ้าเลือกระบุสาขาแล้วต้องเลือกสาขาด้วย
+    if (specifyBranch && !editUserData.branchId) {
+      showWarning("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกสาขา");
+      return;
+    }
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(editUserData.email)) {
@@ -127,13 +133,15 @@ export function EditUserDialog({
 
     setIsUpdating(true);
     try {
-      // เตรียมข้อมูลสำหรับส่ง API โดยแปลง null เป็น undefined
+      // เตรียมข้อมูลสำหรับส่ง API โดยเก็บ null ไว้เพื่อให้ API เคลียร์ข้อมูลสาขา
       const dataToSend = {
         ...editUserData,
-        branchId: editUserData.branchId ?? undefined,
+        // ไม่แปลง null เป็น undefined เพราะ API ต้องการ null เพื่อเคลียร์ข้อมูล
       };
 
       console.log("Updating user with data:", dataToSend);
+      console.log("branchId value:", editUserData.branchId);
+      console.log("specifyBranch:", specifyBranch);
 
       // เรียก API อัปเดต user
       const updatedUserData = (await updateUser(

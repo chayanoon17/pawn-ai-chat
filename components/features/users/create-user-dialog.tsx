@@ -125,11 +125,15 @@ export function CreateUserDialog({
 
     setIsCreating(true);
     try {
-      // เตรียมข้อมูลสำหรับส่ง API โดยแปลง null เป็น undefined
+      // เตรียมข้อมูลสำหรับส่ง API โดยเก็บ null ไว้เพื่อให้ API รู้ว่าไม่ระบุสาขา
       const dataToSend = {
         ...createUserData,
-        branchId: createUserData.branchId ?? undefined,
+        // ไม่แปลง null เป็น undefined เพราะ API ต้องการ null เพื่อระบุว่าไม่มีสาขา
       };
+
+      console.log("Creating user with data:", dataToSend);
+      console.log("branchId value:", createUserData.branchId);
+      console.log("specifyBranch:", specifyBranch);
 
       // เรียก API สร้าง user
       const newUserData = (await createUser(dataToSend)) as User;
