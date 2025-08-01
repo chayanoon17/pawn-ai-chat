@@ -12,6 +12,7 @@ import {
   ActivityLogResponse,
 } from "@/types/api";
 import { ConversationListResponse } from "@/types/api";
+import type { Role, CreateRoleData, UpdateRoleData } from "@/types/role";
 
 /**
  * Get base URL from environment variable
@@ -508,6 +509,83 @@ export async function getMenuRoles() {
 export async function getMenuBranches(): Promise<Branch[]> {
   const response = await apiClient.get<Branch[]>("/api/v1/menu/branches");
   return response.data;
+}
+
+/**
+ * ===================================
+ * 👥 ROLE MANAGEMENT API
+ * ===================================
+ */
+
+export interface RoleListResponse {
+  roles: Role[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface GetRolesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/**
+ * ดึงรายการ Roles ทั้งหมด
+ */
+export async function getRoles(
+  params?: GetRolesParams
+): Promise<RoleListResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.search) queryParams.append("search", params.search);
+
+  const url = `/api/v1/roles${
+    queryParams.toString() ? `?${queryParams.toString()}` : ""
+  }`;
+
+  const response = await apiClient.get<RoleListResponse>(url);
+  return response.data;
+}
+
+/**
+ * ดึงข้อมูล Role ตาม ID
+ */
+export async function getRoleById(id: number): Promise<Role> {
+  const response = await apiClient.get<{ role: Role }>(`/api/v1/roles/${id}`);
+  return response.data.role;
+}
+
+/**
+ * สร้าง Role ใหม่
+ */
+export async function createRole(data: CreateRoleData): Promise<Role> {
+  const response = await apiClient.post<{ role: Role }>("/api/v1/roles", data);
+  return response.data.role;
+}
+
+/**
+ * อัปเดตข้อมูล Role
+ */
+export async function updateRole(
+  id: number,
+  data: UpdateRoleData
+): Promise<Role> {
+  const response = await apiClient.put<{ role: Role }>(
+    `/api/v1/roles/${id}`,
+    data
+  );
+  return response.data.role;
+}
+
+/**
+ * ลบ Role
+ */
+export async function deleteRole(id: number): Promise<void> {
+  await apiClient.delete(`/api/v1/roles/${id}`);
 }
 
 /**
