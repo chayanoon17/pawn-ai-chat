@@ -47,5 +47,5 @@ export default function Page() {
   }, [isAuthenticated, isLoading, userMenuPermissions, router]);
 
   // Loading state while checking authentication
-  return <LoadingScreen message="กำลังตรวจสอบสถานะ..." />;
+  return <LoadingScreen message="กำลังตรวจสอบสถานะ..." size="lg" />;
 }

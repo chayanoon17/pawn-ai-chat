@@ -1,18 +1,18 @@
-
 /**
  * HTTP API Client
  * จัดการการเชื่อมต่อกับ Backend API พร้อม httpOnly Cookies และ Security Features
  */
 
+import type { Branch } from "@/types/auth";
 import {
-   ApiResponse,
-   ApiErrorResponse,
-   Message,
-   ActivityLog,
-   ActivityLogResponse,
-    } from "@/types/api";
-import {ConversationListResponse} from "@/types/api";
-
+  ApiResponse,
+  ApiErrorResponse,
+  Message,
+  ActivityLog,
+  ActivityLogResponse,
+} from "@/types/api";
+import { ConversationListResponse } from "@/types/api";
+import type { Role, CreateRoleData, UpdateRoleData } from "@/types/role";
 
 /**
  * Get base URL from environment variable
@@ -128,6 +128,44 @@ export async function sendChatMessageStream(
   }
 }
 
+export async function getAllConversations({
+  page = 1,
+  limit = 10,
+  startDate = null,
+  endDate = null,
+  userId = null,
+}: {
+  page: number;
+  limit: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  userId?: string | null;
+}) {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+
+  if (startDate) {
+    params.append("startDate", startDate);
+  }
+
+  if (endDate) {
+    params.append("endDate", endDate);
+  }
+
+  if (userId) {
+    params.append("userId", userId);
+  }
+
+  const queryString = params.toString();
+  const res = await apiClient.get<ConversationListResponse>(
+    `/api/v1/chat/conversations/all?${queryString}`
+  );
+
+  return res.data;
+}
+
 // ดึงข้อมูลประวัติของผู้ใช้ในหน้า log เพื่่อดููบทสนทนาที่ผู็ใช้สนมนา
 export async function getUserConversations(page = 1, limit = 10) {
   const res = await apiClient.get<ConversationListResponse>(
@@ -144,29 +182,64 @@ export async function getConversationMessages(conversationId: string) {
   );
   return res.data;
 }
-// ลบข้อมูลบทสนทนา 
+// ลบข้อมูลบทสนทนา
 export async function deleteConversation(conversationId: string) {
   return apiClient.delete(`/api/v1/chat/conversations/${conversationId}`);
 }
 
-
 // get ประวัติผู้ใช้งาน
-export async function getActivityLogs(page = 1, limit = 10) {
-  const res = await apiClient.get<ActivityLog>(
-    `/api/v1/activity/logs?page=${page}&limit=${limit}`
+export async function getActivityLogs({
+  page = 1,
+  limit = 10,
+  activity = null,
+  startDate = null,
+  endDate = null,
+  userId = null,
+}: {
+  page: number;
+  limit: number;
+  activity?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  userId?: string | null;
+}) {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+
+  if (activity) {
+    params.append("activity", activity);
+  }
+
+  if (startDate) {
+    params.append("startDate", startDate);
+  }
+
+  if (endDate) {
+    params.append("endDate", endDate);
+  }
+
+  if (userId) {
+    params.append("userId", userId);
+  }
+
+  const queryString = params.toString();
+  const res = await apiClient.get<ActivityLogResponse>(
+    `/api/v1/activity/logs?${queryString}`
   );
 
   return res.data;
 }
+
 // export table
-export async function getActivityLogexdport(page = 1,  limit = 10) {
-  const res = await  apiClient.get<ActivityLogResponse>(
-  `/api/v1/activity/logs?page${page}&limit=${limit}`
+export async function getActivityLogexdport(page = 1, limit = 10) {
+  const res = await apiClient.get<ActivityLogResponse>(
+    `/api/v1/activity/logs?page${page}&limit=${limit}`
   );
 
   return res.data;
-  
-} 
+}
 
 interface MenuAccessPayload {
   menuId: string;
@@ -508,9 +581,86 @@ export async function getMenuRoles() {
   return response.data;
 }
 
-export async function getMenuBranches() {
-  const response = await apiClient.get("/api/v1/menu/branches");
+export async function getMenuBranches(): Promise<Branch[]> {
+  const response = await apiClient.get<Branch[]>("/api/v1/menu/branches");
   return response.data;
+}
+
+/**
+ * ===================================
+ * 👥 ROLE MANAGEMENT API
+ * ===================================
+ */
+
+export interface RoleListResponse {
+  roles: Role[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface GetRolesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+/**
+ * ดึงรายการ Roles ทั้งหมด
+ */
+export async function getRoles(
+  params?: GetRolesParams
+): Promise<RoleListResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.search) queryParams.append("search", params.search);
+
+  const url = `/api/v1/roles${
+    queryParams.toString() ? `?${queryParams.toString()}` : ""
+  }`;
+
+  const response = await apiClient.get<RoleListResponse>(url);
+  return response.data;
+}
+
+/**
+ * ดึงข้อมูล Role ตาม ID
+ */
+export async function getRoleById(id: number): Promise<Role> {
+  const response = await apiClient.get<{ role: Role }>(`/api/v1/roles/${id}`);
+  return response.data.role;
+}
+
+/**
+ * สร้าง Role ใหม่
+ */
+export async function createRole(data: CreateRoleData): Promise<Role> {
+  const response = await apiClient.post<{ role: Role }>("/api/v1/roles", data);
+  return response.data.role;
+}
+
+/**
+ * อัปเดตข้อมูล Role
+ */
+export async function updateRole(
+  id: number,
+  data: UpdateRoleData
+): Promise<Role> {
+  const response = await apiClient.put<{ role: Role }>(
+    `/api/v1/roles/${id}`,
+    data
+  );
+  return response.data.role;
+}
+
+/**
+ * ลบ Role
+ */
+export async function deleteRole(id: number): Promise<void> {
+  await apiClient.delete(`/api/v1/roles/${id}`);
 }
 
 /**
@@ -536,4 +686,44 @@ export async function trackMenuAccess(data: MenuAccessData): Promise<void> {
     // Log error แต่ไม่ throw เพื่อไม่ให้กระทบการทำงานของเมนู
     console.error("Failed to track menu access:", error);
   }
+}
+
+/**
+ * ดึงข้อมูลสรุป Activity Logs
+ */
+export interface ActivitySummaryParams {
+  startDate: string; // YYYY-MM-DD format
+  endDate: string; // YYYY-MM-DD format
+  userId?: string | null; // Optional, for admin/super admin
+}
+
+export interface ActivitySummaryResponse {
+  summary: {
+    totalLogs: number;
+    currentMonthLogs: number;
+    activeUsersCount: number;
+  };
+  activityStats: Array<{
+    activity: string;
+    count: number;
+  }>;
+}
+
+export async function getActivitySummary(
+  params: ActivitySummaryParams
+): Promise<ActivitySummaryResponse> {
+  const searchParams = new URLSearchParams({
+    startDate: params.startDate,
+    endDate: params.endDate,
+  });
+
+  if (params.userId) {
+    searchParams.append("userId", params.userId);
+  }
+
+  const response = await apiClient.get<ActivitySummaryResponse>(
+    `/api/v1/activity/logs/summary?${searchParams.toString()}`
+  );
+
+  return response.data;
 }

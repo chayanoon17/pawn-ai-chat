@@ -26,7 +26,6 @@ export const PERMISSION_ACTIONS = {
 
   // System
   SYNC_DATA: "SYNC:Data",
-  SYSTEM_ADMIN: "SYSTEM:Admin",
 } as const;
 
 /**

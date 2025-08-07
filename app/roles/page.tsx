@@ -12,6 +12,7 @@ import {
   CreateRoleDialog,
   EditRoleDialog,
 } from "@/components/features/roles";
+import { MenuPermissionGuard } from "@/components/core/permission-guard";
 
 export default function RoleManagementPage() {
   // 🎯 State Management
@@ -89,73 +90,93 @@ export default function RoleManagementPage() {
   };
 
   return (
-    <div>
-      {isLoading ? (
-        <div className="space-y-8">
-          {/* Header Skeleton */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-            <Skeleton className="h-10 w-32 rounded-md" />
-          </div>
-
-          {/* Stat Cards Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-4 space-y-4">
-                <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-8 w-1/2" />
-                <Skeleton className="h-3 w-1/3" />
-              </Card>
-            ))}
-          </div>
-
-          {/* User Table Skeleton */}
-          <Card>
-            <div className="p-6">
-              <Skeleton className="h-6 w-32 mb-2" />
-              <Skeleton className="h-4 w-64 mb-4" />
-              <div className="space-y-2">
-                {[...Array(5)].map((_, index) => (
-                  <Skeleton key={index} className="h-6 w-full" />
-                ))}
+    <MenuPermissionGuard
+      requiredMenuPermission="Role Management"
+      fallback={
+        <div className="min-h-screen bg-slate-50">
+          <div className="container mx-auto p-6 max-w-7xl">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                  ไม่มีสิทธิ์เข้าถึง
+                </h2>
+                <p className="text-gray-600">
+                  คุณไม่มีสิทธิ์ในการเข้าถึงหน้าจัดการบทบาท
+                </p>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
-      ) : (
-        <div className="space-y-8">
-          <RoleTable
-            roles={roles}
-            availablePermissions={availablePermissions}
-            availableMenuPermissions={availableMenuPermissions}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onCreateRole={() => setIsCreateDialogOpen(true)}
-            onEditRole={handleEditRole}
-            onRoleDeleted={handleRoleDeleted}
-          />
+      }
+    >
+      <div>
+        {isLoading ? (
+          <div className="space-y-8">
+            {/* Header Skeleton */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-10 w-32 rounded-md" />
+            </div>
 
-          <CreateRoleDialog
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-            availablePermissions={availablePermissions}
-            availableMenuPermissions={availableMenuPermissions}
-            onRoleCreated={handleRoleCreated}
-          />
+            {/* Stat Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="p-4 space-y-4">
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </Card>
+              ))}
+            </div>
 
-          <EditRoleDialog
-            open={isEditDialogOpen}
-            onOpenChange={handleEditDialogClose}
-            selectedRole={selectedRole}
-            availablePermissions={availablePermissions}
-            availableMenuPermissions={availableMenuPermissions}
-            onRoleUpdated={handleRoleUpdated}
-          />
-        </div>
-      )}
-    </div>
+            {/* User Table Skeleton */}
+            <Card>
+              <div className="p-6">
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-64 mb-4" />
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, index) => (
+                    <Skeleton key={index} className="h-6 w-full" />
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <RoleTable
+              roles={roles}
+              availablePermissions={availablePermissions}
+              availableMenuPermissions={availableMenuPermissions}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onCreateRole={() => setIsCreateDialogOpen(true)}
+              onEditRole={handleEditRole}
+              onRoleDeleted={handleRoleDeleted}
+            />
+
+            <CreateRoleDialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+              availablePermissions={availablePermissions}
+              availableMenuPermissions={availableMenuPermissions}
+              onRoleCreated={handleRoleCreated}
+            />
+
+            <EditRoleDialog
+              open={isEditDialogOpen}
+              onOpenChange={handleEditDialogClose}
+              selectedRole={selectedRole}
+              availablePermissions={availablePermissions}
+              availableMenuPermissions={availableMenuPermissions}
+              onRoleUpdated={handleRoleUpdated}
+            />
+          </div>
+        )}
+      </div>
+    </MenuPermissionGuard>
   );
 }

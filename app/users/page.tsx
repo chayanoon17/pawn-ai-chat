@@ -38,41 +38,47 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // 🎯 Load data from API
-  useEffect(() => {
-    const loadData = async () => {
-      try {
+  const loadData = async (showLoading = true) => {
+    try {
+      if (showLoading) {
         setIsLoading(true);
+      }
 
-        // Load users and roles from API
-        const [usersResponse, rolesData] = await Promise.all([
-          getAllUsers({ page: 1, limit: 100 }) as Promise<UsersResponse>,
-          getRoles(),
-        ]);
+      // Load users and roles from API
+      const [usersResponse, rolesData] = await Promise.all([
+        getAllUsers({ page: 1, limit: 100 }) as Promise<UsersResponse>,
+        getRoles(),
+      ]);
 
-        setUsers(usersResponse.users);
-        setAvailableRoles(rolesData.roles);
+      setUsers(usersResponse.users);
+      setAvailableRoles(rolesData.roles);
 
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading data:", error);
-        showNetworkError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+      if (showLoading) {
         setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Error loading data:", error);
+      showNetworkError("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+      if (showLoading) {
+        setIsLoading(false);
+      }
+    }
+  };
 
+  useEffect(() => {
     loadData();
   }, []);
 
   // 🎯 Handle user creation
-  const handleUserCreated = (newUser: User) => {
-    setUsers((prev) => [...prev, newUser]);
+  const handleUserCreated = async () => {
+    // Refresh ข้อมูลจาก API เพื่อให้แน่ใจว่าได้ข้อมูลที่ครบถ้วน
+    await loadData(false); // ไม่แสดง loading state
   };
 
   // 🎯 Handle user update
-  const handleUserUpdated = (updatedUser: User) => {
-    setUsers((prev) =>
-      prev.map((user) => (user.id === updatedUser.id ? updatedUser : user))
-    );
+  const handleUserUpdated = async () => {
+    // Refresh ข้อมูลจาก API เพื่อให้แน่ใจว่าได้ข้อมูลที่ครบถ้วน
+    await loadData(false); // ไม่แสดง loading state
   };
 
   // 🎯 Handle user deletion

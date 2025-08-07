@@ -29,10 +29,8 @@ export interface MenuPermission {
 export interface Branch {
   id: number;
   name: string;
-  code?: string;
-  address?: string;
-  phone?: string;
-  status: "ACTIVE" | "INACTIVE";
+  location: string;
+  shortName: string;
 }
 
 /**
