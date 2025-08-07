@@ -13,10 +13,12 @@
 - 🏷️ **การวิเคราะห์ประเภททรัพย์** (Asset Type Analytics, Rankings, Period Comparisons)
 - 🏅 **ราคาทองคำแบบเรียลไทม์** (Auto-sync จาก External API พร้อม Cron Jobs)
 - 💬 **ระบบแชทบอท AI** (OpenAI Integration พร้อม streaming responses และ conversation history)
-- 🔄 **ซิงค์ข้อมูลอัตโนมัติ** (Pawn Shop API, Gold Price API, Batch Processing)
+- � **ระบบการแจ้งเตือน** (In-app Notifications พร้อม advanced targeting และ notification management)
+- �🔄 **ซิงค์ข้อมูลอัตโนมัติ** (Pawn Shop API, Gold Price API, Batch Processing)
 - 📝 **การตรวจสอบและบันทึกกิจกรรม** (Activity & Change Logs พร้อม comprehensive audit trail)
 - 📈 **ระบบติดตามประสิทธิภาพ** (Real-time metrics, Health monitoring, Performance analytics)
 - 📋 **การส่งออกข้อมูล** (CSV export พร้อม UTF-8 BOM, Excel compatibility และ Thai language support)
+- 🗄️ **การจัดการฐานข้อมูล** (Database export/import พร้อม relations และ automated backup scripts)
 
 ### 🏗️ สถาปัตยกรรมระบบ
 
@@ -28,6 +30,7 @@
 - **Monitoring**: Built-in Performance Monitoring & Real-time Health Checks
 - **AI Integration**: OpenAI Chat API พร้อม streaming responses และ conversation management
 - **External APIs**: Gold Price API และ Pawn Shop API integration พร้อม rate limiting
+- **Notifications**: Advanced notification system พร้อม flexible targeting และ real-time delivery
 
 ---
 
@@ -47,16 +50,31 @@
 12. [💰 Gold Price Management](#-gold-price-management)
 13. [🏪 Pawn Shop Operations](#-pawn-shop-operations)
 14. [🏷️ Asset Type Reports](#️-asset-type-reports)
-15. [🔄 Data Synchronization](#-data-synchronization)
-16. [📤 Export Operations](#-export-operations)
-17. [💬 Chat Management](#-chat-management)
-18. [📊 Activity Tracking & Logs](#-activity-tracking--logs)
-19. [📝 Change Logs](#-change-logs)
-20. [📈 Metrics & Monitoring](#-metrics--monitoring)
-21. [🛡️ Protected Routes](#️-protected-routes)
-22. [📊 Response Format](#-response-format)
-23. [⚠️ Error Handling](#️-error-handling)
-24. [📞 Support & Documentation](#-support--documentation)
+15. [🔔 Notification Management](#-notification-management)
+16. [💬 AI Chat System](#-ai-chat-system)
+17. [🔄 Data Synchronization](#-data-synchronization)
+18. [📤 Export Operations](#-export-operations)
+19. [📊 Activity Logs](#-activity-logs)
+20. [📝 Change Logs](#-change-logs)
+21. [📈 Metrics & Monitoring](#-metrics--monitoring)
+22. [🗂️ Cache Management](#️-cache-management)
+23. [📊 Activity Tracking](#-activity-tracking)
+24. [🛡️ Protected Routes](#️-protected-routes)
+25. [📊 Response Format](#-response-format)
+26. [⚠️ Error Handling](#️-error-handling)
+27. [📈 Performance & Monitoring](#-performance--monitoring)
+28. [🔧 Development & Testing](#-development--testing)
+29. [📝 Changelog & Version History](#-changelog--version-history)
+30. [📞 Support & Documentation](#-support--documentation)
+31. [📤 Export Operations](#-export-operations)
+32. [💬 Chat Management](#-chat-management)
+33. [📊 Activity Tracking & Logs](#-activity-tracking--logs)
+34. [📝 Change Logs](#-change-logs)
+35. [📈 Metrics & Monitoring](#-metrics--monitoring)
+36. [🛡️ Protected Routes](#️-protected-routes)
+37. [📊 Response Format](#-response-format)
+38. [⚠️ Error Handling](#️-error-handling)
+39. [📞 Support & Documentation](#-support--documentation)
 
 ---
 
@@ -2081,7 +2099,332 @@ top?: number (optional) - หากระบุจะแสดง Top N + "อ�
 
 ---
 
-## 🔄 Data Synchronization
+## � Notification Management
+
+ระบบการแจ้งเตือนใน application พร้อม advanced targeting system
+
+### GET /api/v1/notifications
+
+ดึงรายการ notifications ของ user พร้อม pagination และ filtering
+
+**Access**: Private (READ:Notification permission)
+
+#### Query Parameters
+
+```
+page?: number (default: 1)
+limit?: number (default: 10, max: 100)
+onlyUnread?: boolean (default: false)
+type?: NotificationType (EXPORT_REPORT | SYSTEM_ALERT | USER_ACTION | MAINTENANCE | SECURITY)
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Notifications retrieved successfully",
+  "data": {
+    "notifications": [
+      {
+        "id": 1,
+        "type": "EXPORT_REPORT",
+        "title": "Database Export Completed",
+        "message": "Your database export has been completed successfully.",
+        "metadata": {
+          "exportId": "exp_123",
+          "fileName": "db-export.json"
+        },
+        "isRead": false,
+        "readAt": null,
+        "priority": "MEDIUM",
+        "createdAt": "2025-08-07T10:00:00.000Z",
+        "updatedAt": "2025-08-07T10:00:00.000Z",
+        "relatedUser": {
+          "id": 1,
+          "fullName": "John Doe",
+          "email": "john@example.com"
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "totalPages": 3,
+      "hasNext": true,
+      "hasPrev": false
+    }
+  }
+}
+```
+
+### GET /api/v1/notifications/unread-count
+
+ดึงจำนวน notification ที่ยังไม่อ่าน
+
+**Access**: Private (READ:Notification permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Unread count retrieved successfully",
+  "data": {
+    "unreadCount": 5
+  }
+}
+```
+
+### GET /api/v1/notifications/:notificationId
+
+ดึงรายละเอียด notification ตาม ID
+
+**Access**: Private (READ:Notification permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Notification details retrieved successfully",
+  "data": {
+    "id": 1,
+    "type": "EXPORT_REPORT",
+    "title": "Database Export Completed",
+    "message": "Your database export has been completed successfully.",
+    "metadata": {
+      "exportId": "exp_123",
+      "fileName": "db-export.json"
+    },
+    "isRead": false,
+    "readAt": null,
+    "priority": "MEDIUM",
+    "createdAt": "2025-08-07T10:00:00.000Z",
+    "updatedAt": "2025-08-07T10:00:00.000Z",
+    "relatedUser": {
+      "id": 1,
+      "fullName": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+### PUT /api/v1/notifications/:notificationId/read
+
+ทำเครื่องหมาย notification ว่าอ่านแล้ว
+
+**Access**: Private (READ:Notification permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Notification marked as read",
+  "data": {
+    "id": 1,
+    "isRead": true,
+    "readAt": "2025-08-07T11:00:00.000Z"
+  }
+}
+```
+
+### PUT /api/v1/notifications/mark-all-read
+
+ทำเครื่องหมาย notifications ทั้งหมดของ user ว่าอ่านแล้ว
+
+**Access**: Private (READ:Notification permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "All notifications marked as read",
+  "data": {
+    "updatedCount": 5
+  }
+}
+```
+
+### DELETE /api/v1/notifications/:notificationId
+
+ลบ notification
+
+**Access**: Private (READ:Notification permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Notification deleted successfully"
+}
+```
+
+### Notification Types & Priority Levels
+
+#### NotificationType
+
+- `EXPORT_REPORT` - แจ้งเตือนการ export ข้อมูล
+- `SYSTEM_ALERT` - แจ้งเตือนระบบ
+- `USER_ACTION` - แจ้งเตือนการดำเนินงานของผู้ใช้
+- `MAINTENANCE` - แจ้งเตือนการบำรุงรักษา
+- `SECURITY` - แจ้งเตือนความปลอดภัย
+
+#### NotificationPriority
+
+- `LOW` - ความสำคัญต่ำ
+- `MEDIUM` - ความสำคัญปานกลาง (default)
+- `HIGH` - ความสำคัญสูง
+- `URGENT` - เร่งด่วน
+
+---
+
+## 💬 AI Chat System
+
+ระบบแชทบอท AI พร้อม OpenAI integration และ conversation management
+
+### POST /api/v1/chat
+
+ส่งข้อความไปยัง AI Chat
+
+**Access**: Private (Chat menu permission)
+
+#### Request Body
+
+```json
+{
+  "message": "สวัสดี ช่วยอธิบายการทำงานของระบบจำนำได้ไหม",
+  "conversationId": "conv_123" // optional - สำหรับ conversation ที่มีอยู่แล้ว
+}
+```
+
+#### Response (Streaming)
+
+```json
+{
+  "success": true,
+  "data": {
+    "conversationId": "conv_123",
+    "message": "สวัสดีครับ! ระบบจำนำเป็นระบบที่ช่วยในการจัดการ...",
+    "timestamp": "2025-08-07T10:00:00.000Z"
+  }
+}
+```
+
+### GET /api/v1/chat/conversations
+
+ดึงรายการ conversations ของ User พร้อม pagination
+
+**Access**: Private (Chat menu permission)
+
+#### Query Parameters
+
+```
+page?: number (default: 1)
+limit?: number (default: 10, max: 50)
+search?: string (ค้นหาใน conversation)
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Conversations retrieved successfully",
+  "data": {
+    "conversations": [
+      {
+        "conversationId": "conv_123",
+        "title": "การใช้งานระบบจำนำ",
+        "lastMessage": "ขอบคุณมากครับ",
+        "lastMessageAt": "2025-08-07T10:00:00.000Z",
+        "messageCount": 15,
+        "createdAt": "2025-08-07T09:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 5,
+      "totalPages": 1,
+      "hasNext": false,
+      "hasPrev": false
+    }
+  }
+}
+```
+
+### GET /api/v1/chat/conversations/:conversationId/messages
+
+ดึงข้อความทั้งหมดของ conversation
+
+**Access**: Private (Chat menu permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Conversation messages retrieved successfully",
+  "data": {
+    "conversationId": "conv_123",
+    "messages": [
+      {
+        "id": "msg_1",
+        "content": "สวัสดี ช่วยอธิบายการทำงานของระบบจำนำได้ไหม",
+        "role": "user",
+        "timestamp": "2025-08-07T09:30:00.000Z"
+      },
+      {
+        "id": "msg_2",
+        "content": "สวัสดีครับ! ระบบจำนำเป็นระบบที่ช่วยในการจัดการ...",
+        "role": "assistant",
+        "timestamp": "2025-08-07T09:30:15.000Z"
+      }
+    ],
+    "totalMessages": 10
+  }
+}
+```
+
+### GET /api/v1/chat/conversations/all
+
+ดึงรายการ conversations ทั้งหมด (สำหรับ Admin)
+
+**Access**: Private (Admin + Chat menu permission)
+
+#### Query Parameters
+
+```
+page?: number (default: 1)
+limit?: number (default: 10, max: 50)
+search?: string
+userId?: number (filter by user)
+```
+
+### DELETE /api/v1/chat/conversations/:conversationId
+
+ลบ conversation
+
+**Access**: Private (Chat menu permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Conversation deleted successfully"
+}
+```
+
+---
+
+## �🔄 Data Synchronization
 
 ### POST /api/v1/asset-types/sync
 
@@ -2427,7 +2770,232 @@ days?: number = 90
 
 ---
 
-## 🛡️ Protected Routes
+## �️ Cache Management
+
+### GET /api/v1/cache/status
+
+ดึงสถานะของระบบ cache
+
+**Access**: Private (READ_REPORT permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Cache status retrieved successfully",
+  "data": {
+    "status": "connected",
+    "type": "memory",
+    "stats": {
+      "totalKeys": 150,
+      "memoryUsage": "12.5 MB",
+      "hitRate": 0.85
+    },
+    "uptime": "5 days, 3 hours"
+  }
+}
+```
+
+### POST /api/v1/cache/test
+
+ทดสอบการทำงานของ cache (read/write operations)
+
+**Access**: Private (SYNC_DATA permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Cache test completed successfully",
+  "data": {
+    "writeTest": {
+      "success": true,
+      "responseTime": "2ms"
+    },
+    "readTest": {
+      "success": true,
+      "responseTime": "1ms"
+    },
+    "deleteTest": {
+      "success": true,
+      "responseTime": "1ms"
+    }
+  }
+}
+```
+
+### POST /api/v1/cache/clear
+
+ล้างข้อมูล cache ทั้งหมด
+
+**Access**: Private (SYNC_DATA permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Cache cleared successfully",
+  "data": {
+    "clearedKeys": 150,
+    "freedMemory": "12.5 MB"
+  }
+}
+```
+
+### GET /api/v1/cache/stats
+
+ดึงสถิติการใช้งาน cache
+
+**Access**: Private (READ_REPORT permission)
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Cache statistics retrieved successfully",
+  "data": {
+    "totalOperations": 10520,
+    "hits": 8940,
+    "misses": 1580,
+    "hitRate": 0.85,
+    "averageResponseTime": "1.2ms",
+    "topKeys": [
+      {
+        "key": "branches:all",
+        "accessCount": 450,
+        "lastAccessed": "2025-08-07T10:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### GET /api/v1/cache/keys
+
+ดึงรายการ cache keys ทั้งหมด
+
+**Access**: Private (READ_REPORT permission)
+
+---
+
+## 📊 Activity Tracking
+
+### GET /api/v1/activity/tracking
+
+ดึงข้อมูลการติดตามกิจกรรมของผู้ใช้งาน
+
+**Access**: Private (Admin + READ_ACTIVITY_LOG permission)
+
+#### Query Parameters
+
+```
+page?: number (default: 1)
+limit?: number (default: 10)
+userId?: number
+startDate?: string (YYYY-MM-DD)
+endDate?: string (YYYY-MM-DD)
+activityType?: string
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Activity tracking data retrieved successfully",
+  "data": {
+    "activities": [
+      {
+        "id": 1,
+        "userId": 1,
+        "user": {
+          "id": 1,
+          "fullName": "John Doe",
+          "email": "john@example.com"
+        },
+        "activityType": "API_REQUEST",
+        "endpoint": "/api/v1/users",
+        "method": "GET",
+        "ipAddress": "192.168.1.1",
+        "userAgent": "Mozilla/5.0...",
+        "responseTime": 125,
+        "statusCode": 200,
+        "createdAt": "2025-08-07T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 500,
+      "totalPages": 50,
+      "hasNext": true,
+      "hasPrev": false
+    }
+  }
+}
+```
+
+### GET /api/v1/activity/tracking/summary
+
+ดึงสรุปกิจกรรมของผู้ใช้งาน
+
+**Access**: Private (Admin + READ_ACTIVITY_LOG permission)
+
+#### Query Parameters
+
+```
+startDate?: string (YYYY-MM-DD)
+endDate?: string (YYYY-MM-DD)
+groupBy?: string (hour | day | week | month)
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Activity tracking summary retrieved successfully",
+  "data": {
+    "totalActivities": 15000,
+    "periodSummary": [
+      {
+        "period": "2025-08-07",
+        "count": 1250,
+        "uniqueUsers": 45,
+        "topEndpoints": [
+          {
+            "endpoint": "/api/v1/users",
+            "count": 300
+          }
+        ]
+      }
+    ],
+    "userActivityRanking": [
+      {
+        "userId": 1,
+        "fullName": "John Doe",
+        "activityCount": 450
+      }
+    ],
+    "endpointStatistics": [
+      {
+        "endpoint": "/api/v1/users",
+        "count": 2500,
+        "averageResponseTime": 95,
+        "errorRate": 0.01
+      }
+    ]
+  }
+}
+```
+
+---
+
+## �🛡️ Protected Routes
 
 ### GET /api/protected
 
@@ -4753,6 +5321,25 @@ npm run type-check  # TypeScript type checking
 - ✅ Conversation History Management
 - ✅ Error Recovery และ Fallback Mechanisms
 
+#### ✅ Notification System
+
+- ✅ In-app Notification System
+- ✅ Advanced Targeting System (User IDs, Roles, Branches, Admin-only, Send-to-all)
+- ✅ Multiple Notification Types (Export Reports, System Alerts, User Actions, Maintenance, Security)
+- ✅ Priority Levels (Low, Medium, High, Urgent)
+- ✅ Read/Unread Status Tracking
+- ✅ Notification Management (Mark as read, Delete, Bulk operations)
+- ✅ Export Integration (Automatic notifications for export completion)
+
+#### ✅ Cache Management
+
+- ✅ Memory Cache System
+- ✅ Cache Status Monitoring
+- ✅ Performance Statistics
+- ✅ Manual Cache Operations (Clear, Test)
+- ✅ Hit Rate Tracking
+- ✅ Key Management
+
 #### ✅ Export & Reporting
 
 - ✅ CSV Export พร้อม UTF-8 BOM
@@ -4821,7 +5408,7 @@ npm run type-check  # TypeScript type checking
 
 ### API Documentation
 
-- **Total Endpoints**: 50+ RESTful endpoints
+- **Total Endpoints**: 70+ RESTful endpoints
 - **Controllers**: 15 main controller files
 - **Middleware**: 6 comprehensive middleware modules
 - **Services**: 5 external service integrations
@@ -4841,12 +5428,15 @@ npm run type-check  # TypeScript type checking
 | **Gold Price**                 | 2     | Real-time gold price data             |
 | **Pawn Shop Operations**       | 4     | Branch operations and reporting       |
 | **Asset Type Reports**         | 3     | Asset analytics and rankings          |
+| **Notification Management**    | 6     | In-app notifications with targeting   |
+| **AI Chat System**             | 4     | OpenAI integration with conversations |
 | **Data Synchronization**       | 6     | External API data sync                |
 | **Export Operations**          | 1     | CSV export functionality              |
-| **Chat Management**            | 3     | AI chat integration                   |
-| **Activity Logs**              | 5     | User activity tracking                |
+| **Activity Logs**              | 6     | User activity tracking with analytics |
 | **Change Logs**                | 4     | Data change audit trail               |
 | **Metrics & Monitoring**       | 4     | Performance and health monitoring     |
+| **Cache Management**           | 5     | Cache operations and statistics       |
+| **Activity Tracking**          | 2     | Real-time user activity monitoring    |
 | **Protected Routes**           | 1     | Authentication testing                |
 
 ### Technical Specifications
@@ -4882,7 +5472,7 @@ npm run type-check  # TypeScript type checking
 
 - **API Version**: 1.0.0
 - **Documentation Version**: 1.0.0
-- **Last Updated**: 21 มกราคม 2025
+- **Last Updated**: 7 สิงหาคม 2025
 - **Maintained By**: Development Team
 
 ### Additional Resources

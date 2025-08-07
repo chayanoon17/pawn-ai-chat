@@ -20,6 +20,18 @@ export type * from "./api";
 // Common types & constants
 export * from "./common";
 
+// Notification types
+export type * from "./notification";
+export type {
+  NotificationItem,
+  RawNotificationItem,
+  NotificationResponse,
+  UnreadCountResponse,
+  NotificationType,
+  NotificationPriority,
+} from "./notification";
+export { convertRawNotification } from "./notification";
+
 // Dashboard widgets types
 export type * from "./dashboard";
 
