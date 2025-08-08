@@ -1,4 +1,4 @@
-import { MenuName } from './common';
+import { MenuName } from "./common";
 /**
  * API Response Types
  * รวม interface สำหรับการตอบกลับจาก API ทั้งหมด
@@ -10,7 +10,7 @@ import { MenuName } from './common';
  */
 export interface ApiResponse<T = any> {
   json(): unknown;
-  success: boolean;
+  status: string;
   message: string;
   data: T;
 }
@@ -19,7 +19,7 @@ export interface ApiResponse<T = any> {
  * API Error Response structure สำหรับกรณีเกิดข้อผิดพลาด
  */
 export interface ApiErrorResponse {
-  success: false;
+  status: string;
   message: string;
   error: string;
   details?: any;
@@ -32,7 +32,6 @@ export interface LoginResponse {
   userId: number;
   accessToken?: string; // Optional เพราะใช้ httpOnly cookies เป็นหลัก
 }
-
 
 // แต่ละข้อความในบทสนทนา
 export interface ChatMessage {
@@ -78,12 +77,12 @@ export interface ConversationListResponse {
 }
 
 // type ของการดึง log chat ของ user
-  export interface Message {
+export interface Message {
   from: "user" | "ai";
   text: string;
   time: string;
 }
-// ดึงข้อมูล ประวัติการเข้าใช้งาน 
+// ดึงข้อมูล ประวัติการเข้าใช้งาน
 export interface ActivityLog {
   [x: string]: any;
   id: number;
@@ -172,7 +171,6 @@ export interface ActivityLogExport {
   status?: string;
 }
 
-
 export interface UserInfo {
   id: number;
   email: string;
@@ -181,6 +179,5 @@ export interface UserInfo {
     id: number;
     name: string;
   };
-  branch: string; 
+  branch: string;
 }
-

@@ -4,6 +4,7 @@ import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 
 import AuthProvider from "../context/auth-context";
+import NotificationProvider from "../context/notification-context";
 import ErrorBoundary from "../components/error-boundary";
 import "./globals.css";
 
@@ -33,7 +34,9 @@ export default function RootLayout({
       <body className="antialiased">
         <ErrorBoundary>
           <AuthProvider>
-            <Theme>{children}</Theme>
+            <NotificationProvider>
+              <Theme>{children}</Theme>
+            </NotificationProvider>
           </AuthProvider>
         </ErrorBoundary>
       </body>

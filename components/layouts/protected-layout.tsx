@@ -47,7 +47,7 @@ export function ProtectedLayout({
             isChatOpen={isChatOpen}
             onFilterChange={onFilterChange}
           />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>
