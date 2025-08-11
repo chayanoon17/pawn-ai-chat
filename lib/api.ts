@@ -33,7 +33,7 @@ export const getApiUrl = (path: string = ""): string => {
 export async function sendChatMessage(message: string): Promise<string> {
   const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
 
-  const response = await fetch(getApiUrl("/chat"), {
+  const response = await fetch(getApiUrl("/api/v1/chat"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -70,6 +70,7 @@ export async function sendChatMessageStream(
   message: string,
   onChunk: (chunk: string) => void,
   messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
+  conversationId?: string,
   onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
 ): Promise<void> {
   try {
@@ -78,7 +79,7 @@ export async function sendChatMessageStream(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+      body: JSON.stringify({ message, messages, conversationId }), 
       credentials: "include",
     });
 
@@ -138,7 +139,7 @@ export async function getAllConversations({
   page: number;
   limit: number;
   startDate?: string | null;
-  endDate?: string | null;
+  endDate?: string | null;  
   userId?: string | null;
 }) {
   const params = new URLSearchParams();
@@ -180,7 +181,17 @@ export async function getConversationMessages(conversationId: string) {
   const res = await apiClient.get<ApiResponse<Message[]>>(
     `/api/v1/chat/conversations/${conversationId}/messages`
   );
-  return res.data;
+  // Debug log เพื่อดู response ที่ได้จาก backend
+  if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    console.log("[getConversationMessages] API response:", res);
+  }
+  // ป้องกันกรณี data ซ้อน data
+  if (res && Array.isArray(res.data)) {
+    return res.data;
+  } else if (res && res.data && Array.isArray(res.data.data)) {
+    return res.data.data;
+  }
+  return [];
 }
 // ลบข้อมูลบทสนทนา
 export async function deleteConversation(conversationId: string) {

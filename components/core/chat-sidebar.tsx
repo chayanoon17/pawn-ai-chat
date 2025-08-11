@@ -33,6 +33,17 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   const [isContextExpanded, setIsContextExpanded] = useState(false);
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
 
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  
+  useEffect(() => {
+  if (!conversationId) {
+    // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
+    const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
+    setConversationId(newConversationId);
+  }
+}, [conversationId]);
+
+
   const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
     latestMessagesRef.current = messages;
@@ -337,6 +348,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           }
         },
         historyMessages,
+        conversationId || undefined,
         () => {
           console.log("✅ Streaming เสร็จสิ้น - ปลดล็อก input");
           setIsSending(false);
