@@ -127,19 +127,19 @@ export const ContractTransactionSummary = ({
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น จำนำ ส่งดอกเบี้ย และอื่นๆ",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
-          summaries: data.map((item) => ({
-            type: item.name,
-            count: item.value,
-            color: item.color,
-          })),
-          totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
-          lastUpdated: timestamp,
-          topTransactionType: data.reduce(
-            (max, item) => (item.value > max.value ? item : max),
-            data[0]
-          )?.name,
-        }
+        branchId: parseInt(branchId),
+        summaries: data.map((item) => ({
+          type: item.name,
+          count: item.value,
+          color: item.color,
+        })),
+        totalTransactions: data.reduce((sum, item) => sum + item.value, 0),
+        lastUpdated: timestamp,
+        topTransactionType: data.reduce(
+          (max, item) => (item.value > max.value ? item : max),
+          data[0]
+        )?.name,
+      }
       : null
   );
 
@@ -245,18 +245,23 @@ export const ContractTransactionSummary = ({
           <div className="p-3 bg-slate-100 rounded-lg">
             <ChartPie className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-start">
             <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ
             </CardTitle>
+            {/* ข้อมูลวันที่ */}
+            <span className="text-sm text-gray-800 font-medium">
+              ข้อมูลวันที่ {formatDate(date)}
+            </span>
+
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

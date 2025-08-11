@@ -64,6 +64,7 @@ interface TransactionSummaryItem {
 
 interface TransactionDetailItem {
   contractNumber: number;
+  ticketBookNumber: string;
   transactionDate: string;
   interestPaymentDate: string | null;
   overdueDays: number;
@@ -78,7 +79,7 @@ interface TransactionDetailItem {
   assetDetail: string;
   pawnPrice: number;
   monthlyInterest: number;
-  ticketStatus: string;
+  contractStatus: string;
   redeemedDate: string | null;
   customerName: string;
   customerPhone: string;
@@ -243,26 +244,27 @@ export default function ContractTransactionDetails({
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
-          branchId: data.branchId,
-          totalTransactions: data.transactions.length,
-          summaries: data.summaries,
-          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-            contractNumber: t.contractNumber,
-            customerName: t.customerName,
-            transactionType: t.transactionType,
-            remainingAmount: t.remainingAmount,
-            assetType: t.assetType,
-            ticketStatus: t.ticketStatus,
-          })),
-          transactionTypes: [
-            ...new Set(data.transactions.map((t) => t.transactionType)),
-          ],
-          totalAmount: data.transactions.reduce(
-            (sum, t) => sum + t.remainingAmount,
-            0
-          ),
-          lastUpdated: data.timestamp,
-        }
+        branchId: data.branchId,
+        totalTransactions: data.transactions.length,
+        summaries: data.summaries,
+        sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+          contractNumber: t.contractNumber,
+          ticketBookNumber: t.ticketBookNumber,
+          customerName: t.customerName,
+          transactionType: t.transactionType,
+          remainingAmount: t.remainingAmount,
+          assetType: t.assetType,
+          ticketStatus: t.contractStatus,
+        })),
+        transactionTypes: [
+          ...new Set(data.transactions.map((t) => t.transactionType)),
+        ],
+        totalAmount: data.transactions.reduce(
+          (sum, t) => sum + t.remainingAmount,
+          0
+        ),
+        lastUpdated: data.timestamp,
+      }
       : null
   );
 
@@ -276,6 +278,9 @@ export default function ContractTransactionDetails({
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
         transaction.contractNumber.toString().includes(searchTerm) ||
+        transaction.ticketBookNumber
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         transaction.assetType
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
@@ -284,6 +289,9 @@ export default function ContractTransactionDetails({
           .includes(searchTerm.toLowerCase()) ||
         transaction.pawnPrice.toString().includes(searchTerm) ||
         transaction.transactionType
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        transaction.contractStatus
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
@@ -336,18 +344,22 @@ export default function ContractTransactionDetails({
             <div className="p-3 bg-slate-100 rounded-lg">
               <TableIcon className="w-5 h-5 text-slate-600" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col items-start">
               <CardTitle className="text-lg font-semibold text-slate-80">
                 รายการรับจำนำทั้งหมด
               </CardTitle>
+              {/* ข้อมูลวันที่ */}
+              <span className="text-sm text-gray-800 font-medium">
+                ข้อมูลวันที่ {formatDate(date)}
+              </span>
               <span className="text-sm text-slate-500">
                 {isLoading
                   ? "กำลังโหลดข้อมูล..."
                   : data
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
-                  : branchId === "all"
-                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                  : "ไม่พบข้อมูล"}
+                    ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                    : branchId === "all"
+                      ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                      : "ไม่พบข้อมูล"}
               </span>
             </div>
           </div>
@@ -438,7 +450,7 @@ export default function ContractTransactionDetails({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder="ค้นหาจากเลขที่สัญญา, ชื่อ, ประเภททรัพย์, รายละเอียด, หรือราคา..."
+                    placeholder="ค้นหาจากเลขที่สัญญา, เลขที่ตั๋ว, ชื่อ, ประเภททรัพย์, รายละเอียด, สถานะ หรือราคา..."
                     className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -504,10 +516,12 @@ export default function ContractTransactionDetails({
                 <TableHeader>
                   <TableRow className="bg-gray-100">
                     <TableHead>เลขที่สัญญา</TableHead>
+                    <TableHead>เลขที่ตั๋ว</TableHead>
                     <TableHead>ชื่อ - นามสกุล</TableHead>
                     <TableHead>ประเภททรัพย์</TableHead>
                     <TableHead className="text-center">รายละเอียด</TableHead>
                     <TableHead className="pl-8">ประเภท</TableHead>
+                    <TableHead className="text-center">สถานะ</TableHead>
                     <TableHead className="text-center pl-8">ราคา</TableHead>
                     <TableHead className="text-center">จัดการ</TableHead>
                   </TableRow>
@@ -517,6 +531,9 @@ export default function ContractTransactionDetails({
                     <TableRow key={index}>
                       <TableCell className="font-mono">
                         {item.contractNumber}
+                      </TableCell>
+                      <TableCell className="font-mono">
+                        {item.ticketBookNumber}
                       </TableCell>
                       <TableCell>{item.customerName}</TableCell>
                       <TableCell>{item.assetType}</TableCell>
@@ -530,6 +547,15 @@ export default function ContractTransactionDetails({
                           )}`}
                         >
                           {item.transactionType}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-block w-[80px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
+                            item.contractStatus
+                          )}`}
+                        >
+                          {item.contractStatus}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -553,7 +579,7 @@ export default function ContractTransactionDetails({
                   {Array.from({ length: pageSize - paginatedData.length }).map(
                     (_, idx) => (
                       <TableRow key={`empty-${idx}`}>
-                        <TableCell colSpan={7} className="py-6" />
+                        <TableCell colSpan={9} className="py-6" />
                       </TableRow>
                     )
                   )}
@@ -665,6 +691,14 @@ export default function ContractTransactionDetails({
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        เลขที่ตั๋ว
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-mono">
+                        {selectedTransaction.ticketBookNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         ประเภทธุรกรรม
                       </label>
                       <div className="mt-1">
@@ -679,11 +713,17 @@ export default function ContractTransactionDetails({
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                        สถานะตั๋ว
+                        สถานะสัญญา
                       </label>
-                      <p className="text-sm text-slate-800 mt-1">
-                        {selectedTransaction.ticketStatus}
-                      </p>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                            selectedTransaction.contractStatus
+                          )}`}
+                        >
+                          {selectedTransaction.contractStatus}
+                        </span>
+                      </div>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -840,8 +880,8 @@ export default function ContractTransactionDetails({
                       <p className="text-sm text-slate-800 mt-1">
                         {selectedTransaction.interestPaymentDate
                           ? formatDateOnly(
-                              selectedTransaction.interestPaymentDate
-                            )
+                            selectedTransaction.interestPaymentDate
+                          )
                           : "-"}
                       </p>
                     </div>

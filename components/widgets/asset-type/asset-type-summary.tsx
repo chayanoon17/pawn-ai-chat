@@ -215,20 +215,20 @@ export const AssetTypesSummary = ({
     "ข้อมูลสรุปประเภททรัพย์และจำนวน พร้อมจำนวนและเปอร์เซ็นต์",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
-          totalAssetTypes: data.length,
-          totalItems: data.reduce((sum, item) => sum + item.value, 0),
-          assetTypes: data.map((item) => ({
-            name: item.name,
-            count: item.value,
-            percentage: item.percentage,
-          })),
-          topAssetType: data.reduce(
-            (max, item) => (item.value > max.value ? item : max),
-            data[0]
-          )?.name,
-          lastUpdated: timestamp,
-        }
+        branchId: parseInt(branchId),
+        totalAssetTypes: data.length,
+        totalItems: data.reduce((sum, item) => sum + item.value, 0),
+        assetTypes: data.map((item) => ({
+          name: item.name,
+          count: item.value,
+          percentage: item.percentage,
+        })),
+        topAssetType: data.reduce(
+          (max, item) => (item.value > max.value ? item : max),
+          data[0]
+        )?.name,
+        lastUpdated: timestamp,
+      }
       : null
   );
 
@@ -251,18 +251,21 @@ export const AssetTypesSummary = ({
           <div className="p-3 bg-slate-100 rounded-lg">
             <PieChartIcon className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-start">
             <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลประเภททรัพย์และจำนวน
-            </CardTitle>
+            </CardTitle>  {/* ข้อมูลวันที่ */}
+            <span className="text-sm text-gray-800 font-medium">
+              ข้อมูลวันที่ {formatDate(date)}
+            </span>
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

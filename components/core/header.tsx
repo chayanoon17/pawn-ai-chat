@@ -4,8 +4,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMenuPermissions } from "@/hooks/use-permissions";
 import { WidgetFilter, WidgetFilterData } from "@/components/features/filters";
+import { NotificationDropdown } from "@/components/features/notifications";
 import { usePathname } from "next/navigation";
 import { PAGE_LABELS } from "@/lib/constants";
+import { useAuth } from "@/context/auth-context";
 
 // 📝 Component Props Interface
 interface HeaderProps {
@@ -37,6 +39,7 @@ export default function Header({
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { hasMenuPermission } = useMenuPermissions();
+  const { user } = useAuth();
 
   // 🎯 Check if current page should show filters and chat
   const shouldShowWidgetFilter =
@@ -44,10 +47,14 @@ export default function Header({
   const shouldShowAIChat =
     pathname === "/dashboard" || pathname === "/asset-types";
 
+  // 🔔 Check if user has permission to see notifications (Super Admin or Admin only)
+  const canViewNotifications =
+    user && (user.role.name === "Super Admin" || user.role.name === "Admin");
+
   console.log("Header rendered for page:", selectedPage);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 backdrop-blur-sm bg-white/95">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {isMobile && (
@@ -72,6 +79,9 @@ export default function Header({
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Notification - แสดงเฉพาะ Super Admin และ Admin */}
+          {canViewNotifications && <NotificationDropdown />}
+
           {/* Widget Filter - แสดงเฉพาะหน้า dashboard และ asset-type */}
           {shouldShowWidgetFilter && (
             <WidgetFilter onFilterChange={onFilterChange} />
