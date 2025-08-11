@@ -244,27 +244,27 @@ export default function ContractTransactionDetails({
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
-          branchId: data.branchId,
-          totalTransactions: data.transactions.length,
-          summaries: data.summaries,
-          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-            contractNumber: t.contractNumber,
-            ticketBookNumber: t.ticketBookNumber,
-            customerName: t.customerName,
-            transactionType: t.transactionType,
-            remainingAmount: t.remainingAmount,
-            assetType: t.assetType,
-            ticketStatus: t.contractStatus,
-          })),
-          transactionTypes: [
-            ...new Set(data.transactions.map((t) => t.transactionType)),
-          ],
-          totalAmount: data.transactions.reduce(
-            (sum, t) => sum + t.remainingAmount,
-            0
-          ),
-          lastUpdated: data.timestamp,
-        }
+        branchId: data.branchId,
+        totalTransactions: data.transactions.length,
+        summaries: data.summaries,
+        sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+          contractNumber: t.contractNumber,
+          ticketBookNumber: t.ticketBookNumber,
+          customerName: t.customerName,
+          transactionType: t.transactionType,
+          remainingAmount: t.remainingAmount,
+          assetType: t.assetType,
+          ticketStatus: t.contractStatus,
+        })),
+        transactionTypes: [
+          ...new Set(data.transactions.map((t) => t.transactionType)),
+        ],
+        totalAmount: data.transactions.reduce(
+          (sum, t) => sum + t.remainingAmount,
+          0
+        ),
+        lastUpdated: data.timestamp,
+      }
       : null
   );
 
@@ -344,18 +344,22 @@ export default function ContractTransactionDetails({
             <div className="p-3 bg-slate-100 rounded-lg">
               <TableIcon className="w-5 h-5 text-slate-600" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col items-start">
               <CardTitle className="text-lg font-semibold text-slate-80">
                 รายการรับจำนำทั้งหมด
               </CardTitle>
+              {/* ข้อมูลวันที่ */}
+              <span className="text-sm text-gray-800 font-medium">
+                ข้อมูลวันที่ {formatDate(date)}
+              </span>
               <span className="text-sm text-slate-500">
                 {isLoading
                   ? "กำลังโหลดข้อมูล..."
                   : data
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
-                  : branchId === "all"
-                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                  : "ไม่พบข้อมูล"}
+                    ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                    : branchId === "all"
+                      ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                      : "ไม่พบข้อมูล"}
               </span>
             </div>
           </div>
@@ -876,8 +880,8 @@ export default function ContractTransactionDetails({
                       <p className="text-sm text-slate-800 mt-1">
                         {selectedTransaction.interestPaymentDate
                           ? formatDateOnly(
-                              selectedTransaction.interestPaymentDate
-                            )
+                            selectedTransaction.interestPaymentDate
+                          )
                           : "-"}
                       </p>
                     </div>
