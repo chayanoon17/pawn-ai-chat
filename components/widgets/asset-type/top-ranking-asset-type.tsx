@@ -85,22 +85,22 @@ export const TopRankingAssetType = ({
     "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
     rankings.length > 0
       ? {
-          branchId: parseInt(branchId),
-          totalRankings: rankings.length,
-          rankings: rankings.map((r) => ({
-            rank: r.rank,
-            assetType: r.assetType,
-            count: r.count,
-            totalValue: r.totalValue,
-            averageValue: r.totalValue / r.count,
-          })),
-          topAssetType: rankings[0]?.assetType,
-          highestValueType: rankings.reduce(
-            (max, r) => (r.totalValue > max.totalValue ? r : max),
-            rankings[0]
-          )?.assetType,
-          lastUpdated: timestamp,
-        }
+        branchId: parseInt(branchId),
+        totalRankings: rankings.length,
+        rankings: rankings.map((r) => ({
+          rank: r.rank,
+          assetType: r.assetType,
+          count: r.count,
+          totalValue: r.totalValue,
+          averageValue: r.totalValue / r.count,
+        })),
+        topAssetType: rankings[0]?.assetType,
+        highestValueType: rankings.reduce(
+          (max, r) => (r.totalValue > max.totalValue ? r : max),
+          rankings[0]
+        )?.assetType,
+        lastUpdated: timestamp,
+      }
       : null
   );
 
@@ -123,18 +123,22 @@ export const TopRankingAssetType = ({
           <div className="p-3 bg-slate-100 rounded-lg">
             <Trophy className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-start">
             <CardTitle className="text-lg font-semibold text-slate-80">
               10 อันดับ รายการประเภททรัพย์และราคา
             </CardTitle>
+            {/* ข้อมูลวันที่ */}
+            <span className="text-sm text-gray-800 font-medium">
+              ข้อมูลวันที่ {formatDate(date)}
+            </span>
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

@@ -261,66 +261,77 @@ export function UserTable({
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100">
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-slate-50">
-                    <TableCell className="font-medium text-slate-800">
-                      {user.fullName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {user.email}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="default"
-                        className="bg-slate-100 text-slate-600"
-                      >
-                        {user.role.name}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {user.branch
-                        ? `${user.branch.location} (${user.branch.shortName})`
-                        : "ไม่ระบุ"}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(user.status)}</TableCell>
-                    <TableCell className="text-slate-600 text-sm">
-                      {new Date(user.updatedAt).toLocaleDateString("th-TH")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsViewDialogOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEditUser(user)}
-                          className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDeleteUser(user.id, user.fullName)
-                          }
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7} // ปรับตามจำนวนคอลัมน์ของตาราง
+                      className="text-center py-8 text-slate-500"
+                    >
+                      ไม่พบข้อมูลผู้ใช้
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-slate-50">
+                      <TableCell className="font-medium text-slate-800">
+                        {user.fullName}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {user.email}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="default"
+                          className="bg-slate-100 text-slate-600"
+                        >
+                          {user.role.name}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {user.branch
+                          ? `${user.branch.location} (${user.branch.shortName})`
+                          : "ไม่ระบุ"}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(user.status)}</TableCell>
+                      <TableCell className="text-slate-600 text-sm">
+                        {new Date(user.updatedAt).toLocaleDateString("th-TH")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsViewDialogOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditUser(user)}
+                            className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleDeleteUser(user.id, user.fullName)
+                            }
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

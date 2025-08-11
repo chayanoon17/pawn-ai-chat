@@ -79,14 +79,14 @@ export const DailyOperationSummary = ({
     "ข้อมูลเปรียบเทียบผลการดำเนินงานรายวัน (ทรัพย์จำนำยกมาและทรัพย์จำนำปัจจุบัน)",
     summary
       ? {
-          branchId: summary.branchId,
-          beginningBalance: summary.beginningBalance,
-          endingBalance: summary.endingBalance,
-          countChange: summary.countChange,
-          amountChange: summary.amountChange,
-          lastUpdated: summary.timestamp,
-          netChangeDirection: summary.amountChange >= 0 ? "เพิ่มขึ้น" : "ลดลง",
-        }
+        branchId: summary.branchId,
+        beginningBalance: summary.beginningBalance,
+        endingBalance: summary.endingBalance,
+        countChange: summary.countChange,
+        amountChange: summary.amountChange,
+        lastUpdated: summary.timestamp,
+        netChangeDirection: summary.amountChange >= 0 ? "เพิ่มขึ้น" : "ลดลง",
+      }
       : null
   );
 
@@ -112,20 +112,28 @@ export const DailyOperationSummary = ({
           <div className="p-3 bg-slate-100 rounded-lg">
             <BarChart3 className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-slate-80">
+          <div className="flex-1 flex flex-col items-start">
+            <CardTitle className="text-lg font-semibold text-slate-800">
               รายงานผลการดำเนินงาน
             </CardTitle>
+
+            {/* ข้อมูลวันที่ */}
+            <span className="text-sm text-gray-800 font-medium">
+              ข้อมูลวันที่ {formatDate(date)}
+            </span>
+
+            {/* ข้อความวันที่ */}
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
-                : branchId === "all"
-                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
+                  : branchId === "all"
+                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                    : "ไม่พบข้อมูล"}
             </span>
           </div>
+
         </div>
       </CardHeader>
 
@@ -229,7 +237,7 @@ export const DailyOperationSummary = ({
                       <p className="text-sm font-semibold text-slate-800">
                         {Math.abs(
                           summary.endingBalance.amount -
-                            summary.beginningBalance.amount
+                          summary.beginningBalance.amount
                         ).toLocaleString("th-TH", {
                           maximumFractionDigits: 0,
                         })}{" "}
@@ -237,13 +245,12 @@ export const DailyOperationSummary = ({
                       </p>
                     </div>
                     <div
-                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                        summary.amountChange > 0
-                          ? "bg-green-100 text-green-700"
-                          : summary.amountChange < 0
+                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${summary.amountChange > 0
+                        ? "bg-green-100 text-green-700"
+                        : summary.amountChange < 0
                           ? "bg-red-100 text-red-700"
                           : "bg-slate-100 text-slate-600"
-                      }`}
+                        }`}
                     >
                       {summary.amountChange > 0 ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -256,8 +263,8 @@ export const DailyOperationSummary = ({
                         {summary.amountChange > 0
                           ? `+${summary.amountChange.toFixed(1)}%`
                           : summary.amountChange < 0
-                          ? `${summary.amountChange.toFixed(1)}%`
-                          : "0%"}
+                            ? `${summary.amountChange.toFixed(1)}%`
+                            : "0%"}
                       </span>
                     </div>
                   </div>
@@ -273,19 +280,18 @@ export const DailyOperationSummary = ({
                       <p className="text-sm font-semibold text-slate-800">
                         {Math.abs(
                           summary.endingBalance.count -
-                            summary.beginningBalance.count
+                          summary.beginningBalance.count
                         ).toLocaleString("th-TH")}{" "}
                         ราย
                       </p>
                     </div>
                     <div
-                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${
-                        summary.countChange > 0
-                          ? "bg-green-100 text-green-700"
-                          : summary.countChange < 0
+                      className={`flex items-center px-2 py-1 rounded-md text-xs font-medium ${summary.countChange > 0
+                        ? "bg-green-100 text-green-700"
+                        : summary.countChange < 0
                           ? "bg-red-100 text-red-700"
                           : "bg-slate-100 text-slate-600"
-                      }`}
+                        }`}
                     >
                       {summary.countChange > 0 ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -298,8 +304,8 @@ export const DailyOperationSummary = ({
                         {summary.countChange > 0
                           ? `+${summary.countChange.toFixed(1)}%`
                           : summary.countChange < 0
-                          ? `${summary.countChange.toFixed(1)}%`
-                          : "0%"}
+                            ? `${summary.countChange.toFixed(1)}%`
+                            : "0%"}
                       </span>
                     </div>
                   </div>

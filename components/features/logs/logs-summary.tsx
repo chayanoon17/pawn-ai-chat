@@ -137,7 +137,7 @@ export function LogsSummary({
   const getActivityDisplayName = (activity: string): string => {
     const activityMap: Record<string, string> = {
       LOGIN: "User/Login",
-      LOGOUT: "User/Login",
+      LOGOUT: "User/Logout",
       MENU_ACCESS: "View menu",
       EXPORT_REPORT: "Export",
       CHAT: "Chat history",

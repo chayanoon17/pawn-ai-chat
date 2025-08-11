@@ -75,16 +75,28 @@ export default function LoginPage() {
       }
 
       await login(email, password);
-      // หลัง login สำเร็จ ให้แสดง loading state
+
       showSuccess("เข้าสู่ระบบสำเร็จ!", "กำลังนำทางไปยังหน้าหลัก...", 2000);
       setIsRedirecting(true);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
+      const rawMessage = error instanceof Error ? error.message : "";
+      let friendlyMessage = "เข้าสู่ระบบไม่สำเร็จ";
+      if (rawMessage === "Invalid body data") {
+        friendlyMessage = "รูปแบบอีเมลไม่ถูกต้อง";
+      } else if (rawMessage === "Invalid credentials") {
+        friendlyMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+      } else if (
+        rawMessage ===
+        "Too many login attempts, please try again in 15 minutes"
+      ) {
+        friendlyMessage =
+          "พยายามเข้าสู่ระบบหลายครั้งเกินไป กรุณาลองใหม่อีกครั้งในอีก 15 นาที";
+      } else if (rawMessage === "User not found") {
+        friendlyMessage = "ไม่พบบัญชีผู้ใช้นี้";
+      }
 
-      // ใช้ SweetAlert2 แทน state error
-      showLoginError(errorMessage);
-      setIsRedirecting(false); // รีเซ็ต redirecting state เมื่อเกิด error
+      showLoginError(friendlyMessage);
+      setIsRedirecting(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -204,9 +216,9 @@ export default function LoginPage() {
                 จดจำฉัน
               </label>
             </div>
-            <a href="#" className="text-gray-500 hover:underline">
+            {/* <a href="#" className="text-gray-500 hover:underline">
               ลืมรหัสผ่าน?
-            </a>
+            </a> */}
           </div>
         </div>
       </div>

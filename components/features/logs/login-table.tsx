@@ -75,8 +75,8 @@ export function LoginTable({
         const targetUserId = isAdminRole
           ? null
           : user?.id
-          ? String(user.id)
-          : null;
+            ? String(user.id)
+            : null;
 
         // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
         const formatDateForAPI = (date?: Date): string | null => {
@@ -292,7 +292,7 @@ export function LoginTable({
                         colSpan={6}
                         className="text-center py-8 text-slate-500"
                       >
-                        ไม่มีข้อมูลการเข้าสู่ระบบ
+                        ไม่พบข้อมูลการเข้าสู่ระบบ
                       </TableCell>
                     </TableRow>
                   ) : (
