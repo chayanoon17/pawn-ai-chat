@@ -29,7 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
-import EditProfileDialog from "./buttonadduser";
+import EditProfileDialog from "./features/users/add-user-button";
 import { getAllUsers } from "@/lib/auth-service";
 
 interface User {
@@ -52,7 +52,6 @@ export function UserTable() {
   const ITEMS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
-
   const roleMap: Record<number, string> = {
     1: "Admin",
     2: "Manager",
@@ -63,8 +62,8 @@ export function UserTable() {
     async function fetchUsers() {
       try {
         const response = await getAllUsers();
-        setUsers(response.data);
-      } catch (err) {
+        setUsers(response as User[]);
+      } catch {
         setError("Failed to load users");
       } finally {
         setLoading(false);
@@ -113,7 +112,6 @@ export function UserTable() {
     setCurrentPage(1); // รีเซ็ตหน้าเมื่อ filter เปลี่ยน
   }, [searchTerm, users, roleFilter, branchFilter]);
 
-
   if (loading) return <div className="p-6">Loading users...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -123,13 +121,11 @@ export function UserTable() {
   );
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
-
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
-
 
   return (
     <div className="px-6 py-5 space-y-6 bg-white rounded-xl shadow-md">
@@ -173,7 +169,6 @@ export function UserTable() {
         </div>
       </div>
 
-
       {/* Table */}
       <div className="overflow-x-auto">
         <Table>
@@ -191,11 +186,17 @@ export function UserTable() {
             {paginatedUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell>{roleMap[Number(user.roleId)] ?? user.roleId}</TableCell>
+                <TableCell>
+                  {roleMap[Number(user.roleId)] ?? user.roleId}
+                </TableCell>
                 <TableCell>{user.branchId ?? "-"}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  <Badge variant={user.status === "ACTIVE" ? "default" : "destructive"}>
+                  <Badge
+                    variant={
+                      user.status === "ACTIVE" ? "default" : "destructive"
+                    }
+                  >
                     {user.status === "ACTIVE" ? "ใช้งาน" : "ปิดใช้งาน"}
                   </Badge>
                 </TableCell>
@@ -274,7 +275,6 @@ export function UserTable() {
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-
       </div>
     </div>
   );
