@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev -p 8080",
     "build": "next build",
-    "start": "node server.js",
+    "start": "chmod +x startup.sh && ./startup.sh",
+    "start:prod": "node server.js",
     "start:next": "next start",
     "lint": "next lint",
     "azure:postinstall": "npm run build",
