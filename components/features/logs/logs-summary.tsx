@@ -9,7 +9,6 @@ import {
   Logs,
   Users,
   Activity,
-  TrendingUp,
   FileChartColumn,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";

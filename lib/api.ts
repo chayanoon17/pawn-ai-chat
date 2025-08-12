@@ -8,7 +8,6 @@ import {
   ApiResponse,
   ApiErrorResponse,
   Message,
-  ActivityLog,
   ActivityLogResponse,
 } from "@/types/api";
 import { ConversationListResponse } from "@/types/api";
@@ -397,7 +396,7 @@ class ApiClient {
     try {
       const data = await response.json();
       return data;
-    } catch (error) {
+    } catch {
       throw new Error("Failed to parse response JSON");
     }
   }

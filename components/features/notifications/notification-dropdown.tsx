@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Bell,
   BellRing,
-  Check,
   CheckCheck,
   AlertTriangle,
   Info,
@@ -530,7 +529,7 @@ export default function NotificationDropdown() {
                       การดำเนินการนี้ไม่สามารถย้อนกลับได้
                       <br />
                       <br />
-                      <strong>"{selectedNotification.title}"</strong>
+                      <strong>&quot;{selectedNotification.title}&quot;</strong>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
 
