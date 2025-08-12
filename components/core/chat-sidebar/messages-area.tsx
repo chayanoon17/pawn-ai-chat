@@ -8,7 +8,7 @@ export interface Message {
   id: string;
   type: "user" | "bot";
   content: string;
-  timestamp: Date | string; // กันกรณีมาจาก API เป็น string
+  timestamp: Date;
 }
 
 interface MessagesAreaProps {
@@ -18,17 +18,6 @@ interface MessagesAreaProps {
 export const MessagesArea = ({ messages }: MessagesAreaProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // ✅ ทำ key ให้ยูนีกเสมอ แม้ message.id จะซ้ำ (เช่นจาก timestamp เดียวกัน)
-  // ใช้วิธีนับลำดับที่เจอ id ซ้ำ และเติม suffix __N
-  const uniqueKeys = useMemo(() => {
-    const seen = new Map<string, number>();
-    return messages.map((m) => {
-      const n = seen.get(m.id) ?? 0;
-      seen.set(m.id, n + 1);
-      return n === 0 ? m.id : `${m.id}__${n}`;
-    });
-  }, [messages]);
 
   // 🎯 Auto-scroll to bottom when messages change
   const scrollToBottom = (smooth: boolean = true) => {
@@ -43,39 +32,40 @@ export const MessagesArea = ({ messages }: MessagesAreaProps) => {
   // Memoize derived values to reduce re-renders
   const messagesLength = messages.length;
   const lastMessage = useMemo(
-    () => (messagesLength > 0 ? messages[messagesLength - 1] : null),
-    [messagesLength, messages]
+    () => (messages.length > 0 ? messages[messages.length - 1] : null),
+    [messages]
   );
   const hasThinking = useMemo(
     () => messages.some((m) => m.content === "thinking"),
     [messages]
   );
   const messagesContent = useMemo(
-    () =>
-      // ใช้เฉพาะความยาวเพื่อหลีกเลี่ยงการคำนวณหนัก แต่ยังทริกเกอร์เมื่อสตรีมเพิ่มตัวอักษร
-      messages.map((m) => (typeof m.content === "string" ? m.content.length : 0)).join("|"),
+    () => messages.map((m) => m.content).join(""),
     [messages]
   );
-
-  // Helper: แปลง timestamp ให้เป็น Date เสมอ
-  const toDate = (ts: Date | string) => (ts instanceof Date ? ts : new Date(ts));
 
   // Auto-scroll when new messages are added
   useEffect(() => {
     if (messagesLength > 0) {
       const timeoutId = setTimeout(() => {
         scrollToBottom();
-      }, 50);
+      }, 50); // Small delay to ensure DOM is updated
+
       return () => clearTimeout(timeoutId);
     }
   }, [messagesLength]);
 
   // Auto-scroll when message content changes (streaming)
   useEffect(() => {
-    if (lastMessage && lastMessage.type === "bot" && lastMessage.content !== "thinking") {
+    if (
+      lastMessage &&
+      lastMessage.type === "bot" &&
+      lastMessage.content !== "thinking"
+    ) {
       const timeoutId = setTimeout(() => {
         scrollToBottom();
       }, 100);
+
       return () => clearTimeout(timeoutId);
     }
   }, [messagesContent, lastMessage]);
@@ -83,8 +73,7 @@ export const MessagesArea = ({ messages }: MessagesAreaProps) => {
   // Scroll to bottom immediately when thinking animation appears
   useEffect(() => {
     if (hasThinking) {
-      const t = setTimeout(() => scrollToBottom(), 50);
-      return () => clearTimeout(t);
+      setTimeout(() => scrollToBottom(), 50);
     }
   }, [hasThinking]);
 
@@ -108,63 +97,66 @@ export const MessagesArea = ({ messages }: MessagesAreaProps) => {
           </div>
         )}
 
-        {messages.map((message, i) => {
-          const key = uniqueKeys[i];
-          const isUser = message.type === "user";
-          const isThinking = message.content === "thinking";
-          const timeText = toDate(message.timestamp).toLocaleTimeString("th-TH", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-          return (
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${
+              message.type === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
             <div
-              key={key}
-              className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+              className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                message.type === "user"
+                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
+                  : "bg-white border border-gray-100 text-gray-900 shadow-md"
+              }`}
             >
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                  isUser
-                    ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
-                    : "bg-white border border-gray-100 text-gray-900 shadow-md"
-                }`}
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  {isUser ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="p-1 bg-white/20 rounded-full">
-                        <User className="w-3 h-3" />
-                      </div>
-                      <span className="text-xs opacity-90 font-medium">คุณ</span>
-                      <span className="text-xs opacity-75">{timeText}</span>
+              <div className="flex items-center space-x-2 mb-2">
+                {message.type === "user" ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1 bg-white/20 rounded-full">
+                      <User className="w-3 h-3" />
                     </div>
-                  ) : isThinking ? (
-                    <ThinkingAnimation />
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <div className="p-1 bg-blue-100 rounded-full">
-                        <Bot className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <span className="text-xs font-medium text-blue-600">Pawn AI</span>
-                      <span className="text-xs text-gray-500">{timeText}</span>
+                    <span className="text-xs opacity-90 font-medium">คุณ</span>
+                    <span className="text-xs opacity-75">
+                      {message.timestamp.toLocaleTimeString("th-TH", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                ) : message.content === "thinking" ? (
+                  <ThinkingAnimation />
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1 bg-blue-100 rounded-full">
+                      <Bot className="w-3 h-3 text-blue-600" />
                     </div>
-                  )}
-                </div>
-
-                {!isThinking && (
-                  <MarkdownMessage
-                    content={
-                      typeof message.content === "string"
-                        ? message.content
-                        : JSON.stringify(message.content)
-                    }
-                    isUser={isUser}
-                  />
+                    <span className="text-xs font-medium text-blue-600">
+                      Pawn AI
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {message.timestamp.toLocaleTimeString("th-TH", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
                 )}
               </div>
+              {message.content !== "thinking" && (
+                <MarkdownMessage
+                  content={
+                    typeof message.content === "string"
+                      ? message.content
+                      : JSON.stringify(message.content)
+                  }
+                  isUser={message.type === "user"}
+                />
+              )}
             </div>
-          );
-        })}
+          </div>
+        ))}
 
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} className="h-1" />
