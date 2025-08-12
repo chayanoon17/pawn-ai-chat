@@ -123,16 +123,22 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // เรียก API login endpoint
-      const response = await apiClient.post<LoginResponse>(
+      // เรียก API login endpoint - ใช้ postAuth สำหรับ auth endpoints
+      const response = await apiClient.postAuth<LoginResponse>(
         "/api/auth/login",
         credentials
       );
+
+      // เก็บ access token ใน localStorage สำหรับการใช้งานต่อไป
+      if (response.data.accessToken) {
+        localStorage.setItem("accessToken", response.data.accessToken);
+      }
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("🎉 Login successful:", {
           userId: response.data.userId,
+          hasToken: !!response.data.accessToken,
         });
       }
 
@@ -153,8 +159,11 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // เรียก API logout endpoint
-      await apiClient.post("/api/auth/logout");
+      // เรียก API logout endpoint - ใช้ postAuth สำหรับ auth endpoints
+      await apiClient.postAuth("/api/auth/logout");
+
+      // ลบ access token จาก localStorage
+      localStorage.removeItem("accessToken");
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
@@ -169,6 +178,9 @@ class AuthService {
         );
       }
 
+      // ลบ access token แม้ API fail
+      localStorage.removeItem("accessToken");
+
       // ไม่ throw error เพราะแม้ API fail เราก็ควร clear local state
     }
   }
@@ -179,9 +191,8 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน
-      // ปรับ path ให้ตรงกับ Backend API
-      const response = await apiClient.get<User>("/api/auth/me");
+      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน - ใช้ getAuth สำหรับ auth endpoints
+      const response = await apiClient.getAuth<User>("/api/auth/me");
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {

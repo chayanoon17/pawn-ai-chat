@@ -70,15 +70,13 @@ export async function sendChatMessageStream(
   onChunk: (chunk: string) => void,
   messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
   conversationId?: string,
-  onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
+  onComplete?: () => void
 ): Promise<void> {
   try {
     const response = await fetch(getApiUrl("/chat"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, messages, conversationId }), 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, messages, conversationId }),
       credentials: "include",
     });
 
@@ -96,34 +94,46 @@ export async function sendChatMessageStream(
 
       buffer += decoder.decode(value, { stream: true });
 
-      const lines = buffer.split("\n\n");
-      for (let i = 0; i < lines.length - 1; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith("data: ")) {
-          const json = line.replace(/^data:\s*/, "");
-          try {
-            const parsed = JSON.parse(json);
-            if (parsed.content) {
-              onChunk(parsed.content);
+      let idx: number;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const rawEvent = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 2);
+
+        const dataLines = rawEvent
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("data:"))
+          .map((l) => l.replace(/^data:\s*/, ""));
+
+        for (const payload of dataLines) {
+          // จบสตรีม
+          if (payload === "[DONE]") {
+            onComplete?.();
+            return;
+          }
+          // ping/keepalive -> ข้าม
+          if (payload === ":ping" || payload === '":ping"') continue;
+
+          // parse เฉพาะที่ดูเป็น JSON
+          if (payload.startsWith("{") || payload.startsWith("[")) {
+            try {
+              const parsed = JSON.parse(payload);
+              if (parsed?.content) onChunk(parsed.content);
+              // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
+            } catch (e) {
+              console.error("❌ JSON parse error:", e);
             }
-          } catch (err) {
-            console.error("❌ JSON parse error:", err);
+          } else {
+            // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
+            onChunk(payload);
           }
         }
       }
-
-      buffer = lines[lines.length - 1];
     }
 
-    // 🎯 เรียก callback เมื่อ streaming จบ
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
   } catch (error) {
-    // รอบการจัดการ error และเรียก onComplete ด้วย
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
     throw error;
   }
 }
@@ -138,7 +148,7 @@ export async function getAllConversations({
   page: number;
   limit: number;
   startDate?: string | null;
-  endDate?: string | null;  
+  endDate?: string | null;
   userId?: string | null;
 }) {
   const params = new URLSearchParams();
@@ -298,16 +308,38 @@ class ApiClient {
   constructor() {
     this.baseURL = getBaseUrl();
     this.timeout = 10000; // 10 วินาที timeout
+
+    // Debug logging
+    console.log("🌐 ApiClient initialized:", {
+      baseURL: this.baseURL,
+      timeout: this.timeout,
+      env: process.env.NEXT_PUBLIC_API_URL,
+    });
+
+    // ตรวจสอบว่า baseURL ไม่ว่าง
+    if (!this.baseURL) {
+      console.error("❌ API_URL is not set! Check environment variables.");
+    }
   }
 
   /**
    * สร้าง default headers พร้อม configuration สำหรับ httpOnly cookies
    */
   private getDefaultHeaders(): Record<string, string> {
-    return {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
+
+    // เพิ่ม Authorization header ถ้ามี token ใน localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
+    return headers;
   }
 
   /**
@@ -315,8 +347,15 @@ class ApiClient {
    */
   private getDefaultConfig(): RequestInit {
     return {
-      credentials: "include", // 🍪 สำคัญ! ส่ง httpOnly cookies ไปกับทุก request
-      headers: this.getDefaultHeaders(),
+      credentials: "include", // ส่ง cookies และ authentication headers
+      mode: "cors", // เพิ่ม CORS mode
+      cache: "no-cache", // ป้องกัน cache issues
+      headers: {
+        ...this.getDefaultHeaders(),
+        // เพิ่ม headers เพื่อรองรับ CORS และ Azure
+        "Access-Control-Allow-Credentials": "true",
+        "X-Requested-With": "XMLHttpRequest",
+      },
     };
   }
 
@@ -332,14 +371,37 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    console.log("🚀 fetchWithTimeout:", {
+      url,
+      method: fetchConfig.method,
+      timeout,
+      headers: fetchConfig.headers,
+      body: fetchConfig.body?.toString().substring(0, 100),
+    });
+
     try {
       const response = await fetch(url, {
         ...fetchConfig,
         signal: controller.signal,
       });
+
+      console.log("✅ fetch response:", {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       clearTimeout(timeoutId);
       return response;
     } catch (error) {
+      console.error("❌ fetch error:", {
+        url,
+        error: error instanceof Error ? error.message : error,
+        name: error instanceof Error ? error.name : "Unknown",
+        cause: error instanceof Error ? error.cause : undefined,
+      });
+
       clearTimeout(timeoutId);
       throw error;
     }
@@ -464,6 +526,56 @@ class ApiClient {
       ...config,
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * POST Request สำหรับ Auth endpoints (ไม่เติม /api/v1 path)
+   */
+  async postAuth<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: FetchConfig
+  ): Promise<ApiResponse<T>> {
+    const fullUrl = `${this.baseURL}${url}`;
+
+    // Enhanced logging for debugging
+    console.log("🔍 postAuth Debug:", {
+      baseURL: this.baseURL,
+      url: url,
+      fullUrl: fullUrl,
+      data: data,
+      config: config,
+    });
+
+    this.logRequest("POST", fullUrl, data);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * GET Request สำหรับ Auth endpoints (ไม่เติม /api/v1 path)
+   */
+  async getAuth<T = unknown>(
+    url: string,
+    config?: FetchConfig
+  ): Promise<ApiResponse<T>> {
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("GET", fullUrl);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "GET",
     });
 
     return this.handleResponse<T>(response);

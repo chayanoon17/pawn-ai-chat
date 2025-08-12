@@ -167,6 +167,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         sessionStorage.removeItem("widgetFilter_session");
         localStorage.removeItem("widgetFilter_branchId");
         localStorage.removeItem("widgetFilter_date");
+        // ลบ access token
+        localStorage.removeItem("accessToken");
 
         // ล้างข้อมูล remember me เมื่อ logout (ยกเว้นถ้าผู้ใช้เลือกให้จดจำ)
         const rememberMeEnabled = localStorage.getItem("rememberMe_enabled");
@@ -192,6 +194,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         sessionStorage.removeItem("widgetFilter_session");
         localStorage.removeItem("widgetFilter_branchId");
         localStorage.removeItem("widgetFilter_date");
+        // ลบ access token
+        localStorage.removeItem("accessToken");
 
         // ล้างข้อมูล remember me เมื่อ logout (ยกเว้นถ้าผู้ใช้เลือกให้จดจำ)
         const rememberMeEnabled = localStorage.getItem("rememberMe_enabled");
