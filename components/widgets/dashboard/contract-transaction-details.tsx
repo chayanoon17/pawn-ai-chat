@@ -215,7 +215,7 @@ export default function ContractTransactionDetails({
   }, [searchTerm, selectedType]);
 
   // 📥 Export CSV Function
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (!branchId || !date) {
       showWarning(
         "ไม่สามารถ Export ได้",
@@ -224,16 +224,69 @@ export default function ContractTransactionDetails({
       return;
     }
 
-    // สร้าง URL และเปิดในหน้าต่างใหม่เพื่อให้ browser จัดการการดาวน์โหลด
-    const exportUrl = getApiUrl(
-      `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
-    );
+    try {
+      setLoading(true);
 
-    // เปิดลิงค์ในหน้าต่างใหม่
-    window.open(exportUrl, "_blank");
+      // สร้าง URL พร้อม authentication headers
+      const exportUrl = getApiUrl(
+        `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
+      );
 
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.log("✅ Opening CSV export URL:", exportUrl);
+      // สร้าง headers สำหรับ authentication
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "text/csv,application/csv",
+      };
+
+      // เพิ่ม Authorization header ถ้ามี token ใน localStorage
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      // เรียก fetch โดยตรงเพื่อให้ได้ blob response
+      const response = await fetch(exportUrl, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP Error ${response.status}: ${response.statusText}`
+        );
+      }
+
+      // แปลงเป็น blob
+      const blob = await response.blob();
+
+      // สร้าง blob URL และดาวน์โหลดไฟล์
+      const url = window.URL.createObjectURL(blob);
+
+      // สร้าง element <a> เพื่อดาวน์โหลด
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `contract-transactions-${branchId}-${date}.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      // ทำความสะอาด
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+        console.log("✅ CSV export completed successfully");
+      }
+    } catch (error) {
+      console.error("❌ Error exporting CSV:", error);
+      showWarning(
+        "ไม่สามารถ Export ได้",
+        "เกิดข้อผิดพลาดในการส่งออกไฟล์ CSV กรุณาลองใหม่อีกครั้ง"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -244,27 +297,27 @@ export default function ContractTransactionDetails({
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
-        branchId: data.branchId,
-        totalTransactions: data.transactions.length,
-        summaries: data.summaries,
-        sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-          contractNumber: t.contractNumber,
-          ticketBookNumber: t.ticketBookNumber,
-          customerName: t.customerName,
-          transactionType: t.transactionType,
-          remainingAmount: t.remainingAmount,
-          assetType: t.assetType,
-          ticketStatus: t.contractStatus,
-        })),
-        transactionTypes: [
-          ...new Set(data.transactions.map((t) => t.transactionType)),
-        ],
-        totalAmount: data.transactions.reduce(
-          (sum, t) => sum + t.remainingAmount,
-          0
-        ),
-        lastUpdated: data.timestamp,
-      }
+          branchId: data.branchId,
+          totalTransactions: data.transactions.length,
+          summaries: data.summaries,
+          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+            contractNumber: t.contractNumber,
+            ticketBookNumber: t.ticketBookNumber,
+            customerName: t.customerName,
+            transactionType: t.transactionType,
+            remainingAmount: t.remainingAmount,
+            assetType: t.assetType,
+            ticketStatus: t.contractStatus,
+          })),
+          transactionTypes: [
+            ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          totalAmount: data.transactions.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          lastUpdated: data.timestamp,
+        }
       : null
   );
 
@@ -352,10 +405,10 @@ export default function ContractTransactionDetails({
                 {isLoading
                   ? "กำลังโหลดข้อมูล..."
                   : data
-                    ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
-                    : branchId === "all"
-                      ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                      : "ไม่พบข้อมูล"}
+                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                  : branchId === "all"
+                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                  : "ไม่พบข้อมูล"}
               </span>
             </div>
           </div>
@@ -525,7 +578,10 @@ export default function ContractTransactionDetails({
                 <TableBody>
                   {paginatedData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-6 text-slate-500">
+                      <TableCell
+                        colSpan={9}
+                        className="text-center py-6 text-slate-500"
+                      >
                         ไม่พบข้อมูล
                       </TableCell>
                     </TableRow>
@@ -533,8 +589,12 @@ export default function ContractTransactionDetails({
                     <>
                       {paginatedData.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell className="font-mono">{item.contractNumber}</TableCell>
-                          <TableCell className="font-mono">{item.ticketBookNumber}</TableCell>
+                          <TableCell className="font-mono">
+                            {item.contractNumber}
+                          </TableCell>
+                          <TableCell className="font-mono">
+                            {item.ticketBookNumber}
+                          </TableCell>
                           <TableCell>{item.customerName}</TableCell>
                           <TableCell>{item.assetType}</TableCell>
                           <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
@@ -576,7 +636,9 @@ export default function ContractTransactionDetails({
                           </TableCell>
                         </TableRow>
                       ))}
-                      {Array.from({ length: pageSize - paginatedData.length }).map((_, idx) => (
+                      {Array.from({
+                        length: pageSize - paginatedData.length,
+                      }).map((_, idx) => (
                         <TableRow key={`empty-${idx}`}>
                           <TableCell colSpan={9} className="py-6" />
                         </TableRow>
@@ -584,7 +646,6 @@ export default function ContractTransactionDetails({
                     </>
                   )}
                 </TableBody>
-
               </Table>
             </div>
 
@@ -881,8 +942,8 @@ export default function ContractTransactionDetails({
                       <p className="text-sm text-slate-800 mt-1">
                         {selectedTransaction.interestPaymentDate
                           ? formatDateOnly(
-                            selectedTransaction.interestPaymentDate
-                          )
+                              selectedTransaction.interestPaymentDate
+                            )
                           : "-"}
                       </p>
                     </div>

@@ -32,11 +32,22 @@ export const getApiUrl = (path: string = ""): string => {
 export async function sendChatMessage(message: string): Promise<string> {
   const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
 
+  // สร้าง headers พร้อม authentication
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // เพิ่ม Authorization header ถ้ามี token ใน localStorage
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
   const response = await fetch(getApiUrl("/api/v1/chat"), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ message }),
     credentials: "include", // ✅ สำคัญ: เพื่อส่ง cookie / token ไปด้วย
     signal: controller.signal,
@@ -73,9 +84,22 @@ export async function sendChatMessageStream(
   onComplete?: () => void
 ): Promise<void> {
   try {
+    // สร้าง headers พร้อม authentication
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    // เพิ่ม Authorization header ถ้ามี token ใน localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
     const response = await fetch(getApiUrl("/chat"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ message, messages, conversationId }),
       credentials: "include",
     });
@@ -307,7 +331,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = getBaseUrl();
-    this.timeout = 10000; // 10 วินาที timeout
+    this.timeout = 30000; // 30 วินาที timeout
 
     // Debug logging
     console.log("🌐 ApiClient initialized:", {
@@ -634,20 +658,10 @@ export default apiClient;
  */
 export async function getPermissions(): Promise<Permission[]> {
   try {
-    const response = await fetch(getApiUrl("/menu/permissions"), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch permissions: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const response = await apiClient.get<Permission[]>(
+      "/api/v1/menu/permissions"
+    );
+    return response.data || [];
   } catch (error) {
     console.error("Error fetching permissions:", error);
     return [];
@@ -659,22 +673,10 @@ export async function getPermissions(): Promise<Permission[]> {
  */
 export async function getMenuPermissions(): Promise<MenuPermission[]> {
   try {
-    const response = await fetch(getApiUrl("/menu/menu-permissions"), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch menu permissions: ${response.statusText}`
-      );
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const response = await apiClient.get<MenuPermission[]>(
+      "/api/v1/menu/menu-permissions"
+    );
+    return response.data || [];
   } catch (error) {
     console.error("Error fetching menu permissions:", error);
     return [];
