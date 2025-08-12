@@ -71,15 +71,13 @@ export async function sendChatMessageStream(
   onChunk: (chunk: string) => void,
   messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
   conversationId?: string,
-  onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
+  onComplete?: () => void
 ): Promise<void> {
   try {
     const response = await fetch(getApiUrl("/chat"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, messages, conversationId }), 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, messages, conversationId }),
       credentials: "include",
     });
 
@@ -97,37 +95,50 @@ export async function sendChatMessageStream(
 
       buffer += decoder.decode(value, { stream: true });
 
-      const lines = buffer.split("\n\n");
-      for (let i = 0; i < lines.length - 1; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith("data: ")) {
-          const json = line.replace(/^data:\s*/, "");
-          try {
-            const parsed = JSON.parse(json);
-            if (parsed.content) {
-              onChunk(parsed.content);
+      let idx: number;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const rawEvent = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 2);
+
+        const dataLines = rawEvent
+          .split("\n")
+          .map(l => l.trim())
+          .filter(l => l.startsWith("data:"))
+          .map(l => l.replace(/^data:\s*/, ""));
+
+        for (const payload of dataLines) {
+          // จบสตรีม
+          if (payload === "[DONE]") {
+            onComplete?.();
+            return;
+          }
+          // ping/keepalive -> ข้าม
+          if (payload === ":ping" || payload === '":ping"') continue;
+
+          // parse เฉพาะที่ดูเป็น JSON
+          if (payload.startsWith("{") || payload.startsWith("[")) {
+            try {
+              const parsed = JSON.parse(payload);
+              if (parsed?.content) onChunk(parsed.content);
+              // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
+            } catch (e) {
+              console.error("❌ JSON parse error:", e);
             }
-          } catch (err) {
-            console.error("❌ JSON parse error:", err);
+          } else {
+            // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
+            onChunk(payload);
           }
         }
       }
-
-      buffer = lines[lines.length - 1];
     }
 
-    // 🎯 เรียก callback เมื่อ streaming จบ
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
   } catch (error) {
-    // รอบการจัดการ error และเรียก onComplete ด้วย
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
     throw error;
   }
 }
+
 
 export async function getAllConversations({
   page = 1,
