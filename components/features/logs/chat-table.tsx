@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getAllConversations, getConversationMessages } from "@/lib/api";
+import axios from "axios";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -51,8 +52,7 @@ export default function ChatTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isChatHistoryDialogOpen, setIsChatHistoryDialogOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] =
-    useState<ConversationItem | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [chatMessages, setChatMessages] = useState<
     { from: "user" | "ai"; text: string; time: string }[]
   >([]);
@@ -148,16 +148,16 @@ export default function ChatTable({
 
   // ฟังก์ชันดึงข้อความทั้งหมดของห้องแชท
   const fetchChatMessages = async (conversationId: string) => {
-    setIsMessagesLoading(true);
-    try {
-      const messages = await getConversationMessages(conversationId);
-      setChatMessages(messages || []);
-    } catch (err) {
-      setChatMessages([]);
-    } finally {
-      setIsMessagesLoading(false);
-    }
-  };
+  setIsMessagesLoading(true);
+  try {
+    const messages = await getConversationMessages(conversationId);
+    setChatMessages(messages || []);
+  } catch (err) {
+    setChatMessages([]);
+  } finally {
+    setIsMessagesLoading(false);
+  }
+};
 
   // เมื่อเปิด modal ประวัติการสนทนา ให้ดึงข้อความทั้งหมด
   useEffect(() => {
@@ -709,16 +709,12 @@ export default function ChatTable({
 
                   {/* แสดงข้อความทั้งหมดจาก API ถ้ามี */}
                   {isMessagesLoading ? (
-                    <div className="text-center  py-8 text-slate-500">
-                      กำลังโหลดประวัติการสนทนา...
-                    </div>
+                    <div className="text-center  py-8 text-slate-500">กำลังโหลดประวัติการสนทนา...</div>
                   ) : chatMessages.length > 0 ? (
                     chatMessages.map((msg, idx) => (
                       <div
                         key={idx}
-                        className={`flex ${
-                          msg.from === "user" ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
                           className={`max-w-[80%] p-3 rounded-lg ${
@@ -730,24 +726,12 @@ export default function ChatTable({
                           {msg.from === "ai" && (
                             <div className="flex items-center space-x-2 mb-2">
                               <MessageSquare className="w-4 h-4 text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500">
-                                Pawn AI
-                              </span>
+                              <span className="text-xs font-medium text-slate-500">Pawn AI</span>
                             </div>
                           )}
-                          <p className="text-sm whitespace-pre-wrap">
-                            {msg.text}
-                          </p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              msg.from === "user"
-                                ? "text-blue-100"
-                                : "text-slate-500"
-                            }`}
-                          >
-                            {msg.time
-                              ? new Date(msg.time).toLocaleTimeString("th-TH")
-                              : ""}
+                          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                          <p className={`text-xs mt-1 ${msg.from === "user" ? "text-blue-100" : "text-slate-500"}`}>
+                            {msg.time ? new Date(msg.time).toLocaleTimeString("th-TH") : ""}
                           </p>
                         </div>
                       </div>
@@ -756,9 +740,7 @@ export default function ChatTable({
                     <div className="text-center py-8 text-slate-500">
                       <MessagesSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                       <p>ไม่มีข้อมูลการสนทนาในห้องนี้</p>
-                      <p className="text-sm">
-                        อาจเป็นห้องแชทที่ยังไม่ได้เริ่มการสนทนา
-                      </p>
+                      <p className="text-sm">อาจเป็นห้องแชทที่ยังไม่ได้เริ่มการสนทนา</p>
                     </div>
                   )}
                 </div>
