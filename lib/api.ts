@@ -101,9 +101,9 @@ export async function sendChatMessageStream(
 
         const dataLines = rawEvent
           .split("\n")
-          .map(l => l.trim())
-          .filter(l => l.startsWith("data:"))
-          .map(l => l.replace(/^data:\s*/, ""));
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("data:"))
+          .map((l) => l.replace(/^data:\s*/, ""));
 
         for (const payload of dataLines) {
           // จบสตรีม
@@ -138,7 +138,6 @@ export async function sendChatMessageStream(
   }
 }
 
-
 export async function getAllConversations({
   page = 1,
   limit = 10,
@@ -149,7 +148,7 @@ export async function getAllConversations({
   page: number;
   limit: number;
   startDate?: string | null;
-  endDate?: string | null;  
+  endDate?: string | null;
   userId?: string | null;
 }) {
   const params = new URLSearchParams();
@@ -309,6 +308,18 @@ class ApiClient {
   constructor() {
     this.baseURL = getBaseUrl();
     this.timeout = 10000; // 10 วินาที timeout
+
+    // Debug logging
+    console.log("🌐 ApiClient initialized:", {
+      baseURL: this.baseURL,
+      timeout: this.timeout,
+      env: process.env.NEXT_PUBLIC_API_URL,
+    });
+
+    // ตรวจสอบว่า baseURL ไม่ว่าง
+    if (!this.baseURL) {
+      console.error("❌ API_URL is not set! Check environment variables.");
+    }
   }
 
   /**
@@ -326,7 +337,9 @@ class ApiClient {
    */
   private getDefaultConfig(): RequestInit {
     return {
-      credentials: "include", // 🍪 สำคัญ! ส่ง httpOnly cookies ไปกับทุก request
+      // credentials: "include", // ปิดชั่วคราวเพื่อทดสอบ CORS
+      mode: "cors", // เพิ่ม CORS mode
+      cache: "no-cache", // ป้องกัน cache issues
       headers: this.getDefaultHeaders(),
     };
   }
@@ -343,14 +356,37 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    console.log("🚀 fetchWithTimeout:", {
+      url,
+      method: fetchConfig.method,
+      timeout,
+      headers: fetchConfig.headers,
+      body: fetchConfig.body?.toString().substring(0, 100),
+    });
+
     try {
       const response = await fetch(url, {
         ...fetchConfig,
         signal: controller.signal,
       });
+
+      console.log("✅ fetch response:", {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       clearTimeout(timeoutId);
       return response;
     } catch (error) {
+      console.error("❌ fetch error:", {
+        url,
+        error: error instanceof Error ? error.message : error,
+        name: error instanceof Error ? error.name : "Unknown",
+        cause: error instanceof Error ? error.cause : undefined,
+      });
+
       clearTimeout(timeoutId);
       throw error;
     }
@@ -475,6 +511,56 @@ class ApiClient {
       ...config,
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * POST Request สำหรับ Auth endpoints (ไม่เติม /api/v1 path)
+   */
+  async postAuth<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: FetchConfig
+  ): Promise<ApiResponse<T>> {
+    const fullUrl = `${this.baseURL}${url}`;
+
+    // Enhanced logging for debugging
+    console.log("🔍 postAuth Debug:", {
+      baseURL: this.baseURL,
+      url: url,
+      fullUrl: fullUrl,
+      data: data,
+      config: config,
+    });
+
+    this.logRequest("POST", fullUrl, data);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * GET Request สำหรับ Auth endpoints (ไม่เติม /api/v1 path)
+   */
+  async getAuth<T = unknown>(
+    url: string,
+    config?: FetchConfig
+  ): Promise<ApiResponse<T>> {
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("GET", fullUrl);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "GET",
     });
 
     return this.handleResponse<T>(response);
