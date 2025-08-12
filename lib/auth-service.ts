@@ -129,10 +129,16 @@ class AuthService {
         credentials
       );
 
+      // เก็บ access token สำหรับ subsequent requests
+      if (response.data && response.data.accessToken) {
+        apiClient.setAccessToken(response.data.accessToken);
+      }
+
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("🎉 Login successful:", {
           userId: response.data.userId,
+          hasToken: !!response.data.accessToken,
         });
       }
 
@@ -156,11 +162,17 @@ class AuthService {
       // เรียก API logout endpoint - ใช้ postAuth สำหรับ auth endpoints
       await apiClient.postAuth("/api/auth/logout");
 
+      // ลบ access token
+      apiClient.setAccessToken(null);
+
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("👋 Logout successful");
       }
     } catch (error) {
+      // ลบ access token แม้ว่า API จะ fail
+      apiClient.setAccessToken(null);
+
       // Log warning แต่ไม่ throw error เพราะ logout ควรสำเร็จเสมอใน frontend
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.warn(

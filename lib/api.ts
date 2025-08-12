@@ -304,6 +304,7 @@ interface FetchError extends Error {
 class ApiClient {
   private readonly baseURL: string;
   private readonly timeout: number;
+  private accessToken: string | null = null;
 
   constructor() {
     this.baseURL = getBaseUrl();
@@ -323,13 +324,38 @@ class ApiClient {
   }
 
   /**
+   * Set access token for subsequent requests
+   */
+  setAccessToken(token: string | null): void {
+    this.accessToken = token;
+    console.log(
+      "🎫 Access token updated:",
+      token ? "***" + token.slice(-8) : "null"
+    );
+  }
+
+  /**
+   * Get current access token
+   */
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  /**
    * สร้าง default headers พร้อม configuration สำหรับ httpOnly cookies
    */
   private getDefaultHeaders(): Record<string, string> {
-    return {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
     };
+
+    // เพิ่ม Authorization header ถ้ามี access token
+    if (this.accessToken) {
+      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    }
+
+    return headers;
   }
 
   /**
@@ -337,7 +363,7 @@ class ApiClient {
    */
   private getDefaultConfig(): RequestInit {
     return {
-      // credentials: "include", // ปิดชั่วคราวเพื่อทดสอบ CORS
+      credentials: "include", // เปิดกลับมาเพื่อส่ง cookies/token
       mode: "cors", // เพิ่ม CORS mode
       cache: "no-cache", // ป้องกัน cache issues
       headers: this.getDefaultHeaders(),
