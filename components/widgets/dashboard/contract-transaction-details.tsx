@@ -523,63 +523,68 @@ export default function ContractTransactionDetails({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-mono">
-                        {item.contractNumber}
-                      </TableCell>
-                      <TableCell className="font-mono">
-                        {item.ticketBookNumber}
-                      </TableCell>
-                      <TableCell>{item.customerName}</TableCell>
-                      <TableCell>{item.assetType}</TableCell>
-                      <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
-                        {item.assetDetail}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-block w-[90px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
-                            item.transactionType
-                          )}`}
-                        >
-                          {item.transactionType}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-block w-[80px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
-                            item.contractStatus
-                          )}`}
-                        >
-                          {item.contractStatus}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item.pawnPrice.toLocaleString()} บาท
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTransaction(item);
-                            setViewDialogOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                  {paginatedData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-6 text-slate-500">
+                        ไม่พบข้อมูล
                       </TableCell>
                     </TableRow>
-                  ))}
-                  {Array.from({ length: pageSize - paginatedData.length }).map(
-                    (_, idx) => (
-                      <TableRow key={`empty-${idx}`}>
-                        <TableCell colSpan={9} className="py-6" />
-                      </TableRow>
-                    )
+                  ) : (
+                    <>
+                      {paginatedData.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-mono">{item.contractNumber}</TableCell>
+                          <TableCell className="font-mono">{item.ticketBookNumber}</TableCell>
+                          <TableCell>{item.customerName}</TableCell>
+                          <TableCell>{item.assetType}</TableCell>
+                          <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
+                            {item.assetDetail}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-block w-[90px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
+                                item.transactionType
+                              )}`}
+                            >
+                              {item.transactionType}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-block w-[80px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
+                                item.contractStatus
+                              )}`}
+                            >
+                              {item.contractStatus}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.pawnPrice.toLocaleString()} บาท
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTransaction(item);
+                                setViewDialogOpen(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 hover:bg-slate-100"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {Array.from({ length: pageSize - paginatedData.length }).map((_, idx) => (
+                        <TableRow key={`empty-${idx}`}>
+                          <TableCell colSpan={9} className="py-6" />
+                        </TableRow>
+                      ))}
+                    </>
                   )}
                 </TableBody>
+
               </Table>
             </div>
 

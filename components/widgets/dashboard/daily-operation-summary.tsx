@@ -182,7 +182,7 @@ export const DailyOperationSummary = ({
                     <div className="text-xl font-bold text-slate-800">
                       {summary.beginningBalance.count.toLocaleString()}
                     </div>
-                    <div className="text-xs text-slate-500">ราย</div>
+                    <div className="text-xs text-slate-500">รายการ</div>
                   </div>
                   <div className="bg-white rounded-md p-3 border border-slate-200">
                     <div className="text-xl font-bold text-slate-800">
@@ -203,7 +203,7 @@ export const DailyOperationSummary = ({
                     <div className="text-xl font-bold text-slate-800">
                       {summary.endingBalance.count.toLocaleString()}
                     </div>
-                    <div className="text-xs text-slate-500">ราย</div>
+                    <div className="text-xs text-slate-500">รายการ</div>
                   </div>
 
                   <div className="bg-white rounded-md p-3 border border-slate-200">
