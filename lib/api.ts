@@ -17,7 +17,7 @@ import type { Role, CreateRoleData, UpdateRoleData } from "@/types/role";
  * Get base URL from environment variable
  */
 export const getBaseUrl = (): string => {
-  return process.env.NEXT_PUBLIC_API_URL || "";
+  return "http://localhost:3000";
 };
 
 /**
