@@ -38,7 +38,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   useEffect(() => {
   if (!conversationId) {
     // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
-    const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
+    const newConversationId = crypto.randomUUID(); 
     setConversationId(newConversationId);
   }
 }, [conversationId]);

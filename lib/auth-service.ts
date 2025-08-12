@@ -123,16 +123,22 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // เรียก API login endpoint
-      const response = await apiClient.post<LoginResponse>(
+      // เรียก API login endpoint - ใช้ postAuth สำหรับ auth endpoints
+      const response = await apiClient.postAuth<LoginResponse>(
         "/api/auth/login",
         credentials
       );
+
+      // เก็บ access token สำหรับ subsequent requests
+      if (response.data && response.data.accessToken) {
+        apiClient.setAccessToken(response.data.accessToken);
+      }
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("🎉 Login successful:", {
           userId: response.data.userId,
+          hasToken: !!response.data.accessToken,
         });
       }
 
@@ -153,14 +159,20 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // เรียก API logout endpoint
-      await apiClient.post("/api/auth/logout");
+      // เรียก API logout endpoint - ใช้ postAuth สำหรับ auth endpoints
+      await apiClient.postAuth("/api/auth/logout");
+
+      // ลบ access token
+      apiClient.setAccessToken(null);
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.log("👋 Logout successful");
       }
     } catch (error) {
+      // ลบ access token แม้ว่า API จะ fail
+      apiClient.setAccessToken(null);
+
       // Log warning แต่ไม่ throw error เพราะ logout ควรสำเร็จเสมอใน frontend
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
         console.warn(
@@ -179,9 +191,8 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน
-      // ปรับ path ให้ตรงกับ Backend API
-      const response = await apiClient.get<User>("/api/auth/me");
+      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน - ใช้ getAuth สำหรับ auth endpoints
+      const response = await apiClient.getAuth<User>("/api/auth/me");
 
       // Log success ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
