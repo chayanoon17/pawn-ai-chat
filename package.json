@@ -5,14 +5,10 @@
   "scripts": {
     "dev": "next dev -p 8080",
     "build": "next build",
-    "start": "chmod +x startup.sh && ./startup.sh",
-    "start:prod": "node server.js",
+    "start": "node server.js",
     "start:next": "next start",
     "lint": "next lint",
-    "azure:postinstall": "npm run build",
-    "test:api": "node scripts/test-api.js",
-    "test:api:auth": "node scripts/test-api.js --auth",
-    "test:api:verbose": "node scripts/test-api.js --auth --verbose"
+    "azure:postinstall": "npm run build"
   },
   "dependencies": {
     "@heroui/calendar": "^2.2.23",
