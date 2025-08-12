@@ -32,7 +32,7 @@ export const getApiUrl = (path: string = ""): string => {
 export async function sendChatMessage(message: string): Promise<string> {
   const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
 
-  const response = await fetch(getApiUrl("/chat"), {
+  const response = await fetch(getApiUrl("/api/v1/chat"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -69,15 +69,14 @@ export async function sendChatMessageStream(
   message: string,
   onChunk: (chunk: string) => void,
   messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
-  onComplete?: () => void // 🎯 เพิ่ม callback เมื่อจบ streaming
+  conversationId?: string,
+  onComplete?: () => void
 ): Promise<void> {
   try {
     const response = await fetch(getApiUrl("/chat"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, messages }), // ✅ ส่งทั้ง message เดี่ยวและ history
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, messages, conversationId }),
       credentials: "include",
     });
 
@@ -95,37 +94,50 @@ export async function sendChatMessageStream(
 
       buffer += decoder.decode(value, { stream: true });
 
-      const lines = buffer.split("\n\n");
-      for (let i = 0; i < lines.length - 1; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith("data: ")) {
-          const json = line.replace(/^data:\s*/, "");
-          try {
-            const parsed = JSON.parse(json);
-            if (parsed.content) {
-              onChunk(parsed.content);
+      let idx: number;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const rawEvent = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 2);
+
+        const dataLines = rawEvent
+          .split("\n")
+          .map(l => l.trim())
+          .filter(l => l.startsWith("data:"))
+          .map(l => l.replace(/^data:\s*/, ""));
+
+        for (const payload of dataLines) {
+          // จบสตรีม
+          if (payload === "[DONE]") {
+            onComplete?.();
+            return;
+          }
+          // ping/keepalive -> ข้าม
+          if (payload === ":ping" || payload === '":ping"') continue;
+
+          // parse เฉพาะที่ดูเป็น JSON
+          if (payload.startsWith("{") || payload.startsWith("[")) {
+            try {
+              const parsed = JSON.parse(payload);
+              if (parsed?.content) onChunk(parsed.content);
+              // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
+            } catch (e) {
+              console.error("❌ JSON parse error:", e);
             }
-          } catch (err) {
-            console.error("❌ JSON parse error:", err);
+          } else {
+            // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
+            onChunk(payload);
           }
         }
       }
-
-      buffer = lines[lines.length - 1];
     }
 
-    // 🎯 เรียก callback เมื่อ streaming จบ
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
   } catch (error) {
-    // รอบการจัดการ error และเรียก onComplete ด้วย
-    if (onComplete) {
-      onComplete();
-    }
+    onComplete?.();
     throw error;
   }
 }
+
 
 export async function getAllConversations({
   page = 1,
@@ -137,7 +149,7 @@ export async function getAllConversations({
   page: number;
   limit: number;
   startDate?: string | null;
-  endDate?: string | null;
+  endDate?: string | null;  
   userId?: string | null;
 }) {
   const params = new URLSearchParams();
@@ -179,7 +191,17 @@ export async function getConversationMessages(conversationId: string) {
   const res = await apiClient.get<ApiResponse<Message[]>>(
     `/api/v1/chat/conversations/${conversationId}/messages`
   );
-  return res.data;
+  // Debug log เพื่อดู response ที่ได้จาก backend
+  if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    console.log("[getConversationMessages] API response:", res);
+  }
+  // ป้องกันกรณี data ซ้อน data
+  if (res && Array.isArray(res.data)) {
+    return res.data;
+  } else if (res && res.data && Array.isArray(res.data.data)) {
+    return res.data.data;
+  }
+  return [];
 }
 // ลบข้อมูลบทสนทนา
 export async function deleteConversation(conversationId: string) {

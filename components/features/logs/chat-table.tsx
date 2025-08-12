@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllConversations } from "@/lib/api";
+import { getAllConversations, getConversationMessages } from "@/lib/api";
+import axios from "axios";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -51,8 +52,11 @@ export default function ChatTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isChatHistoryDialogOpen, setIsChatHistoryDialogOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] =
-    useState<ConversationItem | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
+  const [chatMessages, setChatMessages] = useState<
+    { from: "user" | "ai"; text: string; time: string }[]
+  >([]);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,6 +145,28 @@ export default function ChatTable({
       conversation.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       conversation.model?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // ฟังก์ชันดึงข้อความทั้งหมดของห้องแชท
+  const fetchChatMessages = async (conversationId: string) => {
+  setIsMessagesLoading(true);
+  try {
+    const messages = await getConversationMessages(conversationId);
+    setChatMessages(messages || []);
+  } catch (err) {
+    setChatMessages([]);
+  } finally {
+    setIsMessagesLoading(false);
+  }
+};
+
+  // เมื่อเปิด modal ประวัติการสนทนา ให้ดึงข้อความทั้งหมด
+  useEffect(() => {
+    if (isChatHistoryDialogOpen && selectedConversation?.conversationId) {
+      fetchChatMessages(selectedConversation.conversationId);
+    } else if (!isChatHistoryDialogOpen) {
+      setChatMessages([]);
+    }
+  }, [isChatHistoryDialogOpen, selectedConversation?.conversationId]);
 
   return (
     <>
@@ -527,7 +553,7 @@ export default function ChatTable({
         open={isChatHistoryDialogOpen}
         onOpenChange={setIsChatHistoryDialogOpen}
       >
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[100vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <History className="w-4 h-4 text-slate-500" />
@@ -671,9 +697,9 @@ export default function ChatTable({
                 <div className="p-4 space-y-4">
                   {/* Debug: แสดงข้อมูลทั้งหมดของ selectedConversation */}
                   {/* <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                    <details>
+                    <details open>
                       <summary className="cursor-pointer text-yellow-800 font-medium">
-                        Debug: ข้อมูลทั้งหมด
+                        Debug: ข้อมูลทั้งหมด (selectedConversation)
                       </summary>
                       <pre className="mt-2 text-yellow-700 whitespace-pre-wrap overflow-auto">
                         {JSON.stringify(selectedConversation, null, 2)}
@@ -681,71 +707,40 @@ export default function ChatTable({
                     </details>
                   </div> */}
 
-                  {/* ตรวจสอบ field ต่างๆ ที่อาจมีข้อมูล */}
-                  {(selectedConversation.userQuestion ||
-                    selectedConversation.userMessage ||
-                    selectedConversation.lastMessage ||
-                    selectedConversation.latestMessage) && (
-                    <>
-                      {/* ข้อความจากผู้ใช้ */}
-                      <div className="flex justify-end">
-                        <div className="max-w-[80%] bg-blue-600 text-white p-3 rounded-lg rounded-br-none">
-                          <p className="text-sm">
-                            {selectedConversation.userQuestion ||
-                              selectedConversation.userMessage ||
-                              selectedConversation.lastMessage ||
-                              selectedConversation.latestMessage ||
-                              "ไม่พบข้อความ"}
-                          </p>
-                          <p className="text-xs text-blue-100 mt-1">
-                            {new Date(
-                              selectedConversation.createdAt
-                            ).toLocaleString("th-TH", {
-                              timeStyle: "short",
-                            })}
+                  {/* แสดงข้อความทั้งหมดจาก API ถ้ามี */}
+                  {isMessagesLoading ? (
+                    <div className="text-center  py-8 text-slate-500">กำลังโหลดประวัติการสนทนา...</div>
+                  ) : chatMessages.length > 0 ? (
+                    chatMessages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[80%] p-3 rounded-lg ${
+                            msg.from === "user"
+                              ? "bg-blue-600 text-white rounded-br-none"
+                              : "bg-slate-100 text-slate-800 rounded-bl-none"
+                          }`}
+                        >
+                          {msg.from === "ai" && (
+                            <div className="flex items-center space-x-2 mb-2">
+                              <MessageSquare className="w-4 h-4 text-slate-500" />
+                              <span className="text-xs font-medium text-slate-500">Pawn AI</span>
+                            </div>
+                          )}
+                          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                          <p className={`text-xs mt-1 ${msg.from === "user" ? "text-blue-100" : "text-slate-500"}`}>
+                            {msg.time ? new Date(msg.time).toLocaleTimeString("th-TH") : ""}
                           </p>
                         </div>
                       </div>
-
-                      {/* ข้อความจาก AI */}
-                      {selectedConversation.aiResponse && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] bg-slate-100 text-slate-800 p-3 rounded-lg rounded-bl-none">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <MessageSquare className="w-4 h-4 text-slate-500" />
-                              <span className="text-xs font-medium text-slate-500">
-                                Pawn AI
-                              </span>
-                            </div>
-                            <p className="text-sm whitespace-pre-wrap">
-                              {selectedConversation.aiResponse}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-2">
-                              {new Date(
-                                selectedConversation.createdAt
-                              ).toLocaleString("th-TH", {
-                                timeStyle: "short",
-                              })}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* แสดงข้อความเมื่อไม่มีข้อมูล */}
-                  {!(
-                    selectedConversation.userQuestion ||
-                    selectedConversation.userMessage ||
-                    selectedConversation.lastMessage ||
-                    selectedConversation.latestMessage
-                  ) && (
+                    ))
+                  ) : (
                     <div className="text-center py-8 text-slate-500">
                       <MessagesSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                       <p>ไม่มีข้อมูลการสนทนาในห้องนี้</p>
-                      <p className="text-sm">
-                        อาจเป็นห้องแชทที่ยังไม่ได้เริ่มการสนทนา
-                      </p>
+                      <p className="text-sm">อาจเป็นห้องแชทที่ยังไม่ได้เริ่มการสนทนา</p>
                     </div>
                   )}
                 </div>
