@@ -251,13 +251,10 @@ export const AssetTypesSummary = ({
           <div className="p-3 bg-slate-100 rounded-lg">
             <PieChartIcon className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex-1 flex flex-col items-start">
+          <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-slate-80">
               ข้อมูลประเภททรัพย์และจำนวน
-            </CardTitle>  {/* ข้อมูลวันที่ */}
-            <span className="text-sm text-gray-800 font-medium">
-              ข้อมูลวันที่ {formatDate(date)}
-            </span>
+            </CardTitle>
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
