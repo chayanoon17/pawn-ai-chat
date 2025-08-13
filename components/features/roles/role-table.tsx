@@ -245,7 +245,16 @@ export function RoleTable({
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100">
-                {filteredRoles.map((role) => (
+                {filteredRoles.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7} // ปรับตามจำนวนคอลัมน์ของตาราง
+                      className="text-center py-8 text-slate-500"
+                    >
+                      ไม่พบข้อมูลตำแหน่ง
+                    </TableCell>
+                  </TableRow>
+                ) : (filteredRoles.map((role) => (
                   <TableRow key={role.id} className="hover:bg-slate-50">
                     <TableCell className="font-medium text-slate-800">
                       {role.name}
@@ -293,7 +302,7 @@ export function RoleTable({
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </div>
