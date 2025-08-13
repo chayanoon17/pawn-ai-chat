@@ -86,6 +86,17 @@ export default function UserManagementPage() {
     setUsers((prev) => prev.filter((user) => user.id !== userId));
   };
 
+  // 🎯 Handle user status change (สำหรับการลบที่เป็นการเปลี่ยนสถานะ)
+  const handleUserStatusChanged = (userId: number, newStatus: string) => {
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.id === userId
+          ? { ...user, status: newStatus as User["status"] }
+          : user
+      )
+    );
+  };
+
   // 🎯 Handle edit user
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
@@ -162,6 +173,7 @@ export default function UserManagementPage() {
               onCreateUser={() => setIsCreateDialogOpen(true)}
               onEditUser={handleEditUser}
               onUserDeleted={handleUserDeleted}
+              onUserStatusChanged={handleUserStatusChanged}
             />
 
             <CreateUserDialog

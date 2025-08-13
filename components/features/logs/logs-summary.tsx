@@ -40,14 +40,54 @@ export function LogsSummary({
   const [summary, setSummary] = useState<ActivitySummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Date states - use props as initial values or default to today
+  // Date states - use props as initial values or load from localStorage or default to today
   const today = new Date();
-  const [localStartDate, setLocalStartDate] = useState<Date | undefined>(
-    startDate || today
-  );
-  const [localEndDate, setLocalEndDate] = useState<Date | undefined>(
-    endDate || today
-  );
+
+  // 🔄 Load saved values from localStorage with session check
+  const [localStartDate, setLocalStartDate] = useState<Date | undefined>(() => {
+    // ถ้ามี props startDate ให้ใช้ตาม props
+    if (startDate) return startDate;
+
+    if (typeof window !== "undefined") {
+      // ตรวจสอบว่าเป็น session ใหม่หรือไม่
+      const isNewSession = !sessionStorage.getItem("logsSummary_session");
+
+      if (isNewSession) {
+        // ถ้าเป็น session ใหม่ ให้ clear localStorage และ mark session
+        localStorage.removeItem("logsSummary_startDate");
+        localStorage.removeItem("logsSummary_endDate");
+        sessionStorage.setItem("logsSummary_session", "active");
+        return today;
+      } else {
+        // ถ้าไม่ใช่ session ใหม่ ให้ใช้ค่าจาก localStorage
+        const savedDate = localStorage.getItem("logsSummary_startDate");
+        if (savedDate) {
+          return new Date(savedDate);
+        }
+      }
+    }
+    return today;
+  });
+
+  const [localEndDate, setLocalEndDate] = useState<Date | undefined>(() => {
+    // ถ้ามี props endDate ให้ใช้ตาม props
+    if (endDate) return endDate;
+
+    if (typeof window !== "undefined") {
+      const isNewSession = !sessionStorage.getItem("logsSummary_session");
+
+      if (isNewSession) {
+        return today;
+      } else {
+        // ถ้าไม่ใช่ session ใหม่ ให้ใช้ค่าจาก localStorage
+        const savedDate = localStorage.getItem("logsSummary_endDate");
+        if (savedDate) {
+          return new Date(savedDate);
+        }
+      }
+    }
+    return today;
+  });
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);
   const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
@@ -119,6 +159,12 @@ export function LogsSummary({
   const handleStartDateSelect = (date: Date | undefined) => {
     setLocalStartDate(date);
     setIsStartDateOpen(false);
+
+    // 💾 Save to localStorage
+    if (typeof window !== "undefined" && date) {
+      localStorage.setItem("logsSummary_startDate", date.toISOString());
+    }
+
     if (onDateChange) {
       onDateChange(date, localEndDate);
     }
@@ -127,6 +173,12 @@ export function LogsSummary({
   const handleEndDateSelect = (date: Date | undefined) => {
     setLocalEndDate(date);
     setIsEndDateOpen(false);
+
+    // 💾 Save to localStorage
+    if (typeof window !== "undefined" && date) {
+      localStorage.setItem("logsSummary_endDate", date.toISOString());
+    }
+
     if (onDateChange) {
       onDateChange(localStartDate, date);
     }
@@ -135,11 +187,11 @@ export function LogsSummary({
   // แมป activity เป็นชื่อที่อ่านง่าย
   const getActivityDisplayName = (activity: string): string => {
     const activityMap: Record<string, string> = {
-      LOGIN: "ผู้ใช้เข้าสู่ระบบ",
-      LOGOUT: "ผู้ใช้ออกจากระบบ",
+      LOGIN: "เข้าสู่ระบบ",
+      LOGOUT: "ออกจากระบบ",
       MENU_ACCESS: "เข้าถึงเมนู",
       EXPORT_REPORT: "ส่งออกข้อมูล",
-      CHAT: "ใช้ AI Chat",
+      CHAT: "คุยกับ AI Chat",
     };
     return activityMap[activity] || activity;
   };
@@ -198,6 +250,7 @@ export function LogsSummary({
                       selected={localStartDate}
                       onSelect={handleStartDateSelect}
                       disabled={(date) => date > new Date()}
+                      defaultMonth={localStartDate || new Date()} // ใช้วันที่ที่เลือกไว้ หรือวันนี้ถ้ายังไม่ได้เลือก
                       initialFocus
                     />
                   </PopoverContent>
@@ -225,6 +278,7 @@ export function LogsSummary({
                       selected={localEndDate}
                       onSelect={handleEndDateSelect}
                       disabled={(date) => date > new Date()}
+                      defaultMonth={localEndDate || new Date()} // ใช้วันที่ที่เลือกไว้ หรือวันนี้ถ้ายังไม่ได้เลือก
                       initialFocus
                     />
                   </PopoverContent>
@@ -369,7 +423,7 @@ export function LogsSummary({
                         {getActivityDisplayName(stat.activity)}
                       </span>
                       <span className="text-sm text-slate-500">
-                        {stat.count.toLocaleString()}
+                        {stat.count.toLocaleString()} ครั้ง
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-2">

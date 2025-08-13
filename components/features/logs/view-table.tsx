@@ -282,7 +282,7 @@ export default function ViewTable({
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-slate-600 font-mono text-sm">
-                            {log.metadata?.path || "-"}
+                            {log.metadata?.menuPath || "-"}
                           </TableCell>
                           <TableCell className="text-slate-600">
                             {new Date(log.createdAt).toLocaleString("th-TH", {
@@ -449,7 +449,7 @@ export default function ViewTable({
                       เส้นทาง (Path)
                     </label>
                     <p className="text-sm text-slate-800 mt-1 font-mono">
-                      {selectedLog.metadata?.path || "-"}
+                      {selectedLog.metadata?.menuPath || "-"}
                     </p>
                   </div>
                   <div className="col-span-2">

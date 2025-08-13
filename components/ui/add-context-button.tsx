@@ -20,6 +20,7 @@ import {
   TableIcon,
   TrendingUp,
   Trophy,
+  CheckSquare,
 } from "lucide-react";
 import { useWidgetContext, WidgetData } from "@/context/widget-context";
 import { usePathname } from "next/navigation";
@@ -84,6 +85,29 @@ export const AddContextButton = ({
     setIsOpen(false);
   };
 
+  const handleSelectAll = () => {
+    // เลือกเฉพาะ widget ที่ยังไม่ได้เลือก
+    const availableWidgets = widgets.filter(
+      (widget) => !isWidgetActive(widget.id)
+    );
+
+    if (availableWidgets.length === 0) {
+      return; // ไม่มี widget ที่เลือกได้
+    }
+
+    // เพิ่ม widget ทั้งหมดที่ยังไม่ได้เลือก
+    availableWidgets.forEach((widget) => {
+      onContextAdded(widget);
+    });
+
+    setIsOpen(false);
+  };
+
+  // นับจำนวน widget ที่ยังเลือกได้
+  const availableWidgetsCount = widgets.filter(
+    (widget) => !isWidgetActive(widget.id)
+  ).length;
+
   if (widgets.length === 0) {
     return null; // ไม่แสดงปุ่มถ้าไม่มี widget
   }
@@ -101,8 +125,27 @@ export const AddContextButton = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
-        <div className="px-3 py-2 text-sm font-medium text-gray-700 border-b">
-          เลือก Widget เพื่อเพิ่มเป็นบริบท
+        {/* Header Section */}
+        <div className="px-3 py-2 border-b">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">
+              เลือกบริบท
+            </span>
+            {availableWidgetsCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectAll}
+                className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                <CheckSquare className="w-3 h-3 mr-1" />
+                เลือกทั้งหมด ({availableWidgetsCount})
+              </Button>
+            )}
+          </div>
+          {availableWidgetsCount === 0 && (
+            <p className="text-xs text-gray-500 mt-1">เลือกทั้งหมดแล้ว</p>
+          )}
         </div>
         {widgets.map((widget, index) => {
           const isActive = isWidgetActive(widget.id);

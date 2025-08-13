@@ -77,7 +77,7 @@ export const WeeklyOperationSummary = ({
     return new Intl.NumberFormat("th-TH").format(amount);
   };
 
-   const formatDate = (iso: string) => {
+  const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
@@ -338,7 +338,9 @@ export const WeeklyOperationSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : data
-                ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                ? `ข้อมูล ณ วันที่ ${formatDate(
+                    date
+                  )} (เปรียบเทียบกับสัปดาห์ก่อนหน้า)`
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}

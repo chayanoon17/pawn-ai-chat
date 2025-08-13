@@ -46,7 +46,12 @@ export const MENU_NAMES = {
 /**
  * User Status - สถานะของผู้ใช้ในระบบ
  */
-export type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+export type UserStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "SUSPENDED"
+  | "DELETED"
+  | "PENDING_VERIFICATION";
 
 /**
  * Widget Data Types - สำหรับระบุประเภทของ widget data

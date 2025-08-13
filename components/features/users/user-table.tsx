@@ -50,6 +50,7 @@ interface UserTableProps {
   onCreateUser: () => void;
   onEditUser: (user: User) => void;
   onUserDeleted: (userId: number) => void;
+  onUserStatusChanged: (userId: number, newStatus: string) => void; // เพิ่ม callback สำหรับเปลี่ยนสถานะ
 }
 
 export function UserTable({
@@ -60,6 +61,7 @@ export function UserTable({
   onCreateUser,
   onEditUser,
   onUserDeleted,
+  onUserStatusChanged, // เพิ่ม callback สำหรับเปลี่ยนสถานะ
 }: UserTableProps) {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -87,11 +89,11 @@ export function UserTable({
 
     if (result.isConfirmed) {
       try {
-        // เรียก API ลบ user
+        // เรียก API ลบ user (ซึ่งจริงๆ แล้วเป็นการเปลี่ยนสถานะเป็น DELETED)
         await deleteUser(userId.toString());
 
-        // เรียก callback function
-        onUserDeleted(userId);
+        // แทนที่จะลบออกจากหน้าจอ ให้อัปเดตสถานะเป็น DELETED แทน
+        onUserStatusChanged(userId, "DELETED");
 
         showDeleteSuccess(
           "ลบผู้ใช้สำเร็จ!",
@@ -118,14 +120,32 @@ export function UserTable({
         );
       case "INACTIVE":
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             ไม่ใช้งาน
+          </Badge>
+        );
+      case "SUSPENDED":
+        return (
+          <Badge variant="outline" className="bg-orange-100 text-orange-800">
+            ถูกระงับ
+          </Badge>
+        );
+      case "DELETED":
+        return (
+          <Badge variant="outline" className="bg-red-100 text-red-800">
+            ลบแล้ว
+          </Badge>
+        );
+      case "PENDING_VERIFICATION":
+        return (
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+            รอการยืนยัน
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-            {status}
+          <Badge variant="outline" className="bg-gray-100 text-gray-800">
+            ไม่ระบุ
           </Badge>
         );
     }
@@ -298,6 +318,7 @@ export function UserTable({
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center space-x-1">
+                          {/* ปุ่ม Detail - แสดงเสมอ */}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -309,24 +330,30 @@ export function UserTable({
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEditUser(user)}
-                            className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleDeleteUser(user.id, user.fullName)
-                            }
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+
+                          {/* ปุ่ม Edit และ Delete - แสดงเฉพาะ user ที่ยังไม่ถูกลบ */}
+                          {user.status !== "DELETED" && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onEditUser(user)}
+                                className="text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteUser(user.id, user.fullName)
+                                }
+                                className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
