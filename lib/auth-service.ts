@@ -64,7 +64,12 @@ export async function updateUser(
     password?: string;
     branchId?: number | null; // เพิ่ม null เพื่อให้สามารถเคลียร์ข้อมูลสาขาได้
     roleId?: number;
-    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+    status?:
+      | "ACTIVE"
+      | "INACTIVE"
+      | "SUSPENDED"
+      | "DELETED"
+      | "PENDING_VERIFICATION";
   }
 ) {
   const response = await apiClient.put(`/api/v1/users/${id}`, data);

@@ -139,10 +139,6 @@ export function EditUserDialog({
         // ไม่แปลง null เป็น undefined เพราะ API ต้องการ null เพื่อเคลียร์ข้อมูล
       };
 
-      console.log("Updating user with data:", dataToSend);
-      console.log("branchId value:", editUserData.branchId);
-      console.log("specifyBranch:", specifyBranch);
-
       // เรียก API อัปเดต user
       const updatedUserData = (await updateUser(
         selectedUser.id.toString(),
