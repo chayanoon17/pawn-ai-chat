@@ -334,7 +334,8 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
             selected={selectedDate}
             onSelect={handleDateSelect}
             disabled={(date) => date > new Date()} // ไม่ให้เลือกวันข้างหน้า
-            initialFocus
+            defaultMonth={selectedDate || new Date()} // ใช้วันที่ที่เลือกไว้ หรือวันนี้ถ้ายังไม่ได้เลือก
+            autoFocus
             className={isMobile ? "text-xs" : ""}
           />
         </PopoverContent>

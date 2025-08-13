@@ -167,14 +167,13 @@ const maskTail = (text: string, tail = 4, maskChar = "X") => {
 
 const maskFirstLast = (fullName: string) => {
   if (!fullName) return "";
-  // แยกคำด้วย space แล้ว mask แยกส่วน (เช่น "สมชาย ใจดี" -> "สมชาXXXX ใจดXXXX")
+  // แยกคำด้วย space แล้ว mask แยกส่วน (เช่น "สมชาย ใจดี" -> "สมชา**** ใจด****")
   return fullName
     .trim()
     .split(/\s+/)
-    .map((part) => maskTail(part, 4, "x"))
+    .map((part) => maskTail(part, 4, "*"))
     .join(" ");
 };
-
 
 export default function ContractTransactionDetails({
   branchId,
@@ -316,27 +315,27 @@ export default function ContractTransactionDetails({
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
-        branchId: data.branchId,
-        totalTransactions: data.transactions.length,
-        summaries: data.summaries,
-        sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-          contractNumber: t.contractNumber,
-          ticketBookNumber: t.ticketBookNumber,
-          customerName: t.customerName,
-          transactionType: t.transactionType,
-          remainingAmount: t.remainingAmount,
-          assetType: t.assetType,
-          ticketStatus: t.contractStatus,
-        })),
-        transactionTypes: [
-          ...new Set(data.transactions.map((t) => t.transactionType)),
-        ],
-        totalAmount: data.transactions.reduce(
-          (sum, t) => sum + t.remainingAmount,
-          0
-        ),
-        lastUpdated: data.timestamp,
-      }
+          branchId: data.branchId,
+          totalTransactions: data.transactions.length,
+          summaries: data.summaries,
+          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+            contractNumber: t.contractNumber,
+            ticketBookNumber: t.ticketBookNumber,
+            customerName: t.customerName,
+            transactionType: t.transactionType,
+            remainingAmount: t.remainingAmount,
+            assetType: t.assetType,
+            ticketStatus: t.contractStatus,
+          })),
+          transactionTypes: [
+            ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          totalAmount: data.transactions.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          lastUpdated: data.timestamp,
+        }
       : null
   );
 
@@ -422,10 +421,10 @@ export default function ContractTransactionDetails({
                 {isLoading
                   ? "กำลังโหลดข้อมูล..."
                   : data
-                    ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
-                    : branchId === "all"
-                      ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                      : "ไม่พบข้อมูล"}
+                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                  : branchId === "all"
+                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                  : "ไม่พบข้อมูล"}
               </span>
             </div>
           </div>
@@ -612,7 +611,9 @@ export default function ContractTransactionDetails({
                           <TableCell className="font-mono">
                             {item.ticketBookNumber}
                           </TableCell>
-                          <TableCell>{maskFirstLast(item.customerName)}</TableCell>
+                          <TableCell>
+                            {maskFirstLast(item.customerName)}
+                          </TableCell>
                           <TableCell>{item.assetType}</TableCell>
                           <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
                             {item.assetDetail}
@@ -959,8 +960,8 @@ export default function ContractTransactionDetails({
                       <p className="text-sm text-slate-800 mt-1">
                         {selectedTransaction.interestPaymentDate
                           ? formatDateOnly(
-                            selectedTransaction.interestPaymentDate
-                          )
+                              selectedTransaction.interestPaymentDate
+                            )
                           : "-"}
                       </p>
                     </div>

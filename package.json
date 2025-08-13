@@ -8,7 +8,8 @@
     "start": "node server.js",
     "start:next": "next start",
     "lint": "next lint",
-    "azure:postinstall": "npm run build"
+    "azure:postinstall": "npm run build",
+    "make-deploy:win": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"npm ci; $env:NODE_ENV='production'; $env:NEXT_TELEMETRY_DISABLED='1'; npm run build; New-Item -ItemType Directory -Force -Path .next/standalone/.next | Out-Null; Copy-Item -Recurse -Force .next/static .next/standalone/.next/static; if (Test-Path public) { Copy-Item -Recurse -Force public .next/standalone/public }; Remove-Item -Recurse -Force deploy -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path deploy | Out-Null; New-Item -ItemType Directory -Path deploy/.next | Out-Null; Copy-Item -Recurse -Force .next/standalone deploy/.next/standalone; Copy-Item -Force package.json deploy/package.json; if (Test-Path package-lock.json) { Copy-Item -Force package-lock.json deploy/package-lock.json }; npm ci --omit=dev --prefix deploy\""
   },
   "dependencies": {
     "@heroui/calendar": "^2.2.23",

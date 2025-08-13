@@ -106,7 +106,7 @@ export const GoldPriceCard = () => {
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : latestPrice
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(latestPrice.updatedAt)} น.`
+                ? `ข้อมูล ณ วันที่ ${formatDate(latestPrice.updatedAt)} น.`
                 : "ไม่พบข้อมูล"}
             </span>
           </div>
@@ -171,8 +171,8 @@ export const GoldPriceCard = () => {
         {latestPrice && !isLoading && (
           <div className="space-y-6">
             {/* Price Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {/* ทองคำแท่ง */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+              {/* ราคารับซื้อ - ทองคำแท่ง */}
               <div className="bg-[#FFF7ED] border border-[#FFD49E] rounded-lg p-4 hover:bg-[#FFF1DD] transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="bg-[#FEB859] text-white px-2.5 py-1 rounded-sm text-sm font-medium">
@@ -190,7 +190,7 @@ export const GoldPriceCard = () => {
                 </div>
               </div>
 
-              {/* ทองรูปพรรณ */}
+              {/* ราคารับซื้อ - ทองรูปพรรณ */}
               <div className="bg-[#FFF7ED] border border-[#FFD49E] rounded-lg p-4 hover:bg-[#FFF1DD] transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="bg-[#FEB859] text-white px-2.5 py-1 rounded-sm text-sm font-medium">
@@ -208,25 +208,43 @@ export const GoldPriceCard = () => {
                 </div>
               </div>
 
-              {/* ทองรูปพรรณ 70% */}
-              <div className="bg-[#FFF7ED] border border-[#FFD49E] rounded-lg p-4 hover:bg-[#FFF1DD] transition-colors">
+              {/* ราคาขาย - ทองคำแท่ง */}
+              <div className="bg-[#F0F9FF] border border-[#7DD3FC] rounded-lg p-4 hover:bg-[#E0F2FE] transition-colors">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="bg-[#FEB859] text-white px-2.5 py-1 rounded-sm text-sm font-medium">
-                    ทองรูปพรรณ 70%
+                  <div className="bg-[#0EA5E9] text-white px-2.5 py-1 rounded-sm text-sm font-medium">
+                    ทองคำแท่ง
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-baseline space-x-2">
                     <div className="text-xl lg:text-2xl font-semibold text-slate-800">
-                      ≈{formatPrice(latestPrice.goldJewelryBuy * 0.7)}
+                      {formatPrice(latestPrice.goldBarSell)}
                     </div>
                     <div className="text-sm text-slate-500">บาท</div>
                   </div>
-                  <div className="text-sm text-slate-500">ราคาประเมิน</div>
+                  <div className="text-sm text-slate-500">ราคาขาย</div>
                 </div>
               </div>
 
-              {/* รับจำนำบาทละไม่เกิน */}
+              {/* ราคาขาย - ทองรูปพรรณ */}
+              <div className="bg-[#F0F9FF] border border-[#7DD3FC] rounded-lg p-4 hover:bg-[#E0F2FE] transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="bg-[#0EA5E9] text-white px-2.5 py-1 rounded-sm text-sm font-medium">
+                    ทองรูปพรรณ
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-baseline space-x-2">
+                    <div className="text-xl lg:text-2xl font-semibold text-slate-800">
+                      {formatPrice(latestPrice.goldJewelrySell)}
+                    </div>
+                    <div className="text-sm text-slate-500">บาท</div>
+                  </div>
+                  <div className="text-sm text-slate-500">ราคาขาย</div>
+                </div>
+              </div>
+
+              {/* รับจำนำไม่เกิน */}
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:bg-slate-100 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="bg-slate-600 text-white px-2.5 py-1 rounded-sm text-sm font-medium">
@@ -236,11 +254,13 @@ export const GoldPriceCard = () => {
                 <div className="space-y-1">
                   <div className="flex items-baseline space-x-2">
                     <div className="text-xl lg:text-2xl font-semibold text-slate-800">
-                      {formatPrice(latestPrice.goldBarBuy * 0.7)}
+                      ≈ {formatPrice(latestPrice.goldBarBuy * 0.81)}
                     </div>
                     <div className="text-sm text-slate-500">บาท</div>
                   </div>
-                  <div className="text-sm text-slate-500">วงเงินสูงสุด</div>
+                  <div className="text-xs text-slate-500">
+                    81% ของราคารับซื้อทองคำแท่ง
+                  </div>
                 </div>
               </div>
             </div>
@@ -263,21 +283,29 @@ export const GoldPriceCard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="text-center lg:text-right">
-                    <div className="text-slate-500">ส่วนต่างทองแท่ง</div>
+                    <div className="text-slate-500 mb-1">
+                      ส่วนต่างราคา (ขาย-รับซื้อ)
+                    </div>
                     <div className="font-medium text-slate-700">
                       {formatPrice(
                         latestPrice.goldBarSell - latestPrice.goldBarBuy
                       )}{" "}
                       บาท
                     </div>
+                    <div className="text-xs text-slate-400 mb-1">ทองแท่ง</div>
                   </div>
                   <div className="text-center lg:text-right">
-                    <div className="text-slate-500">ส่วนต่างทองรูปพรรณ</div>
+                    <div className="text-slate-500 mb-1">
+                      ส่วนต่างราคา (ขาย-รับซื้อ)
+                    </div>
                     <div className="font-medium text-slate-700">
                       {formatPrice(
                         latestPrice.goldJewelrySell - latestPrice.goldJewelryBuy
                       )}{" "}
                       บาท
+                    </div>
+                    <div className="text-xs text-slate-400 mb-1">
+                      ทองรูปพรรณ
                     </div>
                   </div>
                 </div>

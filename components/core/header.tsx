@@ -68,7 +68,7 @@ export default function Header({
               {PAGE_LABELS[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
             </h1>
             <p className="text-sm text-gray-500">
-              วันที่{" "}
+              {"อัปเดตล่าสุดเมื่อ "}
               {new Date().toLocaleString("th-TH", {
                 year: "numeric",
                 month: "long",
@@ -77,7 +77,6 @@ export default function Header({
                 minute: "2-digit",
               })}
             </p>
-
           </div>
         </div>
 
