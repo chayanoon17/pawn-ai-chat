@@ -158,9 +158,9 @@ export const ContractStatusSummary = ({
 
   // 🎯 Memoize chart config to prevent re-renders
   const chartConfig = useMemo(() => {
-    if (!data.length) return { value: { label: "จำนวน" } };
+    if (!data.length) return { value: { label: "มูลค่ารวม" } };
     return {
-      value: { label: "จำนวน" },
+      value: { label: "มูลค่ารวม" },
       ...Object.fromEntries(
         data.map((item) => [item.name, { label: item.name, color: item.color }])
       ),
