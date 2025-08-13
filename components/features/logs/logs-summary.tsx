@@ -135,11 +135,11 @@ export function LogsSummary({
   // แมป activity เป็นชื่อที่อ่านง่าย
   const getActivityDisplayName = (activity: string): string => {
     const activityMap: Record<string, string> = {
-      LOGIN: "User/Login",
-      LOGOUT: "User/Logout",
-      MENU_ACCESS: "View menu",
-      EXPORT_REPORT: "Export",
-      CHAT: "Chat history",
+      LOGIN: "ผู้ใช้เข้าสู่ระบบ",
+      LOGOUT: "ผู้ใช้ออกจากระบบ",
+      MENU_ACCESS: "เข้าถึงเมนู",
+      EXPORT_REPORT: "ส่งออกข้อมูล",
+      CHAT: "ใช้ AI Chat",
     };
     return activityMap[activity] || activity;
   };

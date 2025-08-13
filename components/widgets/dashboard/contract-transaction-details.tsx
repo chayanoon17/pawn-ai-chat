@@ -157,6 +157,25 @@ const statusIconMap: Record<TransactionType, JSX.Element> = {
   แบ่งไถ่: <Tickets className="w-5 h-5 text-white" />,
 };
 
+// ✅ Utilities สำหรับปิดบังข้อมูลชื่อ-นามสกุล (รองรับตัวอักษรไทย)
+const maskTail = (text: string, tail = 4, maskChar = "X") => {
+  if (!text) return "";
+  const chars = Array.from(text.trim()); // กันปัญหา unicode/สระ-วรรณยุกต์
+  if (chars.length <= tail) return maskChar.repeat(chars.length);
+  return chars.slice(0, chars.length - tail).join("") + maskChar.repeat(tail);
+};
+
+const maskFirstLast = (fullName: string) => {
+  if (!fullName) return "";
+  // แยกคำด้วย space แล้ว mask แยกส่วน (เช่น "สมชาย ใจดี" -> "สมชาXXXX ใจดXXXX")
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .map((part) => maskTail(part, 4, "x"))
+    .join(" ");
+};
+
+
 export default function ContractTransactionDetails({
   branchId,
   date,
@@ -297,27 +316,27 @@ export default function ContractTransactionDetails({
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
     data
       ? {
-          branchId: data.branchId,
-          totalTransactions: data.transactions.length,
-          summaries: data.summaries,
-          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-            contractNumber: t.contractNumber,
-            ticketBookNumber: t.ticketBookNumber,
-            customerName: t.customerName,
-            transactionType: t.transactionType,
-            remainingAmount: t.remainingAmount,
-            assetType: t.assetType,
-            ticketStatus: t.contractStatus,
-          })),
-          transactionTypes: [
-            ...new Set(data.transactions.map((t) => t.transactionType)),
-          ],
-          totalAmount: data.transactions.reduce(
-            (sum, t) => sum + t.remainingAmount,
-            0
-          ),
-          lastUpdated: data.timestamp,
-        }
+        branchId: data.branchId,
+        totalTransactions: data.transactions.length,
+        summaries: data.summaries,
+        sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
+          contractNumber: t.contractNumber,
+          ticketBookNumber: t.ticketBookNumber,
+          customerName: t.customerName,
+          transactionType: t.transactionType,
+          remainingAmount: t.remainingAmount,
+          assetType: t.assetType,
+          ticketStatus: t.contractStatus,
+        })),
+        transactionTypes: [
+          ...new Set(data.transactions.map((t) => t.transactionType)),
+        ],
+        totalAmount: data.transactions.reduce(
+          (sum, t) => sum + t.remainingAmount,
+          0
+        ),
+        lastUpdated: data.timestamp,
+      }
       : null
   );
 
@@ -374,8 +393,6 @@ export default function ContractTransactionDetails({
       day: "numeric",
       month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -405,10 +422,10 @@ export default function ContractTransactionDetails({
                 {isLoading
                   ? "กำลังโหลดข้อมูล..."
                   : data
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
-                  : branchId === "all"
-                  ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                  : "ไม่พบข้อมูล"}
+                    ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                    : branchId === "all"
+                      ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                      : "ไม่พบข้อมูล"}
               </span>
             </div>
           </div>
@@ -595,7 +612,7 @@ export default function ContractTransactionDetails({
                           <TableCell className="font-mono">
                             {item.ticketBookNumber}
                           </TableCell>
-                          <TableCell>{item.customerName}</TableCell>
+                          <TableCell>{maskFirstLast(item.customerName)}</TableCell>
                           <TableCell>{item.assetType}</TableCell>
                           <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
                             {item.assetDetail}
@@ -942,8 +959,8 @@ export default function ContractTransactionDetails({
                       <p className="text-sm text-slate-800 mt-1">
                         {selectedTransaction.interestPaymentDate
                           ? formatDateOnly(
-                              selectedTransaction.interestPaymentDate
-                            )
+                            selectedTransaction.interestPaymentDate
+                          )
                           : "-"}
                       </p>
                     </div>

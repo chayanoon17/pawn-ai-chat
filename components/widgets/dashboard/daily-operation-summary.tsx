@@ -93,15 +93,13 @@ export const DailyOperationSummary = ({
   const formatAmount = (value: number) =>
     value.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
-  const formatDate = (iso: string) => {
+   const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
       day: "numeric",
       month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -123,7 +121,7 @@ export const DailyOperationSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : summary
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(summary.timestamp)}`
+                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
                   : branchId === "all"
                     ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                     : "ไม่พบข้อมูล"}

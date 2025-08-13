@@ -59,6 +59,13 @@ interface ChartDataItem {
   [key: string]: string | number;
 }
 
+const subtractDays = (dateStr: string, days: number) => {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+};
+
+
 export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [chartConfig, setChartConfig] = useState<
@@ -165,8 +172,6 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       day: "numeric",
       month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -185,7 +190,16 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                  ? <span className="text-sm text-slate-500">
+                    {isLoading
+                      ? "กำลังโหลดข้อมูล..."
+                      : timestamp
+                        ? `ข้อมูล ณ วันที่ ${formatDate(subtractDays(date, 6))} ถึง วันที่ ${formatDate(date)}`
+                        : branchId === "all"
+                          ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                          : "ไม่พบข้อมูล"}
+                  </span>
+
                   : branchId === "all"
                     ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                     : "ไม่พบข้อมูล"}

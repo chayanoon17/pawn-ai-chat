@@ -144,15 +144,13 @@ export const ContractStatusSummary = ({
   );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย
-  const formatDate = (iso: string) => {
+   const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
       day: "numeric",
       month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -254,7 +252,7 @@ export const ContractStatusSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                  ? `อัปเดตล่าสุดเมื่อ ${formatDate(timestamp)}`
+                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
                   : branchId === "all"
                     ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                     : "ไม่พบข้อมูล"}

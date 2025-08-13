@@ -69,12 +69,15 @@ export default function Header({
             </h1>
             <p className="text-sm text-gray-500">
               วันที่{" "}
-              {new Date().toLocaleDateString("th-TH", {
+              {new Date().toLocaleString("th-TH", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
               })}
             </p>
+
           </div>
         </div>
 

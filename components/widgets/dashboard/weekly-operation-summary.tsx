@@ -77,15 +77,13 @@ export const WeeklyOperationSummary = ({
     return new Intl.NumberFormat("th-TH").format(amount);
   };
 
-  const formatDate = (iso: string) => {
+   const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
       day: "numeric",
       month: "long",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -340,7 +338,7 @@ export const WeeklyOperationSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : data
-                ? `อัปเดตล่าสุดเมื่อ ${formatDate(data.timestamp)}`
+                ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
                 : branchId === "all"
                 ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                 : "ไม่พบข้อมูล"}
@@ -391,7 +389,7 @@ export const WeeklyOperationSummary = ({
 
                 {/* ข้อความวันที่ */}
                 <span className="text-sm text-gray-800 font-medium">
-                  ณ วันที่ {formatDate(date)}
+                  ข้อมูล ณ วันที่ {formatDate(date)}
                 </span>
               </div>
               <div className="text-2xl font-bold">
@@ -503,7 +501,7 @@ export const WeeklyOperationSummary = ({
 
                 {/* ข้อความวันที่ */}
                 <span className="text-sm text-gray-800 font-medium">
-                  ณ วันที่ {formatDate(date)}
+                  ข้อมูล ณ วันที่ {formatDate(date)}
                 </span>
               </div>
               <div className="text-2xl font-bold">
