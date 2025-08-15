@@ -76,6 +76,92 @@ export async function sendChatMessage(message: string): Promise<string> {
   return result;
 }
 
+// export async function sendChatMessageStream(
+//   message: string,
+//   onChunk: (chunk: string) => void,
+//   messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
+//   conversationId?: string,
+//   onComplete?: () => void
+// ): Promise<void> {
+//   try {
+//     // สร้าง headers พร้อม authentication
+//     const headers: Record<string, string> = {
+//       "Content-Type": "application/json",
+//     };
+
+//     // เพิ่ม Authorization header ถ้ามี token ใน localStorage
+//     if (typeof window !== "undefined") {
+//       const token = localStorage.getItem("accessToken");
+//       if (token) {
+//         headers.Authorization = `Bearer ${token}`;
+//       }
+//     }
+
+//     const response = await fetch(getApiUrl("/chat"), {
+//       method: "POST",
+//       headers,
+//       body: JSON.stringify({ message, messages, conversationId }),
+//       credentials: "include",
+//     });
+
+//     if (!response.ok || !response.body) {
+//       throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
+//     }
+
+//     const reader = response.body.getReader();
+//     const decoder = new TextDecoder("utf-8");
+//     let buffer = "";
+
+//     while (true) {
+//       const { done, value } = await reader.read();
+//       if (done) break;
+
+//       buffer += decoder.decode(value, { stream: true });
+
+//       let idx: number;
+//       while ((idx = buffer.indexOf("\n\n")) !== -1) {
+//         const rawEvent = buffer.slice(0, idx).trim();
+//         buffer = buffer.slice(idx + 2);
+
+//         const dataLines = rawEvent
+//           .split("\n")
+//           .map((l) => l.trim())
+//           .filter((l) => l.startsWith("data:"))
+//           .map((l) => l.replace(/^data:\s*/, ""));
+
+//         for (const payload of dataLines) {
+//           // จบสตรีม
+//           if (payload === "[DONE]") {
+//             onComplete?.();
+//             return;
+//           }
+//           // ping/keepalive -> ข้าม
+//           if (payload === ":ping" || payload === '":ping"') continue;
+
+//           // parse เฉพาะที่ดูเป็น JSON
+//           if (payload.startsWith("{") || payload.startsWith("[")) {
+//             try {
+//               const parsed = JSON.parse(payload);
+//               if (parsed?.content) onChunk(parsed.content);
+//               // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
+//             } catch (e) {
+//               console.error("❌ JSON parse error:", e);
+//             }
+//           } else {
+//             // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
+//             onChunk(payload);
+//           }
+//         }
+//       }
+//     }
+
+//     onComplete?.();
+//   } catch (error) {
+//     onComplete?.();
+//     throw error;
+//   }
+// }
+
 export async function sendChatMessageStream(
   message: string,
   onChunk: (chunk: string) => void,
@@ -83,35 +169,34 @@ export async function sendChatMessageStream(
   conversationId?: string,
   onComplete?: () => void
 ): Promise<void> {
+  // สร้าง headers พร้อม auth
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(getApiUrl("/chat"), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ message, messages, conversationId }),
+    credentials: "include",
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+
+  let buffer = "";
+
+  // ✅ ธงช่วยกด error ทิ้งถ้าเรารับข้อความแล้ว/รู้ว่าจบแล้ว
+  let receivedDone = false;
+  let gotAnyChunk = false;
+
   try {
-    // สร้าง headers พร้อม authentication
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    // เพิ่ม Authorization header ถ้ามี token ใน localStorage
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    const response = await fetch(getApiUrl("/chat"), {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ message, messages, conversationId }),
-      credentials: "include",
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -120,47 +205,81 @@ export async function sendChatMessageStream(
 
       let idx: number;
       while ((idx = buffer.indexOf("\n\n")) !== -1) {
-        const rawEvent = buffer.slice(0, idx).trim();
+        const block = buffer.slice(0, idx).trim();
         buffer = buffer.slice(idx + 2);
 
-        const dataLines = rawEvent
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l.startsWith("data:"))
-          .map((l) => l.replace(/^data:\s*/, ""));
+        if (!block) continue;
 
-        for (const payload of dataLines) {
-          // จบสตรีม
-          if (payload === "[DONE]") {
-            onComplete?.();
-            return;
+        // 🔎 parse SSE ตามสเปค: รองรับทั้ง event: และ data:
+        let eventName = "message";
+        const dataLines: string[] = [];
+
+        for (const rawLine of block.split("\n")) {
+          const line = rawLine.trim();
+          if (!line) continue;
+          if (line.startsWith(":")) continue; // comment/keepalive
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim();
+            continue;
           }
-          // ping/keepalive -> ข้าม
-          if (payload === ":ping" || payload === '":ping"') continue;
+          if (line.startsWith("data:")) {
+            dataLines.push(line.slice(5).trim());
+          }
+        }
 
-          // parse เฉพาะที่ดูเป็น JSON
-          if (payload.startsWith("{") || payload.startsWith("[")) {
-            try {
-              const parsed = JSON.parse(payload);
-              if (parsed?.content) onChunk(parsed.content);
-              // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
-            } catch (e) {
-              console.error("❌ JSON parse error:", e);
+        const dataStr = dataLines.join("\n");
+
+        // 🎯 จบสตรีม: รองรับทั้งสองรูปแบบ
+        if (eventName === "done" || dataStr === "[DONE]") {
+          receivedDone = true;
+          onComplete?.();
+          return;
+        }
+
+        // event error → โยน error
+        if (eventName === "error") {
+          throw new Error(dataStr || "SSE error");
+        }
+
+        // ข้าม ping/keepalive ที่ส่งมาเป็น data
+        if (dataStr === ":ping" || dataStr === '":ping"') continue;
+
+        if (dataStr) {
+          // โครงสร้างที่ server ส่งมาอาจเป็น JSON {content:"..."} หรือสตริงดิบ
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed?.content) {
+              gotAnyChunk = true;
+              onChunk(parsed.content);
             }
-          } else {
-            // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
-            onChunk(payload);
+          } catch {
+            gotAnyChunk = true;
+            onChunk(dataStr);
           }
         }
       }
     }
 
     onComplete?.();
-  } catch (error) {
+  } catch (err: any) {
+    // 🙏 ถ้าเรา “จบไปแล้ว” หรือ “ได้ชิ้นส่วนข้อความมาแล้ว” ให้เมิน network error/abort
+    const msg = String(err?.message || "");
+    if (
+      receivedDone ||
+      (gotAnyChunk &&
+        (msg.toLowerCase().includes("network") ||
+         msg.includes("AbortError") ||
+         msg.toUpperCase().includes("RESET")))
+    ) {
+      console.warn("SSE closed after completion. Suppressed:", err);
+      return;
+    }
+
     onComplete?.();
-    throw error;
+    throw err;
   }
 }
+
 
 export async function getAllConversations({
   page = 1,
