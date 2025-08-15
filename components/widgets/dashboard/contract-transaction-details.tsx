@@ -96,7 +96,7 @@ interface ContractTransactionDetailsResponse {
 
 // 📊 Props สำหรับ Widget
 interface ContractTransactionDetailsProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }

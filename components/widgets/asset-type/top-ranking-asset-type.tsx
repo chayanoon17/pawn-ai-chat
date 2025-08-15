@@ -28,7 +28,7 @@ interface ApiResponse {
 }
 
 interface TopRankingAssetTypeProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
 }
 
@@ -93,7 +93,7 @@ export const TopRankingAssetType = ({
     "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
     rankings.length > 0
       ? {
-          branchId: parseInt(branchId),
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
           totalRankings: rankings.length,
           rankings: rankings.map((r) => ({
             rank: r.rank,

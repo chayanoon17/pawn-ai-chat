@@ -43,7 +43,7 @@ type StatusSummaryResponse = {
 };
 
 interface ContractStatusSummaryProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }
@@ -135,7 +135,7 @@ export const ContractStatusSummary = ({
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ เช่น ตั๋วปัจจุบัน หลุดจำนำ ไถ่ถอน",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
           summaries: data.map((item) => ({
             status: item.name,
             count: item.value,

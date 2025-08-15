@@ -43,7 +43,7 @@ type TransactionSummaryResponse = {
 };
 
 interface ContractTransactionSummaryProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }
@@ -135,7 +135,7 @@ export const ContractTransactionSummary = ({
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น จำนำ ส่งดอกเบี้ย และอื่นๆ",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
           summaries: data.map((item) => ({
             type: item.name,
             count: item.value,

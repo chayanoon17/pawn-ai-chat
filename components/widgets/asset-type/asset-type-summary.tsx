@@ -28,7 +28,7 @@ type ApiResponse = {
 };
 
 interface Props {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }
@@ -223,7 +223,7 @@ export const AssetTypesSummary = ({
     "ข้อมูลสรุปประเภททรัพย์และจำนวน พร้อมจำนวนและเปอร์เซ็นต์",
     data.length > 0
       ? {
-          branchId: parseInt(branchId),
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
           totalAssetTypes: data.length,
           totalItems: data.reduce((sum, item) => sum + item.value, 0),
           assetTypes: data.map((item) => ({

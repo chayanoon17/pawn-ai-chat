@@ -37,7 +37,7 @@ interface WeeklyOperationResponse {
 
 // 📊 Props สำหรับ Widget
 interface WeeklyOperationSummaryProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }

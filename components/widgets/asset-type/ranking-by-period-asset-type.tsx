@@ -20,7 +20,7 @@ import apiClient from "@/lib/api";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 interface Props {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
 }
 
@@ -158,7 +158,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
     "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
     chartData.length > 0
       ? {
-          branchId: parseInt(branchId),
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
           periodData: chartData,
           assetTypes: Object.keys(chartConfig),
           dateRange: {
