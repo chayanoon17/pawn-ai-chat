@@ -83,7 +83,19 @@ export async function sendChatMessageStream(
   conversationId?: string,
   onComplete?: () => void
 ): Promise<void> {
+  let controller: AbortController | null = null;
+  let timeoutId: NodeJS.Timeout | null = null;
+
   try {
+    // 🛡️ สร้าง AbortController สำหรับ timeout
+    controller = new AbortController();
+    timeoutId = setTimeout(() => {
+      console.log("⏰ Chat request timeout - aborting...");
+      if (controller) {
+        controller.abort();
+      }
+    }, 60000); // 60 วินาที timeout
+
     // สร้าง headers พร้อม authentication
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -102,7 +114,14 @@ export async function sendChatMessageStream(
       headers,
       body: JSON.stringify({ message, messages, conversationId }),
       credentials: "include",
+      signal: controller.signal, // เพิ่ม AbortSignal
     });
+
+    // ✅ ล้าง timeout หากได้ response สำเร็จ
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
 
     if (!response.ok || !response.body) {
       throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
@@ -112,53 +131,82 @@ export async function sendChatMessageStream(
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, { stream: true });
 
-      let idx: number;
-      while ((idx = buffer.indexOf("\n\n")) !== -1) {
-        const rawEvent = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 2);
+        let idx: number;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const rawEvent = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 2);
 
-        const dataLines = rawEvent
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l.startsWith("data:"))
-          .map((l) => l.replace(/^data:\s*/, ""));
+          const dataLines = rawEvent
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => l.startsWith("data:"))
+            .map((l) => l.replace(/^data:\s*/, ""));
 
-        for (const payload of dataLines) {
-          // จบสตรีม
-          if (payload === "[DONE]") {
-            onComplete?.();
-            return;
-          }
-          // ping/keepalive -> ข้าม
-          if (payload === ":ping" || payload === '":ping"') continue;
-
-          // parse เฉพาะที่ดูเป็น JSON
-          if (payload.startsWith("{") || payload.startsWith("[")) {
-            try {
-              const parsed = JSON.parse(payload);
-              if (parsed?.content) onChunk(parsed.content);
-              // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
-            } catch (e) {
-              console.error("❌ JSON parse error:", e);
+          for (const payload of dataLines) {
+            // จบสตรีม
+            if (payload === "[DONE]") {
+              onComplete?.();
+              return;
             }
-          } else {
-            // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
-            onChunk(payload);
+            // ping/keepalive -> ข้าม
+            if (payload === ":ping" || payload === '":ping"') continue;
+
+            // parse เฉพาะที่ดูเป็น JSON
+            if (payload.startsWith("{") || payload.startsWith("[")) {
+              try {
+                const parsed = JSON.parse(payload);
+                if (parsed?.content) onChunk(parsed.content);
+                // อื่น ๆ เช่น {status:"connected"} / {done:true} ข้ามได้
+              } catch (e) {
+                console.error("❌ JSON parse error:", e);
+              }
+            } else {
+              // เผื่อกรณีส่งสตริงดิบ (ไม่น่าเกิดจากโค้ดเซิร์ฟเวอร์ปัจจุบัน)
+              onChunk(payload);
+            }
           }
         }
+      }
+    } finally {
+      // ✅ ปิด reader อย่างปลอดภัย
+      try {
+        reader.releaseLock();
+      } catch (e) {
+        console.warn("⚠️ Warning: Could not release reader lock", e);
       }
     }
 
     onComplete?.();
   } catch (error) {
+    console.error("💥 Chat stream error:", error);
     onComplete?.();
+
+    // ✅ จัดการ error messages ให้ชัดเจนขึ้น
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        throw new Error(
+          "⏰ การเชื่อมต่อหมดเวลา (60 วินาที) โปรดลองส่งข้อความใหม่อีกครั้ง"
+        );
+      } else if (error.message.includes("fetch")) {
+        throw new Error(
+          "🌐 ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"
+        );
+      }
+    }
+
     throw error;
+  } finally {
+    // ✅ ล้าง timeout ในทุกกรณี
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
   }
 }
 

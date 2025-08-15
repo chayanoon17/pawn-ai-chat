@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { sendChatMessageStream } from "@/lib/api";
 import { WidgetData } from "@/context/widget-context";
@@ -34,20 +34,27 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
-  
-  useEffect(() => {
-  if (!conversationId) {
-    // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
-    const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
-    setConversationId(newConversationId);
-  }
-}, [conversationId]);
 
+  // 🎯 จำกัดจำนวนข้อความในหน่วยความจำ
+  const MAX_CONTEXT_MESSAGES = 10; // เก็บเฉพาะ 10 ข้อความล่าสุด
 
-  const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
-    latestMessagesRef.current = messages;
+    if (!conversationId) {
+      // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
+      const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
+      setConversationId(newConversationId);
+    }
+  }, [conversationId]);
+
+  // 🛡️ ใช้ useMemo เพื่อจำกัดข้อความใน Context
+  const limitedMessages = useMemo(() => {
+    return messages.slice(-MAX_CONTEXT_MESSAGES);
   }, [messages]);
+
+  const latestMessagesRef = useRef<Message[]>(limitedMessages);
+  useEffect(() => {
+    latestMessagesRef.current = limitedMessages;
+  }, [limitedMessages]);
 
   // 🛡️ Safe JSON stringify function to handle circular references
   const safeStringify = (obj: unknown): string => {
@@ -87,9 +94,9 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
             return `[${value.constructor?.name || "ComplexObject"}]`;
           }
 
-          // Limit string length to prevent extremely long outputs
-          if (typeof value === "string" && value.length > 1000) {
-            return value.substring(0, 1000) + "... [truncated]";
+          // 🎯 ลดขนาด: จำกัดความยาวของ string
+          if (typeof value === "string" && value.length > 500) {
+            return value.substring(0, 500) + "... [ตัดข้อมูล]";
           }
 
           return value;
@@ -144,6 +151,17 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
   // 🎯 Handle เพิ่ม Context จาก Widget
   const handleContextAdd = (widget: WidgetData) => {
+    // 🛡️ จำกัดจำนวน Active Contexts ไม่เกิน 3 รายการ
+    if (activeContexts.length >= 3) {
+      const warningMessage = createSafeMessage(
+        `warning-${Date.now()}`,
+        "bot",
+        `⚠️ ไม่สามารถเพิ่ม Context ได้อีก\nสามารถเก็บ Context ได้สูงสุด 3 รายการเท่านั้น กรุณาลบบางรายการก่อน`
+      );
+      setMessages((prev) => [...prev, warningMessage]);
+      return;
+    }
+
     // ตรวจสอบว่ามี widget นี้อยู่แล้วหรือไม่
     const exists = activeContexts.some((ctx) => ctx.widget.id === widget.id);
 
@@ -268,11 +286,13 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           ? "คุณเป็น AI ผู้ช่วยวิเคราะห์ข้อมูล ตอบคำถามแบบตรงจุดและละเอียด ไม่ต้องขออภัยหรือบอกว่าไม่เข้าใจ หากมีข้อมูล context ให้ใช้ข้อมูลนั้นตอบคำถาม"
           : "คุณเป็น AI ผู้ช่วยเกี่ยวกับธุรกิจจำนำ ตอบคำถามแบบเป็นมิตรและให้ข้อมูลที่เป็นประโยชน์";
 
+      // 🛡️ จำกัดจำนวนข้อความที่ส่งให้ AI (เก็บเฉพาะข้อความล่าสุด)
       const historyMessages: {
         role: "user" | "assistant" | "system";
         content: string;
       }[] = [...latestMessagesRef.current, userMessage]
         .filter((msg) => msg.content !== "thinking") // 🐛 กรองข้อความ thinking ออก
+        .slice(-8) // 🎯 เก็บเฉพาะ 8 ข้อความล่าสุด (4 คู่สนทนา)
         .map((msg) => ({
           role: msg.type === "user" ? "user" : "assistant",
           content: msg.content,
@@ -376,10 +396,14 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
         createSafeMessage(
           Date.now().toString(),
           "bot",
-          "❌ เกิดข้อผิดพลาดในการติดต่อ AI โปรดลองใหม่อีกครั้ง\n\n" +
-            (error instanceof Error
-              ? `เหตุผล: ${error.message}`
-              : "ข้อผิดพลาดไม่ทราบสาเหตุ")
+          error instanceof Error && error.message.includes("⏰")
+            ? "⏰ " +
+                error.message +
+                "\n\n💡 **คุณสามารถส่งข้อความใหม่ได้เลย** การ timeout นี้ไม่ส่งผลต่อการสนทนา"
+            : "❌ เกิดข้อผิดพลาดในการติดต่อ AI โปรดลองใหม่อีกครั้ง\n\n" +
+                (error instanceof Error
+                  ? `เหตุผล: ${error.message}`
+                  : "ข้อผิดพลาดไม่ทราบสาเหตุ")
         ),
       ]);
     }
