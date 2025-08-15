@@ -65,7 +65,6 @@ const subtractDays = (dateStr: string, days: number) => {
   return d.toISOString();
 };
 
-
 export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [chartConfig, setChartConfig] = useState<
@@ -78,8 +77,16 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+      params.append("top", "5");
+
       const res = await apiClient.get<ApiResponse>(
-        `/api/v1/asset-types/ranking-by-period?branchId=${branchId}&date=${date}&top=5`
+        `/api/v1/asset-types/ranking-by-period?${params.toString()}`
       );
 
       console.log("✅ Full API Response:", res.data);
@@ -139,7 +146,7 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   };
 
   useEffect(() => {
-    if (!branchId || !date || branchId === "all") return;
+    if (!date) return;
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
@@ -151,17 +158,17 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
     "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
     chartData.length > 0
       ? {
-        branchId: parseInt(branchId),
-        periodData: chartData,
-        assetTypes: Object.keys(chartConfig),
-        dateRange: {
-          start: chartData[0]?.date,
-          end: chartData[chartData.length - 1]?.date,
-        },
-        totalDataPoints: chartData.length,
-        topPerformingAsset: Object.keys(chartConfig)[0], // สมมติว่าเรียงตาม ranking
-        lastUpdated: timestamp,
-      }
+          branchId: parseInt(branchId),
+          periodData: chartData,
+          assetTypes: Object.keys(chartConfig),
+          dateRange: {
+            start: chartData[0]?.date,
+            end: chartData[chartData.length - 1]?.date,
+          },
+          totalDataPoints: chartData.length,
+          topPerformingAsset: Object.keys(chartConfig)[0], // สมมติว่าเรียงตาม ranking
+          lastUpdated: timestamp,
+        }
       : null
   );
 
@@ -187,22 +194,25 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
               ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา
             </CardTitle>
             <span className="text-sm text-slate-500">
-              {isLoading
-                ? "กำลังโหลดข้อมูล..."
-                : timestamp
-                  ? <span className="text-sm text-slate-500">
-                    {isLoading
-                      ? "กำลังโหลดข้อมูล..."
-                      : timestamp
-                        ? `ข้อมูล ณ วันที่ ${formatDate(subtractDays(date, 6))} ถึง วันที่ ${formatDate(date)}`
-                        : branchId === "all"
-                          ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                          : "ไม่พบข้อมูล"}
-                  </span>
-
-                  : branchId === "all"
+              {isLoading ? (
+                "กำลังโหลดข้อมูล..."
+              ) : timestamp ? (
+                <span className="text-sm text-slate-500">
+                  {isLoading
+                    ? "กำลังโหลดข้อมูล..."
+                    : timestamp
+                    ? `ข้อมูล ณ วันที่ ${formatDate(
+                        subtractDays(date, 6)
+                      )} ถึง วันที่ ${formatDate(date)}`
+                    : branchId === "all"
                     ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
                     : "ไม่พบข้อมูล"}
+                </span>
+              ) : branchId === "all" ? (
+                "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+              ) : (
+                "ไม่พบข้อมูล"
+              )}
             </span>
           </div>
         </div>

@@ -60,8 +60,8 @@ export const ContractStatusSummary = ({
 
   // 🌟 เรียก API ดึงข้อมูลสรุปสถานะสัญญา
   const fetchStatusSummary = async () => {
-    // ถ้าไม่มี branchId หรือ date ยัง loading อยู่ ไม่ต้องเรียก API
-    if (!branchId || !date || parentLoading || branchId === "all") {
+    // ถ้าไม่มี date ยัง loading อยู่ ไม่ต้องเรียก API
+    if (!date || parentLoading) {
       setData([]);
       setTimestamp(null);
       setIsLoading(false);
@@ -72,9 +72,17 @@ export const ContractStatusSummary = ({
       setIsLoading(true);
       setError(null);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+      params.append("summaryType", "contractStatus");
+
       // เรียก API ดึงข้อมูลสรุปสถานะสัญญา
       const response = await apiClient.get<StatusSummaryResponse>(
-        `/api/v1/contracts/transactions/summary?branchId=${branchId}&date=${date}&summaryType=contractStatus`
+        `/api/v1/contracts/transactions/summary?${params.toString()}`
       );
 
       // แปลงข้อมูลให้เป็นรูปแบบสำหรับ PieChart
@@ -127,24 +135,24 @@ export const ContractStatusSummary = ({
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ เช่น ตั๋วปัจจุบัน หลุดจำนำ ไถ่ถอน",
     data.length > 0
       ? {
-        branchId: parseInt(branchId),
-        summaries: data.map((item) => ({
-          status: item.name,
-          count: item.value,
-          color: item.color,
-        })),
-        totalContracts: data.reduce((sum, item) => sum + item.value, 0),
-        lastUpdated: timestamp,
-        topStatus: data.reduce(
-          (max, item) => (item.value > max.value ? item : max),
-          data[0]
-        )?.name,
-      }
+          branchId: parseInt(branchId),
+          summaries: data.map((item) => ({
+            status: item.name,
+            count: item.value,
+            color: item.color,
+          })),
+          totalContracts: data.reduce((sum, item) => sum + item.value, 0),
+          lastUpdated: timestamp,
+          topStatus: data.reduce(
+            (max, item) => (item.value > max.value ? item : max),
+            data[0]
+          )?.name,
+        }
       : null
   );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย
-   const formatDate = (iso: string) => {
+  const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
@@ -247,15 +255,15 @@ export const ContractStatusSummary = ({
             <CardTitle className="text-lg font-semibold text-slate-800">
               ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ
             </CardTitle>
-            
+
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
-                  : branchId === "all"
-                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                    : "ไม่พบข้อมูล"}
+                ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

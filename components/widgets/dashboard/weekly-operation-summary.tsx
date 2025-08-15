@@ -102,15 +102,22 @@ export const WeeklyOperationSummary = ({
 
   // 🔄 ดึงข้อมูลจาก API
   const fetchWeeklyOperationSummary = useCallback(async () => {
-    if (!branchId || isLoading) return;
+    if (isLoading || !date) return;
 
     try {
       setLoading(true);
       setError(null);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+
       // เรียก API ดึงข้อมูลสรุปการดำเนินงานรายสัปดาห์
       const response = await apiClient.get<WeeklyOperationResponse>(
-        `/api/v1/branches/weekly-operation/summary?branchId=${branchId}&date=${date}`
+        `/api/v1/branches/weekly-operation/summary?${params.toString()}`
       );
 
       setData(response.data);
