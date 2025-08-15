@@ -2,6 +2,7 @@
   "name": "pawn-ai-chatbot",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 8080",
     "build": "next build",
@@ -9,6 +10,9 @@
     "start:next": "next start",
     "lint": "next lint",
     "azure:postinstall": "npm run build",
+    "deploy:prepare": "npm run build && npm run deploy:package",
+    "deploy:package": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Write-Host 'Creating deployment package...'; Remove-Item -Recurse -Force deploy -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path deploy -Force; Copy-Item -Recurse -Force .next/standalone/* deploy/; Copy-Item -Recurse -Force .next/static deploy/.next/static -ErrorAction SilentlyContinue; Copy-Item -Recurse -Force public deploy/public -ErrorAction SilentlyContinue; Copy-Item -Force server.js deploy/server.js; Copy-Item -Force web.config deploy/web.config; Copy-Item -Force package.json deploy/package.json; if (Test-Path package-lock.json) { Copy-Item -Force package-lock.json deploy/package-lock.json }; Write-Host 'Deployment package created in ./deploy folder' -ForegroundColor Green\"",
+    "deploy:zip": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Compress-Archive -Path deploy/* -DestinationPath deploy-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip -Force; Write-Host 'Deployment zip file created' -ForegroundColor Green\"",
     "make-deploy:win": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"npm ci; $env:NODE_ENV='production'; $env:NEXT_TELEMETRY_DISABLED='1'; npm run build; New-Item -ItemType Directory -Force -Path .next/standalone/.next | Out-Null; Copy-Item -Recurse -Force .next/static .next/standalone/.next/static; if (Test-Path public) { Copy-Item -Recurse -Force public .next/standalone/public }; Remove-Item -Recurse -Force deploy -ErrorAction SilentlyContinue; New-Item -ItemType Directory -Path deploy | Out-Null; New-Item -ItemType Directory -Path deploy/.next | Out-Null; Copy-Item -Recurse -Force .next/standalone deploy/.next/standalone; Copy-Item -Force package.json deploy/package.json; if (Test-Path package-lock.json) { Copy-Item -Force package-lock.json deploy/package-lock.json }; npm ci --omit=dev --prefix deploy\""
   },
   "dependencies": {
