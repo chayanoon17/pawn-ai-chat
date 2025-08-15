@@ -83,7 +83,7 @@ export async function sendChatMessageStream(
   conversationId?: string,
   onComplete?: () => void
 ): Promise<void> {
-  // สร้าง headers พร้อม auth
+  // headers + bearer token (ถ้ามี)
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("accessToken");
@@ -105,10 +105,22 @@ export async function sendChatMessageStream(
   const decoder = new TextDecoder("utf-8");
 
   let buffer = "";
-
-  // ✅ ธงช่วยกด error ทิ้งถ้าเรารับข้อความแล้ว/รู้ว่าจบแล้ว
-  let receivedDone = false;
+  let completed = false;
   let gotAnyChunk = false;
+
+  const safeComplete = () => {
+    if (!completed) {
+      completed = true;
+      onComplete?.();
+    }
+  };
+
+  const emitContent = (text: unknown) => {
+    if (typeof text === "string" && text.length > 0) {
+      gotAnyChunk = true;
+      onChunk(text);
+    }
+  };
 
   try {
     while (true) {
@@ -119,80 +131,109 @@ export async function sendChatMessageStream(
 
       let idx: number;
       while ((idx = buffer.indexOf("\n\n")) !== -1) {
-        const block = buffer.slice(0, idx).trim();
+        const rawBlock = buffer.slice(0, idx);
         buffer = buffer.slice(idx + 2);
 
+        const block = rawBlock.replace(/\r/g, "").trim();
         if (!block) continue;
 
-        // 🔎 parse SSE ตามสเปค: รองรับทั้ง event: และ data:
+        // พาร์สรูปแบบ SSE: รองรับทั้ง event: และ data:
         let eventName = "message";
         const dataLines: string[] = [];
 
         for (const rawLine of block.split("\n")) {
           const line = rawLine.trim();
-          if (!line) continue;
-          if (line.startsWith(":")) continue; // comment/keepalive
+          if (!line || line.startsWith(":")) continue; // comment/keepalive
           if (line.startsWith("event:")) {
             eventName = line.slice(6).trim();
             continue;
           }
           if (line.startsWith("data:")) {
-            dataLines.push(line.slice(5).trim());
+            dataLines.push(line.slice(5));
           }
         }
 
-        const dataStr = dataLines.join("\n");
+        const dataStr = dataLines.join("\n").trim();
 
-        // 🎯 จบสตรีม: รองรับทั้งสองรูปแบบ
+        // จบสตรีม (สองรูปแบบ)
         if (eventName === "done" || dataStr === "[DONE]") {
-          receivedDone = true;
-          onComplete?.();
+          safeComplete();
           return;
         }
 
-        // event error → โยน error
         if (eventName === "error") {
           throw new Error(dataStr || "SSE error");
         }
 
-        // ข้าม ping/keepalive ที่ส่งมาเป็น data
+        // ข้าม ping/keepalive ที่มาเป็น data
         if (dataStr === ":ping" || dataStr === '":ping"') continue;
+        if (!dataStr) continue;
 
-        if (dataStr) {
-          // โครงสร้างที่ server ส่งมาอาจเป็น JSON {content:"..."} หรือสตริงดิบ
-          try {
-            const parsed = JSON.parse(dataStr);
-            if (parsed?.content) {
-              gotAnyChunk = true;
-              onChunk(parsed.content);
-            }
-          } catch {
-            gotAnyChunk = true;
-            onChunk(dataStr);
+        // โครงสร้างที่ server อาจส่งมา: {content:"..."} หรือ delta แบบ OpenAI
+        try {
+          const parsed = JSON.parse(dataStr);
+          const direct =
+            typeof parsed?.content === "string" ? parsed.content : undefined;
+
+          const delta =
+            parsed?.choices?.[0]?.delta?.content ??
+            parsed?.delta?.content ??
+            parsed?.text ??
+            undefined;
+
+          if (direct !== undefined) {
+            emitContent(direct);
+          } else if (typeof delta === "string") {
+            emitContent(delta);
           }
+          // ไม่รู้จักรูปแบบ → ไม่ต้อง emit
+        } catch {
+          // สตริงดิบ
+          emitContent(dataStr);
         }
       }
     }
 
-    onComplete?.();
-  } catch (err: any) {
-    // 🙏 ถ้าเรา “จบไปแล้ว” หรือ “ได้ชิ้นส่วนข้อความมาแล้ว” ให้เมิน network error/abort
-    const msg = String(err?.message || "");
+    // flush ก้อนท้าย (ถ้ามีแต่ไม่ได้ตามด้วย "\n\n")
+    const tail = buffer.trim();
+    if (tail && tail !== "[DONE]") {
+      try {
+        const parsed = JSON.parse(tail);
+        const direct =
+          typeof parsed?.content === "string" ? parsed.content : undefined;
+        const delta =
+          parsed?.choices?.[0]?.delta?.content ??
+          parsed?.delta?.content ??
+          parsed?.text ??
+          undefined;
+
+        if (direct !== undefined) emitContent(direct);
+        else if (typeof delta === "string") emitContent(delta);
+        else emitContent(tail);
+      } catch {
+        emitContent(tail);
+      }
+    }
+
+    safeComplete();
+  } catch (err: unknown) {
+    // ถ้าเรา “จบแล้ว” หรือ “ได้ข้อความมาแล้ว” และ error เป็นแนว network-close ก็เมิน
+    const msg =
+      err instanceof Error ? err.message : typeof err === "string" ? err : "";
+
     if (
-      receivedDone ||
-      (gotAnyChunk &&
-        (msg.toLowerCase().includes("network") ||
-         msg.includes("AbortError") ||
-         msg.toUpperCase().includes("RESET")))
+      completed ||
+      (gotAnyChunk && typeof msg === "string" && /network|abort|reset/i.test(msg))
     ) {
       console.warn("SSE closed after completion. Suppressed:", err);
       return;
     }
 
-    onComplete?.();
-    throw err;
+    safeComplete();
+    throw err instanceof Error ? err : new Error(String(err));
   }
 }
+
 
 
 export async function getAllConversations({
