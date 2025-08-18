@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 export type WidgetFilterData = {
-  branchId: string;
+  branchId: string | null; // null สำหรับ "ทุกสาขา"
   date: string;
   isLoading: boolean;
 };
@@ -58,13 +58,13 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         localStorage.removeItem("widgetFilter_branchId");
         localStorage.removeItem("widgetFilter_date");
         sessionStorage.setItem("widgetFilter_session", "active");
-        return "";
+        return "all"; // ค่าเริ่มต้นเป็น "ทุกสาขา"
       } else {
         // ถ้าไม่ใช่ session ใหม่ ให้ใช้ค่าจาก localStorage
-        return localStorage.getItem("widgetFilter_branchId") || "";
+        return localStorage.getItem("widgetFilter_branchId") || "all";
       }
     }
-    return "";
+    return "all"; // ค่าเริ่มต้นเป็น "ทุกสาขา"
   });
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
@@ -120,11 +120,12 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
         setBranches(response.data);
 
         // เฉพาะกรณีที่ยังไม่มีการเลือกสาขา (ครั้งแรกที่โหลด)
-        if (response.data.length > 0 && !selectedBranchId) {
+        if (
+          response.data.length > 0 &&
+          (!selectedBranchId || selectedBranchId === "")
+        ) {
           // 🔒 ถ้า user มี branch restriction ใช้ branch ของ user
-          const defaultBranchId = isBranchRestricted
-            ? userBranchId
-            : response.data[0].id.toString();
+          const defaultBranchId = isBranchRestricted ? userBranchId : "all"; // ค่าเริ่มต้นเป็น "ทุกสาขา"
 
           setSelectedBranchId(defaultBranchId);
 
@@ -134,16 +135,19 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
           }
 
           onFilterChange?.({
-            branchId: defaultBranchId,
+            branchId: defaultBranchId === "all" ? null : defaultBranchId,
             date: selectedDate
               ? formatDateForAPI(selectedDate)
               : formatDateForAPI(new Date()),
             isLoading: false,
           });
-        } else if (selectedBranchId && selectedDate) {
+        } else if (
+          (selectedBranchId || selectedBranchId === "all") &&
+          selectedDate
+        ) {
           // ถ้ามีค่า saved อยู่แล้ว ให้ trigger onFilterChange
           onFilterChange?.({
-            branchId: selectedBranchId,
+            branchId: selectedBranchId === "all" ? null : selectedBranchId,
             date: formatDateForAPI(selectedDate),
             isLoading: false,
           });
@@ -207,12 +211,25 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
 
   // 📡 Effect for debounced filter changes
   useEffect(() => {
-    if (debouncedBranchId && debouncedDate) {
-      handleFilterChange({
-        branchId: debouncedBranchId,
+    if (
+      debouncedBranchId !== null &&
+      debouncedBranchId !== undefined &&
+      debouncedDate
+    ) {
+      const filterData = {
+        branchId: debouncedBranchId === "all" ? null : debouncedBranchId,
         date: formatDateForAPI(debouncedDate),
         isLoading: false,
+      };
+
+      // Debug log
+      console.log("🔄 Widget Filter Change:", {
+        originalBranchId: debouncedBranchId,
+        finalBranchId: filterData.branchId,
+        date: filterData.date,
       });
+
+      handleFilterChange(filterData);
     }
   }, [debouncedBranchId, debouncedDate, handleFilterChange]);
 
@@ -248,6 +265,9 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
                   />
                 )}
                 {(() => {
+                  if (selectedBranchId === "all") {
+                    return "ทุกสาขา";
+                  }
                   const selectedBranch = branches.find(
                     (b) => b.id.toString() === selectedBranchId
                   );
@@ -279,6 +299,23 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
                 <CommandInput placeholder="ค้นหาสาขา..." className="h-9" />
                 <CommandEmpty>ไม่พบสาขา</CommandEmpty>
                 <CommandGroup>
+                  {/* ตัวเลือก "ทุกสาขา" สำหรับ user ที่ไม่มี branch restriction */}
+                  {!isBranchRestricted && (
+                    <CommandItem
+                      value="ทุกสาขา"
+                      onSelect={() => handleBranchChange("all")}
+                      className={isMobile ? "text-xs" : ""}
+                    >
+                      ทุกสาขา
+                      {selectedBranchId === "all" && (
+                        <Check
+                          className={`ml-auto ${
+                            isMobile ? "h-3 w-3" : "h-4 w-4"
+                          }`}
+                        />
+                      )}
+                    </CommandItem>
+                  )}
                   {branches.map((branch) => (
                     <CommandItem
                       key={branch.id}

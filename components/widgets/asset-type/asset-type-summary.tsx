@@ -28,7 +28,7 @@ type ApiResponse = {
 };
 
 interface Props {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }
@@ -163,7 +163,7 @@ export const AssetTypesSummary = ({
   );
 
   const fetchData = async () => {
-    if (!branchId || !date || branchId === "all" || parentLoading) {
+    if (!date || parentLoading) {
       setData([]);
       setTimestamp(null);
       setIsLoading(false);
@@ -173,8 +173,16 @@ export const AssetTypesSummary = ({
     try {
       setIsLoading(true);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+      params.append("top", "4");
+
       const res = await apiClient.get<ApiResponse>(
-        `/api/v1/asset-types/summary?branchId=${branchId}&date=${date}&top=4`
+        `/api/v1/asset-types/summary?${params.toString()}`
       );
 
       const apiData = res.data;
@@ -215,20 +223,20 @@ export const AssetTypesSummary = ({
     "ข้อมูลสรุปประเภททรัพย์และจำนวน พร้อมจำนวนและเปอร์เซ็นต์",
     data.length > 0
       ? {
-        branchId: parseInt(branchId),
-        totalAssetTypes: data.length,
-        totalItems: data.reduce((sum, item) => sum + item.value, 0),
-        assetTypes: data.map((item) => ({
-          name: item.name,
-          count: item.value,
-          percentage: item.percentage,
-        })),
-        topAssetType: data.reduce(
-          (max, item) => (item.value > max.value ? item : max),
-          data[0]
-        )?.name,
-        lastUpdated: timestamp,
-      }
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
+          totalAssetTypes: data.length,
+          totalItems: data.reduce((sum, item) => sum + item.value, 0),
+          assetTypes: data.map((item) => ({
+            name: item.name,
+            count: item.value,
+            percentage: item.percentage,
+          })),
+          topAssetType: data.reduce(
+            (max, item) => (item.value > max.value ? item : max),
+            data[0]
+          )?.name,
+          lastUpdated: timestamp,
+        }
       : null
   );
 
@@ -257,10 +265,10 @@ export const AssetTypesSummary = ({
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
-                  : branchId === "all"
-                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                    : "ไม่พบข้อมูล"}
+                ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

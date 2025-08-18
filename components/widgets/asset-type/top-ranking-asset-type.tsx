@@ -28,7 +28,7 @@ interface ApiResponse {
 }
 
 interface TopRankingAssetTypeProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
 }
 
@@ -42,7 +42,7 @@ export const TopRankingAssetType = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchTopRanking = async () => {
-    if (!branchId || branchId === "all" || !date) {
+    if (!date) {
       setRankings([]);
       return;
     }
@@ -51,8 +51,16 @@ export const TopRankingAssetType = ({
       setIsLoading(true);
       setError(null);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+      params.append("top", "10");
+
       const res = await apiClient.get<ApiResponse>(
-        `/api/v1/asset-types/top-ranking?branchId=${branchId}&date=${date}&top=10`
+        `/api/v1/asset-types/top-ranking?${params.toString()}`
       );
 
       setRankings(res.data.rankings || []);
@@ -85,26 +93,26 @@ export const TopRankingAssetType = ({
     "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
     rankings.length > 0
       ? {
-        branchId: parseInt(branchId),
-        totalRankings: rankings.length,
-        rankings: rankings.map((r) => ({
-          rank: r.rank,
-          assetType: r.assetType,
-          count: r.count,
-          totalValue: r.totalValue,
-          averageValue: r.totalValue / r.count,
-        })),
-        topAssetType: rankings[0]?.assetType,
-        highestValueType: rankings.reduce(
-          (max, r) => (r.totalValue > max.totalValue ? r : max),
-          rankings[0]
-        )?.assetType,
-        lastUpdated: timestamp,
-      }
+          branchId: branchId ? parseInt(branchId) : null, // แก้ไขให้รองรับ null
+          totalRankings: rankings.length,
+          rankings: rankings.map((r) => ({
+            rank: r.rank,
+            assetType: r.assetType,
+            count: r.count,
+            totalValue: r.totalValue,
+            averageValue: r.totalValue / r.count,
+          })),
+          topAssetType: rankings[0]?.assetType,
+          highestValueType: rankings.reduce(
+            (max, r) => (r.totalValue > max.totalValue ? r : max),
+            rankings[0]
+          )?.assetType,
+          lastUpdated: timestamp,
+        }
       : null
   );
 
-   const formatDate = (iso: string) => {
+  const formatDate = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleString("th-TH", {
       timeZone: "Asia/Bangkok",
@@ -125,15 +133,15 @@ export const TopRankingAssetType = ({
             <CardTitle className="text-lg font-semibold text-slate-80">
               10 อันดับ รายการประเภททรัพย์และราคา
             </CardTitle>
-           
+
             <span className="text-sm text-slate-500">
               {isLoading
                 ? "กำลังโหลดข้อมูล..."
                 : timestamp
-                  ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
-                  : branchId === "all"
-                    ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
-                    : "ไม่พบข้อมูล"}
+                ? `ข้อมูล ณ วันที่ ${formatDate(date)}`
+                : branchId === "all"
+                ? "กรุณาเลือกสาขาเพื่อดูข้อมูล"
+                : "ไม่พบข้อมูล"}
             </span>
           </div>
         </div>

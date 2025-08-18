@@ -96,7 +96,7 @@ interface ContractTransactionDetailsResponse {
 
 // 📊 Props สำหรับ Widget
 interface ContractTransactionDetailsProps {
-  branchId: string;
+  branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
   isLoading?: boolean;
 }
@@ -196,15 +196,22 @@ export default function ContractTransactionDetails({
 
   // 🔄 ดึงข้อมูลจาก API
   const fetchTransactionDetails = async () => {
-    if (!branchId || isLoading) return;
+    if (isLoading || !date) return;
 
     try {
       setLoading(true);
       setError(null);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+
       // เรียก API ดึงข้อมูลรายละเอียดรายการรับจำนำ
       const response = await apiClient.get<ContractTransactionDetailsResponse>(
-        `/api/v1/contracts/transactions/details?branchId=${branchId}&date=${date}`
+        `/api/v1/contracts/transactions/details?${params.toString()}`
       );
 
       setData(response.data);
@@ -234,11 +241,8 @@ export default function ContractTransactionDetails({
 
   // 📥 Export CSV Function
   const handleExportCSV = async () => {
-    if (!branchId || !date) {
-      showWarning(
-        "ไม่สามารถ Export ได้",
-        "กรุณาเลือกสาขาและวันที่ก่อนทำการ Export"
-      );
+    if (!date) {
+      showWarning("ไม่สามารถ Export ได้", "กรุณาเลือกวันที่ก่อนทำการ Export");
       return;
     }
 

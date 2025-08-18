@@ -34,37 +34,3 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-🚀 Scripts ที่เพิ่มเข้าไป:
-
-1. npm run deploy:prepare
-   Build แอปพลิเคชัน และสร้าง deployment package
-   รวม 2 ขั้นตอนเป็นหนึ่งเดียว
-2. npm run deploy:package
-   สร้าง deployment package ใน deploy folder
-   Copy ไฟล์ที่จำเป็นทั้งหมด (standalone build, static files, server.js, web.config)
-3. npm run deploy:zip
-   สร้างไฟล์ zip พร้อม timestamp สำหรับ deployment
-   ได้ไฟล์ deploy-YYYYMMDD-HHMMSS.zip
-
-📋 วิธีใช้งาน:
-
-# สร้าง deployment package
-
-npm run deploy:prepare
-
-# หรือถ้า build แล้ว ก็สร้าง package อย่างเดียว
-
-npm run deploy:package
-
-# สร้างไฟล์ zip สำหรับ upload
-
-npm run deploy:zip
-
-📁 โครงสร้างในโฟลเดอร์ deploy:
-server.js - Custom server
-web.config - IIS configuration
-package.json - Dependencies
-standalone - Next.js build files
-static - Static assets
-public - Public files

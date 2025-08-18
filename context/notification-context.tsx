@@ -123,7 +123,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (isAuthenticated && user) {
       const interval = setInterval(() => {
         loadUnreadCount();
-      }, 30000);
+      }, 60000); // ทุก 1 นาที (60000ms)
 
       return () => clearInterval(interval);
     }

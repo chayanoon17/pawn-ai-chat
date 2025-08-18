@@ -6,10 +6,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   generateEtags: false,
   reactStrictMode: true,
-  trailingSlash: false,
-  experimental: {
-    serverMinification: true,
-  },
 };
 
 export default nextConfig;

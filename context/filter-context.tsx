@@ -12,7 +12,7 @@ const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [filterData, setFilterData] = useState<WidgetFilterData>({
-    branchId: "",
+    branchId: null, // เริ่มต้นด้วย null สำหรับ "ทุกสาขา"
     date: new Date().toISOString().split("T")[0],
     isLoading: true,
   });

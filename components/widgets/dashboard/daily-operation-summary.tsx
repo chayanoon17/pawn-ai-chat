@@ -21,8 +21,8 @@ export const DailyOperationSummary = ({
 
   // 🌟 เรียก API ดึงข้อมูลรายงานผลการดำเนินงาน
   const fetchSummary = async () => {
-    // ถ้าไม่มี branchId หรือ date ยัง loading อยู่ ไม่ต้องเรียก API
-    if (!branchId || !date || parentLoading || branchId === "all") {
+    // ถ้าไม่มี date ยัง loading อยู่ ไม่ต้องเรียก API
+    if (!date || parentLoading) {
       setSummary(null);
       setIsLoading(false);
       return;
@@ -32,9 +32,16 @@ export const DailyOperationSummary = ({
       setIsLoading(true);
       setError(null);
 
+      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
+      }
+      params.append("date", date);
+
       // เรียก API ดึงข้อมูลรายงานผลการดำเนินงาน
       const response = await apiClient.get<BranchDailySummary>(
-        `/api/v1/branches/daily-operation/summary?branchId=${branchId}&date=${date}`
+        `/api/v1/branches/daily-operation/summary?${params.toString()}`
       );
 
       console.log("✅ Fetched Daily Operation Summary:", response.data);
