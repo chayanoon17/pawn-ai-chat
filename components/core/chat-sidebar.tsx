@@ -34,15 +34,14 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
-  
-  useEffect(() => {
-  if (!conversationId) {
-    // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
-    const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
-    setConversationId(newConversationId);
-  }
-}, [conversationId]);
 
+  useEffect(() => {
+    if (!conversationId) {
+      // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
+      const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
+      setConversationId(newConversationId);
+    }
+  }, [conversationId]);
 
   const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
@@ -168,7 +167,28 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       addedAt: new Date(),
     };
 
-    setActiveContexts((prev) => [...prev, newContext]);
+    // 📝 Console log เมื่อเพิ่ม context
+    console.log("➕ เพิ่ม Context ใหม่:", {
+      widgetId: widget.id,
+      widgetName: widget.name,
+      widgetDescription: widget.description,
+      dataType: typeof widget.data,
+      dataContent: safeStringify(widget.data),
+      addedAt: newContext.addedAt.toISOString(),
+    });
+
+    setActiveContexts((prev) => {
+      const updatedContexts = [...prev, newContext];
+      console.log("📊 Active Contexts หลังจากเพิ่ม:", {
+        totalContexts: updatedContexts.length,
+        contextList: updatedContexts.map((ctx) => ({
+          id: ctx.widget.id,
+          name: ctx.widget.name,
+          addedAt: ctx.addedAt.toISOString(),
+        })),
+      });
+      return updatedContexts;
+    });
 
     // แสดงข้อความแจ้งเตือนใน chat
     const contextMessage = createSafeMessage(
@@ -310,11 +330,70 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
         console.log("✅ Context เตรียมเสร็จแล้ว");
 
+        // 🚀 Console log context ที่ส่งไปยัง AI
+        console.log("🤖 ส่ง Context ไปยัง AI:", {
+          totalContexts: activeContexts.length,
+          contextData: activeContexts.map((ctx, index) => ({
+            index: index + 1,
+            widgetId: ctx.widget.id,
+            widgetName: ctx.widget.name,
+            description: ctx.widget.description,
+            dataType: typeof ctx.widget.data,
+            dataPreview: ctx.widget.data
+              ? JSON.stringify(ctx.widget.data).substring(0, 200) + "..."
+              : "ไม่มีข้อมูล",
+            addedAt: ctx.addedAt.toISOString(),
+          })),
+          fullContextPrompt:
+            contextPrompt.substring(0, 500) + "... [truncated for console]",
+          promptLength: contextPrompt.length,
+        });
+
+        // 🔍 Console log ข้อมูลเต็มของแต่ละ widget
+        activeContexts.forEach((ctx, index) => {
+          console.group(`📊 Widget ${index + 1}: ${ctx.widget.name}`);
+          console.log("🆔 Widget ID:", ctx.widget.id);
+          console.log("📝 Description:", ctx.widget.description);
+          console.log("📅 Added At:", ctx.addedAt.toISOString());
+          console.log("🔍 Data Type:", typeof ctx.widget.data);
+          console.log("📄 Full Widget Data:", ctx.widget.data);
+
+          // ✅ เช็คข้อมูล transactions โดยเฉพาะ
+          if (ctx.widget.data && typeof ctx.widget.data === "object") {
+            const data = ctx.widget.data as any;
+            console.log("🔍 ตรวจสอบ transactions:", {
+              hasTransactions: "transactions" in data,
+              transactionsType: typeof data.transactions,
+              transactionsLength: Array.isArray(data.transactions)
+                ? data.transactions.length
+                : "ไม่ใช่ Array",
+              firstTransaction:
+                Array.isArray(data.transactions) && data.transactions.length > 0
+                  ? data.transactions[0]
+                  : "ไม่มีข้อมูล",
+              dataKeys: Object.keys(data),
+            });
+          }
+
+          // แสดงข้อมูลในรูปแบบ JSON ที่อ่านง่าย
+          if (ctx.widget.data) {
+            console.log("📋 JSON Data (Pretty):");
+            console.log(JSON.stringify(ctx.widget.data, null, 2));
+          }
+          console.groupEnd();
+        }); // 📤 Console log ข้อความเต็มที่ส่งไปยัง AI
+        console.group("📤 Context Prompt ที่ส่งไปยัง AI (เต็ม)");
+        console.log("📏 ความยาว:", contextPrompt.length, "ตัวอักษร");
+        console.log("📄 เนื้อหาเต็ม:");
+        console.log(contextPrompt);
+        console.groupEnd();
+
         historyMessages.unshift({
           role: "system",
           content: `${systemMessage}\n\nคุณมีข้อมูล context จาก widgets ดังนี้:\n\n${contextPrompt}\n\nใช้ข้อมูลนี้เพื่อตอบคำถามของผู้ใช้อย่างถูกต้องและละเอียด ไม่ต้องขออภัยหรือบอกว่าไม่เข้าใจ`,
         });
       } else {
+        console.log("📝 ไม่มี Context - ใช้ระบบ AI ทั่วไป");
         historyMessages.unshift({
           role: "system",
           content: systemMessage,

@@ -312,37 +312,6 @@ export default function ContractTransactionDetails({
     }
   };
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
-    "contract-transaction-details",
-    "รายการรับจำนำทั้งหมด",
-    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
-    data
-      ? {
-          branchId: data.branchId,
-          totalTransactions: data.transactions.length,
-          summaries: data.summaries,
-          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-            contractNumber: t.contractNumber,
-            ticketBookNumber: t.ticketBookNumber,
-            customerName: t.customerName,
-            transactionType: t.transactionType,
-            remainingAmount: t.remainingAmount,
-            assetType: t.assetType,
-            ticketStatus: t.contractStatus,
-          })),
-          transactionTypes: [
-            ...new Set(data.transactions.map((t) => t.transactionType)),
-          ],
-          totalAmount: data.transactions.reduce(
-            (sum, t) => sum + t.remainingAmount,
-            0
-          ),
-          lastUpdated: data.timestamp,
-        }
-      : null
-  );
-
   // 🔍 Filter ข้อมูลตามการค้นหา
   const filteredTransactions =
     data?.transactions.filter((transaction) => {
@@ -387,6 +356,41 @@ export default function ContractTransactionDetails({
     page * pageSize
   );
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
+  useWidgetRegistration(
+    "contract-transaction-details",
+    "รายการรับจำนำทั้งหมด",
+    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
+    data
+      ? {
+          branchId: data.branchId,
+          totalTransactions: data.transactions.length,
+          summaries: data.summaries,
+          // ✅ ใช้ transactions ที่กรองและแบ่งหน้าแล้ว (หน้าปัจจุบัน)
+          transactions: paginatedData,
+          // ข้อมูลเพิ่มเติมสำหรับ context
+          currentPage: page,
+          pageSize: pageSize,
+          totalPages: totalPages,
+          filteredTransactionsCount: filteredTransactions.length,
+          searchTerm: searchTerm,
+          selectedType: selectedType,
+          transactionTypes: [
+            ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          totalAmount: data.transactions.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          currentPageAmount: paginatedData.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          lastUpdated: data.timestamp,
+        }
+      : null
+  );
 
   // 🎯 Helper function สำหรับจัดรูปแบบวันที่
   const formatDate = (iso: string) => {
