@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
@@ -124,7 +124,6 @@ export const WeeklyOperationSummary = ({
 
       // Log ใน development mode
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Weekly operation summary loaded:", response.data);
       }
     } catch (err) {
       console.error("❌ Error fetching weekly operation summary:", err);

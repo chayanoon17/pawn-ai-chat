@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +26,6 @@ export const GoldPriceCard = () => {
         );
 
         setLatestPrice(response.data);
-
-        // Log ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("✨ Gold price loaded:", response.data);
-        }
       } catch (err: unknown) {
         const error = err as {
           response?: { data?: { message?: string } };

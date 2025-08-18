@@ -86,13 +86,6 @@ export function useOptimizedMemo<T>(
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
-    if (process.env.NODE_ENV === "development" && debugName) {
-      console.log(`🔄 Recalculating ${debugName}`, {
-        previous,
-        current: deps,
-        changed: previous ? deps.some((dep, i) => dep !== previous[i]) : true,
-      });
-    }
     return factory();
   }, deps);
 }
@@ -285,24 +278,12 @@ export function usePerformanceMonitor(componentName: string) {
     const endTime = performance.now();
     const renderTime = endTime - startTime.current;
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        `🎯 ${componentName} - Render #${
-          renderCount.current
-        } took ${renderTime.toFixed(2)}ms`
-      );
-    }
-
     startTime.current = performance.now();
   });
 
   useEffect(() => {
     return () => {
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `🏁 ${componentName} unmounted after ${renderCount.current} renders`
-        );
-      }
+      // Component unmounted
     };
   }, [componentName]);
 }

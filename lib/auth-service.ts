@@ -139,14 +139,6 @@ class AuthService {
         localStorage.setItem("accessToken", response.data.accessToken);
       }
 
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🎉 Login successful:", {
-          userId: response.data.userId,
-          hasToken: !!response.data.accessToken,
-        });
-      }
-
       return response.data;
     } catch (error) {
       // Log error ใน development mode
@@ -169,11 +161,6 @@ class AuthService {
 
       // ลบ access token จาก localStorage
       localStorage.removeItem("accessToken");
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👋 Logout successful");
-      }
     } catch (error) {
       // Log warning แต่ไม่ throw error เพราะ logout ควรสำเร็จเสมอใน frontend
       if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
@@ -198,15 +185,6 @@ class AuthService {
     try {
       // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน - ใช้ getAuth สำหรับ auth endpoints
       const response = await apiClient.getAuth<User>("/api/auth/me");
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👤 Current user fetched:", {
-          id: response.data.id,
-          email: response.data.email,
-          role: response.data.role.name,
-        });
-      }
 
       return response.data;
     } catch (error) {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -51,11 +51,6 @@ function BasePageLayoutContent({
     (data: WidgetFilterData) => {
       setFilterData(data);
       onFilterChange?.(data);
-
-      // Log การเปลี่ยนแปลง
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log(`🎯 ${page} filter changed:`, data);
-      }
     },
     [page, onFilterChange, setFilterData]
   );

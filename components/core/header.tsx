@@ -1,4 +1,4 @@
-import { Bot, Menu } from "lucide-react";
+﻿import { Bot, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -50,8 +50,6 @@ export default function Header({
   // 🔔 Check if user has permission to see notifications (Super Admin or Admin only)
   const canViewNotifications =
     user && (user.role.name === "Super Admin" || user.role.name === "Admin");
-
-  console.log("Header rendered for page:", selectedPage);
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 backdrop-blur-sm bg-white/95">

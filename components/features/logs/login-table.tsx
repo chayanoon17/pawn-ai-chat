@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { getActivityLogs } from "@/lib/api";
@@ -75,8 +75,8 @@ export function LoginTable({
         const targetUserId = isAdminRole
           ? null
           : user?.id
-            ? String(user.id)
-            : null;
+          ? String(user.id)
+          : null;
 
         // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
         const formatDateForAPI = (date?: Date): string | null => {
@@ -86,15 +86,6 @@ export function LoginTable({
           const day = String(date.getDate()).padStart(2, "0");
           return `${year}-${month}-${day}`;
         };
-
-        console.log(
-          "🔍 Fetching login logs for user:",
-          targetUserId,
-          "page:",
-          currentPage,
-          "dateRange:",
-          { startDate, endDate }
-        );
 
         // ดึงข้อมูล LOGIN และ LOGOUT แยกกัน แต่ใช้ pagination
         const [loginRes, logoutRes] = await Promise.all([

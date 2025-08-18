@@ -86,8 +86,7 @@ export default function LoginPage() {
       } else if (rawMessage === "Invalid credentials") {
         friendlyMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
       } else if (
-        rawMessage ===
-        "Too many login attempts, please try again in 15 minutes"
+        rawMessage === "Too many login attempts, please try again in 15 minutes"
       ) {
         friendlyMessage =
           "พยายามเข้าสู่ระบบหลายครั้งเกินไป กรุณาลองใหม่อีกครั้งในอีก 15 นาที";
@@ -183,7 +182,6 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
-
 
             <button
               type="submit"

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -95,11 +95,6 @@ export const ContractStatusSummary = ({
 
       setData(chartData);
       setTimestamp(response.data.timestamp);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Contract status summary loaded:", response.data);
-      }
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };

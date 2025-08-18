@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Protected Route Hook
  * Custom Hook สำหรับป้องกันหน้าที่ต้องการการยืนยันตัวตน
  */
@@ -77,14 +77,6 @@ export function useProtectedRoute(
 
     // ถ้าไม่ได้ login ให้ redirect
     if (!isAuthenticated) {
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🔐 Protected route: Redirecting to login", {
-          currentPath: window.location.pathname,
-          redirectTo,
-        });
-      }
-
       router.push(redirectTo);
     }
   }, [isAuthenticated, isLoading, router, redirectTo]);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
@@ -43,15 +43,7 @@ export const DailyOperationSummary = ({
       const response = await apiClient.get<BranchDailySummary>(
         `/api/v1/branches/daily-operation/summary?${params.toString()}`
       );
-
-      console.log("✅ Fetched Daily Operation Summary:", response.data);
-
       setSummary(response.data);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Daily operation summary loaded:", response.data);
-      }
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };

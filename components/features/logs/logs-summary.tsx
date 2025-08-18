@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,12 +129,7 @@ export function LogsSummary({
         endDate: formatDateForAPI(localEndDate),
         userId: targetUserId,
       };
-
-      console.log("🔍 Fetching activity summary with params:", params);
-
       const data = await getActivitySummary(params);
-
-      console.log("📊 Activity summary response:", data);
       setSummary(data);
     } catch (error) {
       const errorMessage =

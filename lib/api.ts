@@ -84,7 +84,9 @@ export async function sendChatMessageStream(
   onComplete?: () => void
 ): Promise<void> {
   // headers + bearer token (ถ้ามี)
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("accessToken");
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -223,7 +225,9 @@ export async function sendChatMessageStream(
 
     if (
       completed ||
-      (gotAnyChunk && typeof msg === "string" && /network|abort|reset/i.test(msg))
+      (gotAnyChunk &&
+        typeof msg === "string" &&
+        /network|abort|reset/i.test(msg))
     ) {
       console.warn("SSE closed after completion. Suppressed:", err);
       return;
@@ -233,8 +237,6 @@ export async function sendChatMessageStream(
     throw err instanceof Error ? err : new Error(String(err));
   }
 }
-
-
 
 export async function getAllConversations({
   page = 1,
@@ -288,10 +290,6 @@ export async function getConversationMessages(conversationId: string) {
   const res = await apiClient.get<ApiResponse<Message[]>>(
     `/api/v1/chat/conversations/${conversationId}/messages`
   );
-  // Debug log เพื่อดู response ที่ได้จาก backend
-  if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-    console.log("[getConversationMessages] API response:", res);
-  }
   // ป้องกันกรณี data ซ้อน data
   if (res && Array.isArray(res.data)) {
     return res.data;
@@ -372,7 +370,6 @@ export async function logMenuAccess({
   menuPath,
   parentMenu = "",
 }: MenuAccessPayload): Promise<void> {
-  console.log("📤 Sending logMenuAccess:", { menuId, menuName, menuPath });
   try {
     await apiClient.post("/api/v1/activity/menu-access", {
       menuId,
@@ -380,7 +377,6 @@ export async function logMenuAccess({
       menuPath,
       parentMenu,
     });
-    console.log("✅ Log menu access success:", menuName);
   } catch (error) {
     console.error("❌ Error logging menu access:", error);
   }
@@ -408,12 +404,6 @@ class ApiClient {
     this.timeout = 30000; // 30 วินาที timeout
 
     // Debug logging
-    console.log("🌐 ApiClient initialized:", {
-      baseURL: this.baseURL,
-      timeout: this.timeout,
-      env: process.env.NEXT_PUBLIC_API_URL,
-    });
-
     // ตรวจสอบว่า baseURL ไม่ว่าง
     if (!this.baseURL) {
       console.error("❌ API_URL is not set! Check environment variables.");
@@ -469,25 +459,10 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    console.log("🚀 fetchWithTimeout:", {
-      url,
-      method: fetchConfig.method,
-      timeout,
-      headers: fetchConfig.headers,
-      body: fetchConfig.body?.toString().substring(0, 100),
-    });
-
     try {
       const response = await fetch(url, {
         ...fetchConfig,
         signal: controller.signal,
-      });
-
-      console.log("✅ fetch response:", {
-        url,
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
       });
 
       clearTimeout(timeoutId);
@@ -509,14 +484,6 @@ class ApiClient {
    * จัดการ Response Errors อย่างเป็นระบบ
    */
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    // Log response ใน development mode
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-      console.log("✅ API Response:", {
-        status: response.status,
-        url: response.url,
-      });
-    }
-
     if (!response.ok) {
       let errorData: ApiErrorResponse | null = null;
 
@@ -638,15 +605,6 @@ class ApiClient {
     config?: FetchConfig
   ): Promise<ApiResponse<T>> {
     const fullUrl = `${this.baseURL}${url}`;
-
-    // Enhanced logging for debugging
-    console.log("🔍 postAuth Debug:", {
-      baseURL: this.baseURL,
-      url: url,
-      fullUrl: fullUrl,
-      data: data,
-      config: config,
-    });
 
     this.logRequest("POST", fullUrl, data);
 

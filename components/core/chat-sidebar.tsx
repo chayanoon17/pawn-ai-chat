@@ -124,15 +124,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       safeContent = String(content);
     }
 
-    console.log("📝 Creating message:", {
-      id: String(id),
-      type,
-      originalContent: content,
-      contentType: typeof content,
-      safeContent,
-      safeContentType: typeof safeContent,
-    });
-
     return {
       id: String(id),
       type,
@@ -167,26 +158,10 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       addedAt: new Date(),
     };
 
-    // 📝 Console log เมื่อเพิ่ม context
-    console.log("➕ เพิ่ม Context ใหม่:", {
-      widgetId: widget.id,
-      widgetName: widget.name,
-      widgetDescription: widget.description,
-      dataType: typeof widget.data,
-      dataContent: safeStringify(widget.data),
-      addedAt: newContext.addedAt.toISOString(),
-    });
+    // 📝 เมื่อเพิ่ม context
 
     setActiveContexts((prev) => {
       const updatedContexts = [...prev, newContext];
-      console.log("📊 Active Contexts หลังจากเพิ่ม:", {
-        totalContexts: updatedContexts.length,
-        contextList: updatedContexts.map((ctx) => ({
-          id: ctx.widget.id,
-          name: ctx.widget.name,
-          addedAt: ctx.addedAt.toISOString(),
-        })),
-      });
       return updatedContexts;
     });
 
@@ -224,29 +199,16 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
   // Handle prompt click
   const handlePromptClick = (prompt: string) => {
-    console.log("🎯 Prompt clicked:", typeof prompt, prompt);
-
     // Ensure prompt is always a string
     const safePrompt = typeof prompt === "string" ? prompt : String(prompt);
-    console.log("🎯 Safe prompt:", typeof safePrompt, safePrompt);
 
     setInputValue(""); // Clear input first to prevent double sending
     handleSendMessage(safePrompt);
   };
 
   const handleSendMessage = async (customMessage?: string) => {
-    console.log("🔍 handleSendMessage called with:", {
-      customMessage,
-      customMessageType: typeof customMessage,
-      inputValue,
-      inputValueType: typeof inputValue,
-    });
-
     const messageContent = customMessage || inputValue.trim();
     if (!messageContent || isThinking) return;
-
-    console.log("🚀 เริ่มส่งข้อความ:", typeof messageContent, messageContent);
-    console.log("📊 Active Contexts:", activeContexts.length);
 
     // Ensure message content is always a string
     const safeMessageContent =
@@ -300,21 +262,13 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
       // 🎯 เพิ่ม Context จาก Active Widgets
       if (activeContexts.length > 0) {
-        console.log("📝 กำลังเตรียม Context ข้อมูล...");
-        console.log("📊 จำนวน Widgets:", activeContexts.length);
-
         const contextPrompt = activeContexts
           .map((ctx, index) => {
             try {
-              console.log(`📊 Widget ${index + 1}:`, ctx.widget.name);
-              console.log(`📄 Widget data type:`, typeof ctx.widget.data);
-
               // Use safe stringify to prevent circular reference errors
               const dataString = ctx.widget.data
                 ? safeStringify(ctx.widget.data)
                 : "ไม่มีข้อมูล";
-
-              console.log(`✅ Widget ${index + 1} data processed successfully`);
 
               return `Widget: ${ctx.widget.name}\nDescription: ${
                 ctx.widget.description || "ไม่มีคำอธิบาย"
@@ -328,72 +282,13 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           })
           .join("\n\n---\n\n");
 
-        console.log("✅ Context เตรียมเสร็จแล้ว");
-
-        // 🚀 Console log context ที่ส่งไปยัง AI
-        console.log("🤖 ส่ง Context ไปยัง AI:", {
-          totalContexts: activeContexts.length,
-          contextData: activeContexts.map((ctx, index) => ({
-            index: index + 1,
-            widgetId: ctx.widget.id,
-            widgetName: ctx.widget.name,
-            description: ctx.widget.description,
-            dataType: typeof ctx.widget.data,
-            dataPreview: ctx.widget.data
-              ? JSON.stringify(ctx.widget.data).substring(0, 200) + "..."
-              : "ไม่มีข้อมูล",
-            addedAt: ctx.addedAt.toISOString(),
-          })),
-          fullContextPrompt:
-            contextPrompt.substring(0, 500) + "... [truncated for console]",
-          promptLength: contextPrompt.length,
-        });
-
-        // 🔍 Console log ข้อมูลเต็มของแต่ละ widget
-        activeContexts.forEach((ctx, index) => {
-          console.group(`📊 Widget ${index + 1}: ${ctx.widget.name}`);
-          console.log("🆔 Widget ID:", ctx.widget.id);
-          console.log("📝 Description:", ctx.widget.description);
-          console.log("📅 Added At:", ctx.addedAt.toISOString());
-          console.log("🔍 Data Type:", typeof ctx.widget.data);
-          console.log("📄 Full Widget Data:", ctx.widget.data);
-
-          // ✅ เช็คข้อมูล transactions โดยเฉพาะ
-          if (ctx.widget.data && typeof ctx.widget.data === "object") {
-            const data = ctx.widget.data as any;
-            console.log("🔍 ตรวจสอบ transactions:", {
-              hasTransactions: "transactions" in data,
-              transactionsType: typeof data.transactions,
-              transactionsLength: Array.isArray(data.transactions)
-                ? data.transactions.length
-                : "ไม่ใช่ Array",
-              firstTransaction:
-                Array.isArray(data.transactions) && data.transactions.length > 0
-                  ? data.transactions[0]
-                  : "ไม่มีข้อมูล",
-              dataKeys: Object.keys(data),
-            });
-          }
-
-          // แสดงข้อมูลในรูปแบบ JSON ที่อ่านง่าย
-          if (ctx.widget.data) {
-            console.log("📋 JSON Data (Pretty):");
-            console.log(JSON.stringify(ctx.widget.data, null, 2));
-          }
-          console.groupEnd();
-        }); // 📤 Console log ข้อความเต็มที่ส่งไปยัง AI
-        console.group("📤 Context Prompt ที่ส่งไปยัง AI (เต็ม)");
-        console.log("📏 ความยาว:", contextPrompt.length, "ตัวอักษร");
-        console.log("📄 เนื้อหาเต็ม:");
-        console.log(contextPrompt);
-        console.groupEnd();
+        //  ข้อมูลเต็มของแต่ละ widget
 
         historyMessages.unshift({
           role: "system",
           content: `${systemMessage}\n\nคุณมีข้อมูล context จาก widgets ดังนี้:\n\n${contextPrompt}\n\nใช้ข้อมูลนี้เพื่อตอบคำถามของผู้ใช้อย่างถูกต้องและละเอียด ไม่ต้องขออภัยหรือบอกว่าไม่เข้าใจ`,
         });
       } else {
-        console.log("📝 ไม่มี Context - ใช้ระบบ AI ทั่วไป");
         historyMessages.unshift({
           role: "system",
           content: systemMessage,
@@ -429,7 +324,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
         historyMessages,
         conversationId || undefined,
         () => {
-          console.log("✅ Streaming เสร็จสิ้น - ปลดล็อก input");
           setIsSending(false);
           setIsThinking(false);
         }

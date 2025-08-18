@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Authentication Context
  * จัดการ Global Authentication State และ Actions ทั่วทั้งแอพ
  */
@@ -130,14 +130,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = await authService.getCurrentUser();
 
         dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-        // Log success ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("🎉 Login successful in context:", {
-            userId: user.id,
-            email: user.email,
-          });
-        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Login failed";
@@ -181,11 +173,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // แสดง SweetAlert2 success
       showSuccess("ออกจากระบบสำเร็จ", "ขอบคุณที่ใช้บริการ", 2000);
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👋 Logout successful in context");
-      }
     } catch (error) {
       // แม้ logout API fail เราก็ควร clear local state
 
@@ -224,14 +211,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const user = await authService.getCurrentUser();
 
       dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🔄 User refreshed in context:", {
-          userId: user.id,
-          email: user.email,
-        });
-      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to refresh user";
@@ -280,22 +259,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // พยายามดึงข้อมูลผู้ใช้ปัจจุบัน
         const user = await authService.getCurrentUser();
         dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-        // Log success ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("✅ Auto-login successful:", {
-            userId: user.id,
-            email: user.email,
-          });
-        }
       } catch (error) {
         // ถ้า fail แสดงว่าไม่ได้ login หรือ token หมดอายุ
         dispatch({ type: "AUTH_LOGOUT" });
-
-        // Log ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("ℹ️ No valid authentication found");
-        }
       }
     };
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,9 +88,6 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       const res = await apiClient.get<ApiResponse>(
         `/api/v1/asset-types/ranking-by-period?${params.toString()}`
       );
-
-      console.log("✅ Full API Response:", res.data);
-
       const apiData = res.data;
       if (!apiData || !Array.isArray(apiData.rankings)) {
         console.error("📛 Invalid API structure:", apiData);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Search,
@@ -215,11 +215,6 @@ export default function ContractTransactionDetails({
       );
 
       setData(response.data);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Transaction details loaded:", response.data);
-      }
     } catch (err) {
       console.error("❌ Error fetching transaction details:", err);
       setError("ไม่สามารถดึงข้อมูลได้");
@@ -297,10 +292,6 @@ export default function ContractTransactionDetails({
       // ทำความสะอาด
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✅ CSV export completed successfully");
-      }
     } catch (error) {
       console.error("❌ Error exporting CSV:", error);
       showWarning(
