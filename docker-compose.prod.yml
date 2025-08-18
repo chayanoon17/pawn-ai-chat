@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  pawn-ai-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      # Add your environment variables here
+      # - API_URL=https://your-api.com
+      # - DATABASE_URL=your-database-url
+    restart: always
+    container_name: pawn-ai-chat-prod
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pawn-ai-chat.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.pawn-ai-chat.tls=true"
+      - "traefik.http.routers.pawn-ai-chat.tls.certresolver=letsencrypt"
+
+  # Reverse proxy with Traefik (recommended for production)
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
