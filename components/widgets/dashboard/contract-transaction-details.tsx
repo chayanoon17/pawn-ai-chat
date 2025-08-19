@@ -73,17 +73,17 @@ interface ContractTransactionDetailsProps {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "จำนำ":
-      return "bg-green-100 text-green-700";
+      return "bg-[#596FF6] text-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
-      return "bg-blue-100 text-blue-700";
+      return "bg-[#F1C5C4] text-[#8D3A3A]";
     case "ไถ่ถอน":
-      return "bg-pink-100 text-pink-700";
+      return "bg-[#AD2E27] text-[#FFFFFF]";
     case "ผ่อนต้น":
-      return "bg-teal-100 text-teal-700";
+      return "bg-[#83DDE5] text-[#0A5359]";
     case "เพิ่มต้น":
-      return "bg-purple-100 text-purple-700";
+      return "bg-[#FBE689] text-[#544D1E]";
     case "แบ่งไถ่":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-[#A6A6A6] text-[#000000]";
     default:
       return "bg-gray-100 text-gray-600";
   }
@@ -92,17 +92,17 @@ const getStatusColor = (status: string) => {
 const getIconBgColor = (status: string) => {
   switch (status) {
     case "จำนำ":
-      return "bg-green-700";
+      return "bg-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
-      return "bg-blue-700";
+      return "bg-[#8D3A3A]";
     case "ไถ่ถอน":
-      return "bg-pink-700";
+      return "bg-[#FFFFFF]";
     case "ผ่อนต้น":
-      return "bg-teal-700";
+      return "bg-[#0A5359]";
     case "เพิ่มต้น":
-      return "bg-purple-700";
+      return "bg-[#544D1E]";
     case "แบ่งไถ่":
-      return "bg-yellow-600";
+      return "bg-[#FFFFFF]";
     default:
       return "bg-gray-500";
   }
@@ -117,12 +117,12 @@ type TransactionType =
   | "แบ่งไถ่";
 
 const statusIconMap: Record<TransactionType, JSX.Element> = {
-  จำนำ: <Ticket className="w-5 h-5 text-white" />,
+  จำนำ: <Ticket className="w-5 h-5 text-[#596FF6]" />,
   ส่งดอกเบี้ย: <TicketPercent className="w-5 h-5 text-white" />,
-  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-white" />,
+  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-[#AD2E27]" />,
   ผ่อนต้น: <TicketCheck className="w-5 h-5 text-white" />,
   เพิ่มต้น: <TicketPlus className="w-5 h-5 text-white" />,
-  แบ่งไถ่: <Tickets className="w-5 h-5 text-white" />,
+  แบ่งไถ่: <Tickets className="w-5 h-5 text-[#000000]" />,
 };
 
 // ✅ Utilities สำหรับปิดบังข้อมูลชื่อ-นามสกุล (รองรับตัวอักษรไทย)
