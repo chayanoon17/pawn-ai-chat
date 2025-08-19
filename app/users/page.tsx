@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { getAllUsers } from "@/lib/auth-service";
+import { getAllUsers } from "@/services/user-service";
 import { getRoles } from "@/lib/api-service";
 import type { User } from "@/types/auth";
 import type { Role } from "@/types/role";

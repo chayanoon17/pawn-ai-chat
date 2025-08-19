@@ -51,48 +51,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import apiClient from "@/lib/api-client";
+import {
+  getContractTransactionDetails,
+  exportContractTransactionsCSV,
+  type ContractTransactionDetailsResponse,
+  type TransactionDetailItem,
+  type TransactionSummaryItem,
+} from "@/lib/api-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { showWarning } from "@/lib/sweetalert";
-
-// 📊 Types สำหรับ API Response
-interface TransactionSummaryItem {
-  type: string;
-  value: number;
-  total: number;
-}
-
-interface TransactionDetailItem {
-  contractNumber: number;
-  ticketBookNumber: string;
-  transactionDate: string;
-  interestPaymentDate: string | null;
-  overdueDays: number;
-  remainingAmount: number;
-  interestAmount: number;
-  transactionType: string;
-  branchId: number;
-  branchName: string;
-  branchShortName: string;
-  branchLocation: string;
-  assetType: string;
-  assetDetail: string;
-  pawnPrice: number;
-  monthlyInterest: number;
-  contractStatus: string;
-  redeemedDate: string | null;
-  customerName: string;
-  customerPhone: string;
-  customerAddress: string;
-  customerOccupation: string;
-}
-
-interface ContractTransactionDetailsResponse {
-  branchId: number;
-  summaries: TransactionSummaryItem[];
-  transactions: TransactionDetailItem[];
-  timestamp: string;
-}
 
 // 📊 Props สำหรับ Widget
 interface ContractTransactionDetailsProps {
@@ -202,19 +169,13 @@ export default function ContractTransactionDetails({
       setLoading(true);
       setError(null);
 
-      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
-      const params = new URLSearchParams();
-      if (branchId) {
-        params.append("branchId", branchId);
-      }
-      params.append("date", date);
+      // เรียกใช้ function จาก api-service
+      const response = await getContractTransactionDetails({
+        branchId,
+        date,
+      });
 
-      // เรียก API ดึงข้อมูลรายละเอียดรายการรับจำนำ
-      const response = await apiClient.get<ContractTransactionDetailsResponse>(
-        `/api/v1/contracts/transactions/details?${params.toString()}`
-      );
-
-      setData(response.data);
+      setData(response);
     } catch (err) {
       console.error("❌ Error fetching transaction details:", err);
       setError("ไม่สามารถดึงข้อมูลได้");
@@ -244,18 +205,11 @@ export default function ContractTransactionDetails({
     try {
       setLoading(true);
 
-      // สร้าง URL สำหรับ export
-      const params = new URLSearchParams();
-      if (branchId) {
-        params.append("branchId", branchId);
-      }
-      params.append("date", date);
-
-      const exportUrl = `/api/v1/contracts/transactions/export/csv?${params.toString()}`;
-      const filename = `contract-transactions-${branchId || "all"}-${date}.csv`;
-
-      // เรียกใช้ download function จาก apiClient
-      await apiClient.download(exportUrl, filename);
+      // เรียกใช้ function จาก api-service
+      await exportContractTransactionsCSV({
+        branchId,
+        date,
+      });
     } catch (error) {
       console.error("❌ Error exporting CSV:", error);
       showWarning(

@@ -7,216 +7,8 @@ import type { Branch } from "@/types/auth";
 import { ApiResponse, Message, ActivityLogResponse } from "@/types/api";
 import { ConversationListResponse } from "@/types/api";
 import type { Role, CreateRoleData, UpdateRoleData } from "@/types/role";
-import apiClient, { getApiUrl } from "@/lib/api-client";
-
-export async function sendChatMessage(message: string): Promise<string> {
-  const controller = new AbortController(); // สำหรับยกเลิกได้ในอนาคต
-
-  // สร้าง headers พร้อม authentication
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  // เพิ่ม Authorization header ถ้ามี token ใน localStorage
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-  }
-
-  const response = await fetch(getApiUrl("/api/v1/chat"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ message }),
-    credentials: "include", // ✅ สำคัญ: เพื่อส่ง cookie / token ไปด้วย
-    signal: controller.signal,
-  });
-
-  if (!response.ok || !response.body) {
-    throw new Error("การเชื่อมต่อกับ AI ล้มเหลว");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-
-  let result = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    result += chunk;
-
-    // 👉 หากต้องการแสดงทีละ chunk:
-    // onChunk(chunk); // คุณจะต้องส่ง callback มาในฟังก์ชัน
-  }
-
-  return result;
-}
-
-export async function sendChatMessageStream(
-  message: string,
-  onChunk: (chunk: string) => void,
-  messages: { role: "user" | "assistant" | "system"; content: string }[] = [],
-  conversationId?: string,
-  onComplete?: () => void
-): Promise<void> {
-  // headers + bearer token (ถ้ามี)
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(getApiUrl("/chat"), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ message, messages, conversationId }),
-    credentials: "include",
-  });
-
-  if (!response.ok || !response.body) {
-    throw new Error("ไม่สามารถเชื่อมต่อกับระบบได้");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-
-  let buffer = "";
-  let completed = false;
-  let gotAnyChunk = false;
-
-  const safeComplete = () => {
-    if (!completed) {
-      completed = true;
-      onComplete?.();
-    }
-  };
-
-  const emitContent = (text: unknown) => {
-    if (typeof text === "string" && text.length > 0) {
-      gotAnyChunk = true;
-      onChunk(text);
-    }
-  };
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      let idx: number;
-      while ((idx = buffer.indexOf("\n\n")) !== -1) {
-        const rawBlock = buffer.slice(0, idx);
-        buffer = buffer.slice(idx + 2);
-
-        const block = rawBlock.replace(/\r/g, "").trim();
-        if (!block) continue;
-
-        // พาร์สรูปแบบ SSE: รองรับทั้ง event: และ data:
-        let eventName = "message";
-        const dataLines: string[] = [];
-
-        for (const rawLine of block.split("\n")) {
-          const line = rawLine.trim();
-          if (!line || line.startsWith(":")) continue; // comment/keepalive
-          if (line.startsWith("event:")) {
-            eventName = line.slice(6).trim();
-            continue;
-          }
-          if (line.startsWith("data:")) {
-            dataLines.push(line.slice(5));
-          }
-        }
-
-        const dataStr = dataLines.join("\n").trim();
-
-        // จบสตรีม (สองรูปแบบ)
-        if (eventName === "done" || dataStr === "[DONE]") {
-          safeComplete();
-          return;
-        }
-
-        if (eventName === "error") {
-          throw new Error(dataStr || "SSE error");
-        }
-
-        // ข้าม ping/keepalive ที่มาเป็น data
-        if (dataStr === ":ping" || dataStr === '":ping"') continue;
-        if (!dataStr) continue;
-
-        // โครงสร้างที่ server อาจส่งมา: {content:"..."} หรือ delta แบบ OpenAI
-        try {
-          const parsed = JSON.parse(dataStr);
-          const direct =
-            typeof parsed?.content === "string" ? parsed.content : undefined;
-
-          const delta =
-            parsed?.choices?.[0]?.delta?.content ??
-            parsed?.delta?.content ??
-            parsed?.text ??
-            undefined;
-
-          if (direct !== undefined) {
-            emitContent(direct);
-          } else if (typeof delta === "string") {
-            emitContent(delta);
-          }
-          // ไม่รู้จักรูปแบบ → ไม่ต้อง emit
-        } catch {
-          // สตริงดิบ
-          emitContent(dataStr);
-        }
-      }
-    }
-
-    // flush ก้อนท้าย (ถ้ามีแต่ไม่ได้ตามด้วย "\n\n")
-    const tail = buffer.trim();
-    if (tail && tail !== "[DONE]") {
-      try {
-        const parsed = JSON.parse(tail);
-        const direct =
-          typeof parsed?.content === "string" ? parsed.content : undefined;
-        const delta =
-          parsed?.choices?.[0]?.delta?.content ??
-          parsed?.delta?.content ??
-          parsed?.text ??
-          undefined;
-
-        if (direct !== undefined) emitContent(direct);
-        else if (typeof delta === "string") emitContent(delta);
-        else emitContent(tail);
-      } catch {
-        emitContent(tail);
-      }
-    }
-
-    safeComplete();
-  } catch (err: unknown) {
-    // ถ้าเรา “จบแล้ว” หรือ “ได้ข้อความมาแล้ว” และ error เป็นแนว network-close ก็เมิน
-    const msg =
-      err instanceof Error ? err.message : typeof err === "string" ? err : "";
-
-    if (
-      completed ||
-      (gotAnyChunk &&
-        typeof msg === "string" &&
-        /network|abort|reset/i.test(msg))
-    ) {
-      console.warn("SSE closed after completion. Suppressed:", err);
-      return;
-    }
-
-    safeComplete();
-    throw err instanceof Error ? err : new Error(String(err));
-  }
-}
+import type { GoldPrice } from "@/types/dashboard";
+import apiClient from "@/lib/api-client";
 
 export async function getAllConversations({
   page = 1,
@@ -556,6 +348,170 @@ export async function getActivitySummary(
 
   const response = await apiClient.get<ActivitySummaryResponse>(
     `/api/v1/activity/logs/summary?${searchParams.toString()}`
+  );
+
+  return response.data;
+}
+
+/**
+ * ===================================
+ * 📊 CONTRACT TRANSACTION API
+ * ===================================
+ */
+
+// Types สำหรับ Contract Transaction API
+export interface TransactionSummaryItem {
+  type: string;
+  value: number;
+  total: number;
+}
+
+export interface TransactionDetailItem {
+  contractNumber: number;
+  ticketBookNumber: string;
+  transactionDate: string;
+  interestPaymentDate: string | null;
+  overdueDays: number;
+  remainingAmount: number;
+  interestAmount: number;
+  transactionType: string;
+  branchId: number;
+  branchName: string;
+  branchShortName: string;
+  branchLocation: string;
+  assetType: string;
+  assetDetail: string;
+  pawnPrice: number;
+  monthlyInterest: number;
+  contractStatus: string;
+  redeemedDate: string | null;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerOccupation: string;
+}
+
+export interface ContractTransactionDetailsResponse {
+  branchId: number;
+  summaries: TransactionSummaryItem[];
+  transactions: TransactionDetailItem[];
+  timestamp: string;
+}
+
+/**
+ * ดึงข้อมูลรายละเอียดธุรกรรมสัญญาจำนำ
+ */
+export async function getContractTransactionDetails(params: {
+  branchId?: string | null;
+  date: string;
+}): Promise<ContractTransactionDetailsResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.branchId) {
+    searchParams.append("branchId", params.branchId);
+  }
+  searchParams.append("date", params.date);
+
+  const response = await apiClient.get<ContractTransactionDetailsResponse>(
+    `/api/v1/contracts/transactions/details?${searchParams.toString()}`
+  );
+
+  return response.data;
+}
+
+/**
+ * ส่งออกข้อมูลธุรกรรมสัญญาจำนำเป็น CSV
+ */
+export async function exportContractTransactionsCSV(params: {
+  branchId?: string | null;
+  date: string;
+  filename?: string;
+}): Promise<void> {
+  const searchParams = new URLSearchParams();
+
+  if (params.branchId) {
+    searchParams.append("branchId", params.branchId);
+  }
+  searchParams.append("date", params.date);
+
+  const exportUrl = `/api/v1/contracts/transactions/export/csv?${searchParams.toString()}`;
+  const filename =
+    params.filename ||
+    `contract-transactions-${params.branchId || "all"}-${params.date}.csv`;
+
+  await apiClient.download(exportUrl, filename);
+}
+
+/**
+ * ===================================
+ * 💰 GOLD PRICE API
+ * ===================================
+ */
+
+/**
+ * ดึงข้อมูลราคาทองล่าสุด
+ */
+export async function getLatestGoldPrice(): Promise<GoldPrice> {
+  const response = await apiClient.get<GoldPrice>("/api/v1/gold-price/latest");
+  return response.data;
+}
+
+/**
+ * ===================================
+ * 📊 DASHBOARD SUMMARY API
+ * ===================================
+ */
+
+// Types สำหรับ Dashboard Summary
+export interface StatusSummaryResponse {
+  branchId: number;
+  summaries: Array<{
+    type: string;
+    value: number;
+    percentage: number;
+  }>;
+  timestamp: string;
+}
+
+/**
+ * ดึงข้อมูลสรุปสถานะสัญญา
+ */
+export async function getContractStatusSummary(params: {
+  branchId?: string | null;
+  date: string;
+}): Promise<StatusSummaryResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.branchId) {
+    searchParams.append("branchId", params.branchId);
+  }
+  searchParams.append("date", params.date);
+  searchParams.append("summaryType", "contractStatus");
+
+  const response = await apiClient.get<StatusSummaryResponse>(
+    `/api/v1/contracts/transactions/summary?${searchParams.toString()}`
+  );
+
+  return response.data;
+}
+
+/**
+ * ดึงข้อมูลสรุปประเภทธุรกรรม
+ */
+export async function getContractTransactionTypeSummary(params: {
+  branchId?: string | null;
+  date: string;
+}): Promise<StatusSummaryResponse> {
+  const searchParams = new URLSearchParams();
+
+  if (params.branchId) {
+    searchParams.append("branchId", params.branchId);
+  }
+  searchParams.append("date", params.date);
+  searchParams.append("summaryType", "transactionType");
+
+  const response = await apiClient.get<StatusSummaryResponse>(
+    `/api/v1/contracts/transactions/summary?${searchParams.toString()}`
   );
 
   return response.data;

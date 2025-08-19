@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2 } from "lucide-react";
 import EditProfileDialog from "./features/users/add-user-button";
-import { getAllUsers } from "@/lib/auth-service";
+import { getAllUsers } from "@/services/user-service";
 
 interface User {
   id: string;

@@ -9,7 +9,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import apiClient from "@/lib/api-client";
+import {
+  getContractStatusSummary,
+  type StatusSummaryResponse,
+} from "@/lib/api-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [
@@ -30,16 +33,6 @@ type StatusSummaryData = {
   value: number;
   color: string;
   percentage: number;
-};
-
-type StatusSummaryResponse = {
-  branchId: number;
-  summaries: Array<{
-    type: string;
-    value: number;
-    percentage: number;
-  }>;
-  timestamp: string;
 };
 
 interface ContractStatusSummaryProps {
@@ -72,21 +65,14 @@ export const ContractStatusSummary = ({
       setIsLoading(true);
       setError(null);
 
-      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
-      const params = new URLSearchParams();
-      if (branchId) {
-        params.append("branchId", branchId);
-      }
-      params.append("date", date);
-      params.append("summaryType", "contractStatus");
-
-      // เรียก API ดึงข้อมูลสรุปสถานะสัญญา
-      const response = await apiClient.get<StatusSummaryResponse>(
-        `/api/v1/contracts/transactions/summary?${params.toString()}`
-      );
+      // เรียกใช้ function จาก api-service
+      const response = await getContractStatusSummary({
+        branchId,
+        date,
+      });
 
       // แปลงข้อมูลให้เป็นรูปแบบสำหรับ PieChart
-      const chartData = response.data.summaries.map((item, index) => ({
+      const chartData = response.summaries.map((item, index: number) => ({
         name: item.type,
         value: item.value,
         color: COLORS[index % COLORS.length],
@@ -94,7 +80,7 @@ export const ContractStatusSummary = ({
       }));
 
       setData(chartData);
-      setTimestamp(response.data.timestamp);
+      setTimestamp(response.timestamp);
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };

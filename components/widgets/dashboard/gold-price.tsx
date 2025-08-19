@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Coins, Info } from "lucide-react";
-import apiClient from "@/lib/api-client";
+import { getLatestGoldPrice } from "@/lib/api-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 import type { GoldPrice } from "@/types/dashboard";
 
@@ -20,12 +20,10 @@ export const GoldPriceCard = () => {
         setIsLoading(true);
         setError(null);
 
-        // เรียก API ดึงข้อมูลราคาทองล่าสุด
-        const response = await apiClient.get<GoldPrice>(
-          "/api/v1/gold-price/latest"
-        );
+        // เรียกใช้ function จาก api-service
+        const goldPriceData = await getLatestGoldPrice();
 
-        setLatestPrice(response.data);
+        setLatestPrice(goldPriceData);
       } catch (err: unknown) {
         const error = err as {
           response?: { data?: { message?: string } };

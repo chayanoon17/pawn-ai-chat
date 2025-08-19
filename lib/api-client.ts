@@ -168,7 +168,7 @@ class ApiClient {
    */
   private logRequest(method: string, url: string, data?: unknown): void {
     if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
-      let detail: { method: string; url: string; data?: unknown | null } = {
+      const detail: { method: string; url: string; data?: unknown | null } = {
         method: method.toUpperCase(),
         url,
       };
@@ -181,6 +181,8 @@ class ApiClient {
 
   /**
    * GET Request
+   * @param url - endpoint URL
+   * @param config - fetch configuration
    */
   async get<T = unknown>(
     url: string,
@@ -200,6 +202,9 @@ class ApiClient {
 
   /**
    * POST Request
+   * @param url - endpoint URL
+   * @param data - request body data
+   * @param config - fetch configuration
    */
   async post<T = unknown>(
     url: string,
@@ -221,6 +226,9 @@ class ApiClient {
 
   /**
    * PUT Request
+   * @param url - endpoint URL
+   * @param data - request body data
+   * @param config - fetch configuration
    */
   async put<T = unknown>(
     url: string,
@@ -242,6 +250,8 @@ class ApiClient {
 
   /**
    * DELETE Request
+   * @param url - endpoint URL
+   * @param config - fetch configuration
    */
   async delete<T = unknown>(
     url: string,
@@ -319,8 +329,212 @@ class ApiClient {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
   }
-}
 
+  /**
+   * Stream Request (สำหรับ Server-Sent Events และ Streaming Responses)
+   * @param url - endpoint URL
+   * @param data - request body data
+   * @param onChunk - callback เมื่อได้รับ chunk ใหม่
+   * @param onComplete - callback เมื่อ stream จบ
+   * @param config - fetch configuration
+   */
+  async stream(
+    url: string,
+    data?: unknown,
+    onChunk?: (chunk: string) => void,
+    onComplete?: () => void,
+    config?: FetchConfig
+  ): Promise<void> {
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("POST", fullUrl, data);
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let buffer = "";
+    let completed = false;
+    let gotAnyChunk = false;
+
+    const safeComplete = () => {
+      if (!completed) {
+        completed = true;
+        onComplete?.();
+      }
+    };
+
+    const emitContent = (text: unknown) => {
+      if (typeof text === "string" && text.length > 0) {
+        gotAnyChunk = true;
+        onChunk?.(text);
+      }
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        let idx: number;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const rawBlock = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+
+          const block = rawBlock.replace(/\r/g, "").trim();
+          if (!block) continue;
+
+          // พาร์สรูปแบบ SSE: รองรับทั้ง event: และ data:
+          let eventName = "message";
+          const dataLines: string[] = [];
+
+          for (const rawLine of block.split("\n")) {
+            const line = rawLine.trim();
+            if (!line || line.startsWith(":")) continue; // comment/keepalive
+            if (line.startsWith("event:")) {
+              eventName = line.slice(6).trim();
+              continue;
+            }
+            if (line.startsWith("data:")) {
+              dataLines.push(line.slice(5));
+            }
+          }
+
+          const dataStr = dataLines.join("\n").trim();
+
+          // จบสตรีม (สองรูปแบบ)
+          if (eventName === "done" || dataStr === "[DONE]") {
+            safeComplete();
+            return;
+          }
+
+          if (eventName === "error") {
+            throw new Error(dataStr || "SSE error");
+          }
+
+          // ข้าม ping/keepalive ที่มาเป็น data
+          if (dataStr === ":ping" || dataStr === '":ping"') continue;
+          if (!dataStr) continue;
+
+          // โครงสร้างที่ server อาจส่งมา: {content:"..."} หรือ delta แบบ OpenAI
+          try {
+            const parsed = JSON.parse(dataStr);
+            const direct =
+              typeof parsed?.content === "string" ? parsed.content : undefined;
+
+            const delta =
+              parsed?.choices?.[0]?.delta?.content ??
+              parsed?.delta?.content ??
+              parsed?.text ??
+              undefined;
+
+            if (direct !== undefined) {
+              emitContent(direct);
+            } else if (typeof delta === "string") {
+              emitContent(delta);
+            }
+            // ไม่รู้จักรูปแบบ → ไม่ต้อง emit
+          } catch {
+            // สตริงดิบ
+            emitContent(dataStr);
+          }
+        }
+      }
+
+      // flush ก้อนท้าย (ถ้ามีแต่ไม่ได้ตามด้วย "\n\n")
+      const tail = buffer.trim();
+      if (tail && tail !== "[DONE]") {
+        try {
+          const parsed = JSON.parse(tail);
+          const direct =
+            typeof parsed?.content === "string" ? parsed.content : undefined;
+          const delta =
+            parsed?.choices?.[0]?.delta?.content ??
+            parsed?.delta?.content ??
+            parsed?.text ??
+            undefined;
+
+          if (direct !== undefined) emitContent(direct);
+          else if (typeof delta === "string") emitContent(delta);
+          else emitContent(tail);
+        } catch {
+          emitContent(tail);
+        }
+      }
+
+      safeComplete();
+    } catch (err: unknown) {
+      // ถ้าเรา "จบแล้ว" หรือ "ได้ข้อความมาแล้ว" และ error เป็นแนว network-close ก็เมิน
+      const msg =
+        err instanceof Error ? err.message : typeof err === "string" ? err : "";
+
+      if (
+        completed ||
+        (gotAnyChunk &&
+          typeof msg === "string" &&
+          /network|abort|reset/i.test(msg))
+      ) {
+        console.warn("SSE closed after completion. Suppressed:", err);
+        return;
+      }
+
+      safeComplete();
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  /**
+   * Chat Request (สำหรับ non-streaming chat)
+   * @param url - endpoint URL
+   * @param message - ข้อความที่จะส่ง
+   * @param config - fetch configuration
+   */
+  async chat(
+    url: string,
+    message: string,
+    config?: FetchConfig
+  ): Promise<string> {
+    const fullUrl = `${this.baseURL}${url}`;
+    this.logRequest("POST", fullUrl, { message });
+
+    const response = await this.fetchWithTimeout(fullUrl, {
+      ...this.getDefaultConfig(),
+      ...config,
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let result = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      result += chunk;
+    }
+
+    return result;
+  }
+}
 /**
  * Singleton Instance - ใช้ instance เดียวทั่วทั้งแอพ
  */
