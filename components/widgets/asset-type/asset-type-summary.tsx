@@ -9,9 +9,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
-import { useOptimizedMemo, usePerformanceMonitor } from "@/lib/performance";
+import apiClient from "@/lib/api-client";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
+import { useOptimizedMemo } from "@/lib/performance";
 
 type AssetTypeSummary = {
   assetType: string;
@@ -74,13 +75,13 @@ export const AssetTypesSummary = ({
   date,
   isLoading: parentLoading,
 }: Props) => {
-  // 🎯 Performance monitoring
-  usePerformanceMonitor("AssetTypesSummary");
-
   const [data, setData] = useState<AssetTypeData[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   // 🎯 Stabilized custom label renderer
   const renderCustomLabel = useCallback(
@@ -151,16 +152,12 @@ export const AssetTypesSummary = ({
   ); // Empty dependency array - all values are internal or from props
 
   // 🎯 Memoized chart data transformation
-  const chartData = useOptimizedMemo(
-    () => {
-      return data.map((item, index) => ({
-        ...item,
-        color: COLORS[index % COLORS.length],
-      }));
-    },
-    [data],
-    "AssetTypesSummary-chartData"
-  );
+  const chartData = useOptimizedMemo(() => {
+    return data.map((item, index) => ({
+      ...item,
+      color: COLORS[index % COLORS.length],
+    }));
+  }, [data]);
 
   const fetchData = async () => {
     if (!date || parentLoading) {
@@ -216,8 +213,8 @@ export const AssetTypesSummary = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "asset-type-summary",
     "ข้อมูลประเภททรัพย์และจำนวน",
     "ข้อมูลสรุปประเภททรัพย์และจำนวน พร้อมจำนวนและเปอร์เซ็นต์",
@@ -236,8 +233,19 @@ export const AssetTypesSummary = ({
             data[0]
           )?.name,
           lastUpdated: timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatDate = (iso: string) => {

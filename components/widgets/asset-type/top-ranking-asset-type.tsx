@@ -11,8 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import apiClient from "@/lib/api-client";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 interface AssetRanking {
   rank: number;
@@ -40,6 +41,9 @@ export const TopRankingAssetType = ({
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   const fetchTopRanking = async () => {
     if (!date) {
@@ -86,8 +90,8 @@ export const TopRankingAssetType = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "top-ranking-asset-type",
     "10 อันดับ รายการประเภททรัพย์และราคา",
     "ข้อมูลการจัดอันดับประเภททรัพย์สินตามจำนวนและมูลค่า",
@@ -108,8 +112,19 @@ export const TopRankingAssetType = ({
             rankings[0]
           )?.assetType,
           lastUpdated: timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatDate = (iso: string) => {

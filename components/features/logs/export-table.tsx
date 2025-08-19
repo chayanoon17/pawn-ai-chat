@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getActivityLogs } from "@/lib/api";
+import { getActivityLogs } from "@/services/log-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ActivityLog } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -84,15 +84,6 @@ export function ExportTable({
           const day = String(date.getDate()).padStart(2, "0");
           return `${year}-${month}-${day}`;
         };
-
-        console.log(
-          "🔍 Fetching export logs for user:",
-          targetUserId,
-          "page:",
-          currentPage,
-          "dateRange:",
-          { startDate, endDate }
-        );
 
         // ดึงข้อมูลตาม page ปัจจุบันและ itemsPerPage
         const res = await getActivityLogs({

@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { sendChatMessageStream } from "@/lib/api";
-import { WidgetData } from "@/context/widget-context";
+import { sendChatMessageStream } from "@/services/chat-service";
+import { WidgetData, useWidgetContext } from "@/context/widget-context";
+import { useFilter } from "@/context/filter-context";
 import {
   ChatHeader,
   ActiveContextSection,
@@ -34,15 +35,85 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
-  
-  useEffect(() => {
-  if (!conversationId) {
-    // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
-    const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
-    setConversationId(newConversationId);
-  }
-}, [conversationId]);
 
+  // 🎯 Widget Context & Filter Context
+  const { onWidgetUpdate, contextReplacement } = useWidgetContext();
+  const { onFilterChange } = useFilter();
+
+  useEffect(() => {
+    if (!conversationId) {
+      // ตัวอย่าง: ดึง conversationId จาก backend หรือสร้างใหม่
+      const newConversationId = crypto.randomUUID(); // แทนที่ด้วยการดึงจาก backend
+      setConversationId(newConversationId);
+    }
+  }, [conversationId]);
+
+  // 🔄 Auto-Update: Widget Data Changes (อัพเดทเงียบๆ ไม่แสดงข้อความ)
+  useEffect(() => {
+    const unsubscribeWidgetUpdate = onWidgetUpdate((updatedWidget) => {
+      const options = contextReplacement.get(updatedWidget.id);
+
+      if (options?.replaceOnUpdate) {
+        // Context Replacement: แทนที่ context เดิม (ไม่แสดงข้อความ)
+        setActiveContexts((prev) => {
+          const exists = prev.find((ctx) => ctx.widget.id === updatedWidget.id);
+          if (exists) {
+            return prev.map((ctx) =>
+              ctx.widget.id === updatedWidget.id
+                ? {
+                    ...ctx,
+                    widget: {
+                      id: updatedWidget.id,
+                      name: updatedWidget.name,
+                      description: updatedWidget.description,
+                      data: updatedWidget.data,
+                    },
+                  }
+                : ctx
+            );
+          }
+          return prev;
+        });
+      }
+    });
+
+    return unsubscribeWidgetUpdate;
+  }, [onWidgetUpdate, contextReplacement]);
+
+  // 🔄 Auto-Update: Filter Changes (แสดงข้อความเดียว)
+  useEffect(() => {
+    let filterTimeout: NodeJS.Timeout;
+
+    const unsubscribeFilterChange = onFilterChange(() => {
+      // ยกเลิก timeout เก่า
+      if (filterTimeout) {
+        clearTimeout(filterTimeout);
+      }
+
+      // รอให้ widget อัพเดทก่อน แล้วค่อยแสดงข้อความรวม
+      filterTimeout = setTimeout(() => {
+        if (activeContexts.length > 0) {
+          const contextNames = activeContexts
+            .map((ctx) => ctx.widget.name)
+            .join(", ");
+          const combinedMessage = createSafeMessage(
+            `context-updated-${Date.now()}`,
+            "bot",
+            `🔄 อัพเดท Context เรียบร้อยแล้ว: ${contextNames}`
+          );
+
+          setMessages((prevMessages) => [...prevMessages, combinedMessage]);
+        }
+      }, 800); // รอให้ widget update เสร็จก่อน
+    });
+
+    return () => {
+      if (filterTimeout) {
+        clearTimeout(filterTimeout);
+      }
+      unsubscribeFilterChange();
+    };
+  }, [onFilterChange, activeContexts.length]);
 
   const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
@@ -125,15 +196,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       safeContent = String(content);
     }
 
-    console.log("📝 Creating message:", {
-      id: String(id),
-      type,
-      originalContent: content,
-      contentType: typeof content,
-      safeContent,
-      safeContentType: typeof safeContent,
-    });
-
     return {
       id: String(id),
       type,
@@ -142,19 +204,36 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     };
   };
 
-  // 🎯 Handle เพิ่ม Context จาก Widget
+  // 🎯 Handle เพิ่ม Context จาก Widget - รองรับ Context Replacement
   const handleContextAdd = (widget: WidgetData) => {
     // ตรวจสอบว่ามี widget นี้อยู่แล้วหรือไม่
     const exists = activeContexts.some((ctx) => ctx.widget.id === widget.id);
 
     if (exists) {
-      // แสดงข้อความแจ้งเตือนเมื่อพยายามเพิ่มซ้ำ
-      const warningMessage = createSafeMessage(
-        `warning-${Date.now()}`,
-        "bot",
-        `⚠️ "${widget.name}" ถูกเพิ่มใน Context แล้ว\nหากต้องการอัพเดทข้อมูล กรุณาลบออกก่อนแล้วเพิ่มใหม่`
+      // Context Replacement: แทนที่ context เดิม
+      setActiveContexts((prev) =>
+        prev.map((ctx) =>
+          ctx.widget.id === widget.id
+            ? {
+                ...ctx,
+                widget: {
+                  id: widget.id,
+                  name: widget.name,
+                  description: widget.description,
+                  data: widget.data,
+                },
+                addedAt: new Date(), // อัพเดทเวลา
+              }
+            : ctx
+        )
       );
-      setMessages((prev) => [...prev, warningMessage]);
+
+      const replaceMessage = createSafeMessage(
+        `replace-${Date.now()}`,
+        "bot",
+        `🔄 แทนที่ Context: "${widget.name}" เรียบร้อยแล้ว\nข้อมูลใหม่พร้อมใช้งาน`
+      );
+      setMessages((prev) => [...prev, replaceMessage]);
       return;
     }
 
@@ -168,7 +247,12 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       addedAt: new Date(),
     };
 
-    setActiveContexts((prev) => [...prev, newContext]);
+    // 📝 เมื่อเพิ่ม context
+
+    setActiveContexts((prev) => {
+      const updatedContexts = [...prev, newContext];
+      return updatedContexts;
+    });
 
     // แสดงข้อความแจ้งเตือนใน chat
     const contextMessage = createSafeMessage(
@@ -204,29 +288,16 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
   // Handle prompt click
   const handlePromptClick = (prompt: string) => {
-    console.log("🎯 Prompt clicked:", typeof prompt, prompt);
-
     // Ensure prompt is always a string
     const safePrompt = typeof prompt === "string" ? prompt : String(prompt);
-    console.log("🎯 Safe prompt:", typeof safePrompt, safePrompt);
 
     setInputValue(""); // Clear input first to prevent double sending
     handleSendMessage(safePrompt);
   };
 
   const handleSendMessage = async (customMessage?: string) => {
-    console.log("🔍 handleSendMessage called with:", {
-      customMessage,
-      customMessageType: typeof customMessage,
-      inputValue,
-      inputValueType: typeof inputValue,
-    });
-
     const messageContent = customMessage || inputValue.trim();
     if (!messageContent || isThinking) return;
-
-    console.log("🚀 เริ่มส่งข้อความ:", typeof messageContent, messageContent);
-    console.log("📊 Active Contexts:", activeContexts.length);
 
     // Ensure message content is always a string
     const safeMessageContent =
@@ -280,21 +351,13 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
       // 🎯 เพิ่ม Context จาก Active Widgets
       if (activeContexts.length > 0) {
-        console.log("📝 กำลังเตรียม Context ข้อมูล...");
-        console.log("📊 จำนวน Widgets:", activeContexts.length);
-
         const contextPrompt = activeContexts
           .map((ctx, index) => {
             try {
-              console.log(`📊 Widget ${index + 1}:`, ctx.widget.name);
-              console.log(`📄 Widget data type:`, typeof ctx.widget.data);
-
               // Use safe stringify to prevent circular reference errors
               const dataString = ctx.widget.data
                 ? safeStringify(ctx.widget.data)
                 : "ไม่มีข้อมูล";
-
-              console.log(`✅ Widget ${index + 1} data processed successfully`);
 
               return `Widget: ${ctx.widget.name}\nDescription: ${
                 ctx.widget.description || "ไม่มีคำอธิบาย"
@@ -308,7 +371,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           })
           .join("\n\n---\n\n");
 
-        console.log("✅ Context เตรียมเสร็จแล้ว");
+        //  ข้อมูลเต็มของแต่ละ widget
 
         historyMessages.unshift({
           role: "system",
@@ -350,7 +413,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
         historyMessages,
         conversationId || undefined,
         () => {
-          console.log("✅ Streaming เสร็จสิ้น - ปลดล็อก input");
           setIsSending(false);
           setIsThinking(false);
         }
@@ -406,7 +468,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     <ChatErrorBoundary>
       <div
         className={cn(
-          "w-148 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 flex flex-col h-full shadow-lg",
+          "w-168 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 flex flex-col h-full shadow-lg",
           className
         )}
         data-chat-sidebar

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import {
@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useNotificationContext } from "@/context/notification-context";
 import {
   NotificationItem,
@@ -130,21 +130,14 @@ export default function NotificationDropdown() {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Loading notifications...");
-
       const response = await apiClient.get<NotificationResponse>(
         "/api/v1/notifications?limit=10"
       );
-
-      console.log("✅ Notifications response:", response.data);
-
       // API returns: { status: "success", message: "...", data: {...} }
       if (response.status === "success" && response.data?.notifications) {
-        const { notifications, totalCount } = response.data;
+        const { notifications } = response.data;
 
         if (Array.isArray(notifications)) {
-          console.log("📋 Found notifications:", notifications.length);
-
           // Convert raw notifications to typed notifications
           const typedNotifications = notifications.map(
             (raw: RawNotificationItem) => convertRawNotification(raw)
@@ -154,11 +147,6 @@ export default function NotificationDropdown() {
 
           // Refresh unread count from context
           refreshUnreadCount();
-
-          console.log(
-            "✅ Successfully loaded notifications:",
-            typedNotifications.length
-          );
         } else {
           console.warn("⚠️ No notifications array found in response");
           setNotifications([]);
@@ -179,7 +167,6 @@ export default function NotificationDropdown() {
   // 🎯 Mark notification as read
   const markAsRead = async (notificationId: number) => {
     try {
-      console.log("🔄 Marking notification as read:", notificationId);
       await apiClient.put(`/api/v1/notifications/${notificationId}/read`);
 
       // Update local state
@@ -201,7 +188,6 @@ export default function NotificationDropdown() {
   // 🎯 Mark all as read
   const markAllAsRead = async () => {
     try {
-      console.log("🔄 Marking all notifications as read");
       await apiClient.put("/api/v1/notifications/mark-all-read");
 
       // Update local state
@@ -235,8 +221,6 @@ export default function NotificationDropdown() {
   const deleteNotification = async (notificationId: number) => {
     try {
       setIsDeleting(true);
-      console.log("🔄 Deleting notification:", notificationId);
-
       await apiClient.delete(`/api/v1/notifications/${notificationId}`);
 
       // Remove from local state
@@ -249,8 +233,6 @@ export default function NotificationDropdown() {
       setDeleteDialogOpen(false);
       setDetailDialogOpen(false);
       setSelectedNotification(null);
-
-      console.log("✅ Successfully deleted notification:", notificationId);
     } catch (error) {
       console.error("❌ Error deleting notification:", error);
     } finally {
@@ -398,7 +380,6 @@ export default function NotificationDropdown() {
                   className="w-full text-xs"
                   onClick={() => {
                     // Navigate to notifications page if exists
-                    console.log("Navigate to notifications page");
                     setIsOpen(false);
                   }}
                 >

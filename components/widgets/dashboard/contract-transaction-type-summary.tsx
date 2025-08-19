@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -9,8 +9,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import apiClient from "@/lib/api-client";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 const COLORS = [
   "#10b981", // green-500
@@ -58,6 +59,9 @@ export const ContractTransactionSummary = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
   // 🌟 เรียก API ดึงข้อมูลสรุปสถานะตั๋วจำนำ
   const fetchTransactionSummary = async () => {
     // ถ้าไม่มี date ยัง loading อยู่ ไม่ต้องเรียก API
@@ -95,11 +99,6 @@ export const ContractTransactionSummary = ({
 
       setData(chartData);
       setTimestamp(response.data.timestamp);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Transaction summary loaded:", response.data);
-      }
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };
@@ -115,7 +114,7 @@ export const ContractTransactionSummary = ({
       setTimestamp(null);
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch transaction summary:", err);
       }
     } finally {
@@ -128,8 +127,8 @@ export const ContractTransactionSummary = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "contract-transaction-type-summary",
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ",
     "ข้อมูลสรุปประเภทธุรกรรมตั๋วจำนำ เช่น จำนำ ส่งดอกเบี้ย และอื่นๆ",
@@ -147,8 +146,19 @@ export const ContractTransactionSummary = ({
             (max, item) => (item.value > max.value ? item : max),
             data[0]
           )?.name,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย

@@ -1,9 +1,4 @@
-/**
- * Authentication Context
- * จัดการ Global Authentication State และ Actions ทั่วทั้งแอพ
- */
-
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -13,7 +8,7 @@ import React, {
   useReducer,
   ReactNode,
 } from "react";
-import authService from "../lib/auth-service";
+import authService from "../services/auth-service";
 import { User, AuthContextType } from "../types/auth";
 import { showSuccess, showError, showUnauthorized } from "../lib/sweetalert";
 
@@ -130,21 +125,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = await authService.getCurrentUser();
 
         dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-        // Log success ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("🎉 Login successful in context:", {
-            userId: user.id,
-            email: user.email,
-          });
-        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Login failed";
         dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
 
         // Log error ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+        if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
           console.error("❌ Login failed in context:", error);
         }
 
@@ -181,11 +168,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // แสดง SweetAlert2 success
       showSuccess("ออกจากระบบสำเร็จ", "ขอบคุณที่ใช้บริการ", 2000);
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👋 Logout successful in context");
-      }
     } catch (error) {
       // แม้ logout API fail เราก็ควร clear local state
 
@@ -207,7 +189,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: "AUTH_LOGOUT" });
 
       // Log warning ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.warn("⚠️ Logout API failed, but cleared local state:", error);
       }
     }
@@ -224,21 +206,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const user = await authService.getCurrentUser();
 
       dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🔄 User refreshed in context:", {
-          userId: user.id,
-          email: user.email,
-        });
-      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to refresh user";
       dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to refresh user in context:", error);
       }
     }
@@ -280,22 +254,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // พยายามดึงข้อมูลผู้ใช้ปัจจุบัน
         const user = await authService.getCurrentUser();
         dispatch({ type: "AUTH_SUCCESS", payload: user });
-
-        // Log success ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("✅ Auto-login successful:", {
-            userId: user.id,
-            email: user.email,
-          });
-        }
       } catch (error) {
         // ถ้า fail แสดงว่าไม่ได้ login หรือ token หมดอายุ
         dispatch({ type: "AUTH_LOGOUT" });
-
-        // Log ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-          console.log("ℹ️ No valid authentication found");
-        }
       }
     };
 

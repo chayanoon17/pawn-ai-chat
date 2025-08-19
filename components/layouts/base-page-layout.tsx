@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, ReactNode } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -35,7 +35,7 @@ function BasePageLayoutContent({
   onFilterChange,
 }: BasePageLayoutProps) {
   const isMobile = useIsMobile();
-  const { filterData, setFilterData } = useFilter();
+  const { filterData, setFilterDataWithNotification } = useFilter();
 
   // 🔐 Protected Route - ป้องกันการเข้าถึงโดยไม่ได้ login
   const { shouldRender, message } = useProtectedRoute();
@@ -46,18 +46,13 @@ function BasePageLayoutContent({
     setIsChatOpen((prev) => !prev);
   }, []);
 
-  // 🎯 Handle filter changes
+  // 🎯 Handle filter changes - ใช้ setFilterDataWithNotification เพื่อแจ้งเตือน auto-update
   const handleFilterChange = useCallback(
     (data: WidgetFilterData) => {
-      setFilterData(data);
+      setFilterDataWithNotification(data); // 🔄 ใช้ notification version
       onFilterChange?.(data);
-
-      // Log การเปลี่ยนแปลง
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log(`🎯 ${page} filter changed:`, data);
-      }
     },
-    [page, onFilterChange, setFilterData]
+    [page, onFilterChange, setFilterDataWithNotification]
   );
 
   // 🔐 Guard - แสดง loading state with better UX

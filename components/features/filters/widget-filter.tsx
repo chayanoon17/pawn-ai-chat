@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, Calendar, Lock } from "lucide-react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { format } from "date-fns";
 import { useDebounce, useStableCallback } from "@/lib/performance";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -93,13 +93,6 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`;
-
-    // Debug log
-    console.log("🔍 formatDateForAPI:", {
-      input: date,
-      output: formattedDate,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    });
 
     return formattedDate;
   };
@@ -223,12 +216,6 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
       };
 
       // Debug log
-      console.log("🔄 Widget Filter Change:", {
-        originalBranchId: debouncedBranchId,
-        finalBranchId: filterData.branchId,
-        date: filterData.date,
-      });
-
       handleFilterChange(filterData);
     }
   }, [debouncedBranchId, debouncedDate, handleFilterChange]);
@@ -379,7 +366,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
       </Popover>
 
       {/* Debug Error */}
-      {error && process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && (
+      {error && process.env.NEXT_PUBLIC_DEV_MODE === "true" && (
         <div className="text-red-500 text-xs">⚠️ {error}</div>
       )}
     </div>

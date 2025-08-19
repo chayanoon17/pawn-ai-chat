@@ -1,114 +1,7 @@
-/**
- * Authentication Service
- * จัดการ Authentication logic ทั้งหมด รวมถึงการเรียก API และการตรวจสอบสิทธิ์
- */
-
-import apiClient from "./api";
+import apiClient from "../lib/api-client";
 import { User } from "@/types/auth";
 import { LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";
-
-/**
- * User Management API Functions
- */
-
-export async function createUser(data: {
-  email: string;
-  password: string;
-  fullName: string;
-  phoneNumber?: string;
-  profileUrl?: string;
-  branchId?: number | null; // เพิ่ม null เพื่อให้สามารถไม่ระบุสาขาได้
-  roleId: number;
-  status: "ACTIVE" | "INACTIVE";
-}) {
-  const response = await apiClient.post("/api/v1/users", data);
-  return response.data;
-}
-
-export async function getAllUsers(params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: "ACTIVE" | "INACTIVE";
-  branchId?: number;
-  roleId?: number;
-}) {
-  const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.append("page", params.page.toString());
-  if (params?.limit) queryParams.append("limit", params.limit.toString());
-  if (params?.search) queryParams.append("search", params.search);
-  if (params?.status) queryParams.append("status", params.status);
-  if (params?.branchId)
-    queryParams.append("branchId", params.branchId.toString());
-  if (params?.roleId) queryParams.append("roleId", params.roleId.toString());
-
-  const url = `/api/v1/users${
-    queryParams.toString() ? `?${queryParams.toString()}` : ""
-  }`;
-  const response = await apiClient.get(url);
-  return response.data;
-}
-
-export async function getUserById(id: string) {
-  const response = await apiClient.get(`/api/v1/users/${id}`);
-  return response.data;
-}
-
-export async function updateUser(
-  id: string,
-  data: {
-    fullName?: string;
-    phoneNumber?: string;
-    profileUrl?: string;
-    password?: string;
-    branchId?: number | null; // เพิ่ม null เพื่อให้สามารถเคลียร์ข้อมูลสาขาได้
-    roleId?: number;
-    status?:
-      | "ACTIVE"
-      | "INACTIVE"
-      | "SUSPENDED"
-      | "DELETED"
-      | "PENDING_VERIFICATION";
-  }
-) {
-  const response = await apiClient.put(`/api/v1/users/${id}`, data);
-  return response.data;
-}
-
-export async function deleteUser(id: string) {
-  const response = await apiClient.delete(`/api/v1/users/${id}`);
-  return response.data;
-}
-
-export async function getUserPermissions(id: string) {
-  const response = await apiClient.get(`/api/v1/users/${id}/permissions`);
-  return response.data;
-}
-
-export async function updateUserRole(id: string, roleId: number) {
-  const response = await apiClient.put(`/api/v1/users/${id}/role`, { roleId });
-  return response.data;
-}
-
-// Legacy function for backward compatibility
-export async function registerUser(data: {
-  fullName: string;
-  email: string;
-  password: string;
-  branch: number;
-  role: number;
-  status: string;
-}) {
-  return createUser({
-    email: data.email,
-    password: data.password,
-    fullName: data.fullName,
-    branchId: data.branch,
-    roleId: data.role,
-    status: data.status as "ACTIVE" | "INACTIVE",
-  });
-}
 
 /**
  * Login Credentials Interface
@@ -128,8 +21,8 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // เรียก API login endpoint - ใช้ postAuth สำหรับ auth endpoints
-      const response = await apiClient.postAuth<LoginResponse>(
+      // เรียก API login endpoint
+      const response = await apiClient.post<LoginResponse>(
         "/api/auth/login",
         credentials
       );
@@ -139,18 +32,10 @@ class AuthService {
         localStorage.setItem("accessToken", response.data.accessToken);
       }
 
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("🎉 Login successful:", {
-          userId: response.data.userId,
-          hasToken: !!response.data.accessToken,
-        });
-      }
-
       return response.data;
     } catch (error) {
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Login failed:", error);
       }
 
@@ -164,19 +49,14 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // เรียก API logout endpoint - ใช้ postAuth สำหรับ auth endpoints
-      await apiClient.postAuth("/api/auth/logout");
+      // เรียก API logout endpoint
+      await apiClient.post("/api/auth/logout");
 
       // ลบ access token จาก localStorage
       localStorage.removeItem("accessToken");
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👋 Logout successful");
-      }
     } catch (error) {
       // Log warning แต่ไม่ throw error เพราะ logout ควรสำเร็จเสมอใน frontend
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.warn(
           "⚠️ Logout API failed, but continuing with local logout:",
           error
@@ -196,22 +76,13 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน - ใช้ getAuth สำหรับ auth endpoints
-      const response = await apiClient.getAuth<User>("/api/auth/me");
-
-      // Log success ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("👤 Current user fetched:", {
-          id: response.data.id,
-          email: response.data.email,
-          role: response.data.role.name,
-        });
-      }
+      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน
+      const response = await apiClient.get<User>("/api/auth/me");
 
       return response.data;
     } catch (error) {
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch current user:", error);
       }
 
@@ -233,7 +104,7 @@ class AuthService {
     );
 
     // Log ใน development mode
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       console.log("🔍 Permission check:", {
         action,
         hasPermission,
@@ -258,7 +129,7 @@ class AuthService {
     );
 
     // Log ใน development mode
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       console.log("🔍 Menu access check:", {
         menuName,
         hasAccess,

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { getPermissions, getMenuPermissions, getRoles } from "@/lib/api";
+import { getPermissions, getMenuPermissions } from "@/services/menu-service";
+import { getRoles } from "@/services/role-service";
 import type { Role as RoleManagement } from "@/types/role";
 import { showNetworkError } from "@/lib/sweetalert";
 import type { Permission, MenuPermission } from "@/types/role";

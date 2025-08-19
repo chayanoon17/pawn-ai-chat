@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,8 +16,9 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import apiClient from "@/lib/api-client";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 interface Props {
   branchId: string | null; // รองรับ "ทุกสาขา"
@@ -74,6 +75,9 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -88,9 +92,6 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
       const res = await apiClient.get<ApiResponse>(
         `/api/v1/asset-types/ranking-by-period?${params.toString()}`
       );
-
-      console.log("✅ Full API Response:", res.data);
-
       const apiData = res.data;
       if (!apiData || !Array.isArray(apiData.rankings)) {
         console.error("📛 Invalid API structure:", apiData);
@@ -151,8 +152,8 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "ranking-by-period-asset-type",
     "ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา",
     "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
@@ -168,8 +169,19 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
           totalDataPoints: chartData.length,
           topPerformingAsset: Object.keys(chartConfig)[0], // สมมติว่าเรียงตาม ranking
           lastUpdated: timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatDate = (iso: string) => {

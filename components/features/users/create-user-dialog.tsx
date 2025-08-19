@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import {
@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, FileText, Mail, Lock, Briefcase } from "lucide-react";
-import { createUser } from "@/lib/auth-service";
-import { getMenuBranches } from "@/lib/api";
+import { createUser } from "@/services/user-service";
+import { getMenuBranches } from "@/services/menu-service";
 import { showCreateSuccess, showError, showWarning } from "@/lib/sweetalert";
 import type { User, Branch } from "@/types/auth";
 import type { Role } from "@/types/role";
@@ -129,13 +129,7 @@ export function CreateUserDialog({
       const dataToSend = {
         ...createUserData,
         // ไม่แปลง null เป็น undefined เพราะ API ต้องการ null เพื่อระบุว่าไม่มีสาขา
-      };
-
-      console.log("Creating user with data:", dataToSend);
-      console.log("branchId value:", createUserData.branchId);
-      console.log("specifyBranch:", specifyBranch);
-
-      // เรียก API สร้าง user
+      }; // เรียก API สร้าง user
       const newUserData = (await createUser(dataToSend)) as User;
 
       // เรียก callback function

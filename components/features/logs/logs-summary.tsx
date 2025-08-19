@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { getActivitySummary, ActivitySummaryResponse } from "@/lib/api";
+import {
+  getActivitySummary,
+  ActivitySummaryResponse,
+} from "@/services/log-service";
 import { useAuth } from "@/context/auth-context";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -129,12 +132,7 @@ export function LogsSummary({
         endDate: formatDateForAPI(localEndDate),
         userId: targetUserId,
       };
-
-      console.log("🔍 Fetching activity summary with params:", params);
-
       const data = await getActivitySummary(params);
-
-      console.log("📊 Activity summary response:", data);
       setSummary(data);
     } catch (error) {
       const errorMessage =

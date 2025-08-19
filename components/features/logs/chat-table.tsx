@@ -1,7 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getAllConversations, getConversationMessages } from "@/lib/api";
+import {
+  getAllConversations,
+  getConversationMessages,
+} from "@/services/chat-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -78,17 +81,6 @@ export default function ChatTable({
         // ถ้าไม่ใช่จะดูแค่ข้อมูลของตัวเอง
         const isAdminRole = isUserSuperAdmin || isUserAdmin;
 
-        console.log(
-          "🔍 Fetching conversations for user:",
-          user?.email,
-          "isAdmin:",
-          isAdminRole,
-          "page:",
-          currentPage,
-          "dateRange:",
-          { startDate, endDate }
-        );
-
         // Format dates for API - ใช้ local timezone เพื่อป้องกันปัญหาวันที่ลดลง 1 วัน
         const formatDateForAPI = (date?: Date): string | null => {
           if (!date) return null;
@@ -105,12 +97,7 @@ export default function ChatTable({
           startDate: formatDateForAPI(startDate),
           endDate: formatDateForAPI(endDate),
           userId: isAdminRole ? null : user?.id ? String(user.id) : null,
-        });
-
-        console.log("🔍 Chat conversations data:", data);
-        console.log("🔍 First conversation:", data.conversations?.[0]);
-
-        // ใช้ข้อมูลจาก API response โดยตรง
+        }); // ใช้ข้อมูลจาก API response โดยตรง
         const conversations = data.conversations || [];
         const totalItems = data.total || 0;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -153,6 +140,7 @@ export default function ChatTable({
       const messages = await getConversationMessages(conversationId);
       setChatMessages(messages || []);
     } catch (err) {
+      console.error("Failed to fetch chat messages:", err);
       setChatMessages([]);
     } finally {
       setIsMessagesLoading(false);

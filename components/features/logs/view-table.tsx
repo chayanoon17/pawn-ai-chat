@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getActivityLogs } from "@/lib/api";
+import { getActivityLogs } from "@/services/log-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ActivityLog } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
@@ -104,11 +104,6 @@ export default function ViewTable({
           return `${year}-${month}-${day}`;
         };
 
-        console.log("🔍 Fetching view logs with date range:", {
-          startDate,
-          endDate,
-        });
-
         const data = await getActivityLogs({
           page: currentPage,
           limit: itemsPerPage,
@@ -117,9 +112,6 @@ export default function ViewTable({
           startDate: formatDateForAPI(startDate),
           endDate: formatDateForAPI(endDate),
         });
-
-        console.log("🔍 Raw API response:", data);
-
         const logs = data.activityLogs || [];
         const totalItems = data.total || 0;
         const totalPages = Math.ceil(totalItems / itemsPerPage);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Search,
@@ -51,48 +51,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import apiClient, { getApiUrl } from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import {
+  getContractTransactionDetails,
+  exportContractTransactionsCSV,
+  type ContractTransactionDetailsResponse,
+  type TransactionDetailItem,
+  type TransactionSummaryItem,
+} from "@/services/dashboard-service";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 import { showWarning } from "@/lib/sweetalert";
-
-// 📊 Types สำหรับ API Response
-interface TransactionSummaryItem {
-  type: string;
-  value: number;
-  total: number;
-}
-
-interface TransactionDetailItem {
-  contractNumber: number;
-  ticketBookNumber: string;
-  transactionDate: string;
-  interestPaymentDate: string | null;
-  overdueDays: number;
-  remainingAmount: number;
-  interestAmount: number;
-  transactionType: string;
-  branchId: number;
-  branchName: string;
-  branchShortName: string;
-  branchLocation: string;
-  assetType: string;
-  assetDetail: string;
-  pawnPrice: number;
-  monthlyInterest: number;
-  contractStatus: string;
-  redeemedDate: string | null;
-  customerName: string;
-  customerPhone: string;
-  customerAddress: string;
-  customerOccupation: string;
-}
-
-interface ContractTransactionDetailsResponse {
-  branchId: number;
-  summaries: TransactionSummaryItem[];
-  transactions: TransactionDetailItem[];
-  timestamp: string;
-}
 
 // 📊 Props สำหรับ Widget
 interface ContractTransactionDetailsProps {
@@ -105,17 +73,17 @@ interface ContractTransactionDetailsProps {
 const getStatusColor = (status: string) => {
   switch (status) {
     case "จำนำ":
-      return "bg-green-100 text-green-700";
+      return "bg-[#596FF6] text-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
-      return "bg-blue-100 text-blue-700";
+      return "bg-[#F1C5C4] text-[#8D3A3A]";
     case "ไถ่ถอน":
-      return "bg-pink-100 text-pink-700";
+      return "bg-[#AD2E27] text-[#FFFFFF]";
     case "ผ่อนต้น":
-      return "bg-teal-100 text-teal-700";
+      return "bg-[#83DDE5] text-[#0A5359]";
     case "เพิ่มต้น":
-      return "bg-purple-100 text-purple-700";
+      return "bg-[#FBE689] text-[#544D1E]";
     case "แบ่งไถ่":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-[#A6A6A6] text-[#000000]";
     default:
       return "bg-gray-100 text-gray-600";
   }
@@ -124,17 +92,17 @@ const getStatusColor = (status: string) => {
 const getIconBgColor = (status: string) => {
   switch (status) {
     case "จำนำ":
-      return "bg-green-700";
+      return "bg-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
-      return "bg-blue-700";
+      return "bg-[#8D3A3A]";
     case "ไถ่ถอน":
-      return "bg-pink-700";
+      return "bg-[#FFFFFF]";
     case "ผ่อนต้น":
-      return "bg-teal-700";
+      return "bg-[#0A5359]";
     case "เพิ่มต้น":
-      return "bg-purple-700";
+      return "bg-[#544D1E]";
     case "แบ่งไถ่":
-      return "bg-yellow-600";
+      return "bg-[#FFFFFF]";
     default:
       return "bg-gray-500";
   }
@@ -149,12 +117,12 @@ type TransactionType =
   | "แบ่งไถ่";
 
 const statusIconMap: Record<TransactionType, JSX.Element> = {
-  จำนำ: <Ticket className="w-5 h-5 text-white" />,
+  จำนำ: <Ticket className="w-5 h-5 text-[#596FF6]" />,
   ส่งดอกเบี้ย: <TicketPercent className="w-5 h-5 text-white" />,
-  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-white" />,
+  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-[#AD2E27]" />,
   ผ่อนต้น: <TicketCheck className="w-5 h-5 text-white" />,
   เพิ่มต้น: <TicketPlus className="w-5 h-5 text-white" />,
-  แบ่งไถ่: <Tickets className="w-5 h-5 text-white" />,
+  แบ่งไถ่: <Tickets className="w-5 h-5 text-[#000000]" />,
 };
 
 // ✅ Utilities สำหรับปิดบังข้อมูลชื่อ-นามสกุล (รองรับตัวอักษรไทย)
@@ -194,6 +162,9 @@ export default function ContractTransactionDetails({
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const pageSize = 10;
 
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
   // 🔄 ดึงข้อมูลจาก API
   const fetchTransactionDetails = async () => {
     if (isLoading || !date) return;
@@ -202,24 +173,13 @@ export default function ContractTransactionDetails({
       setLoading(true);
       setError(null);
 
-      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
-      const params = new URLSearchParams();
-      if (branchId) {
-        params.append("branchId", branchId);
-      }
-      params.append("date", date);
+      // เรียกใช้ function จาก dashboard-service
+      const response = await getContractTransactionDetails({
+        branchId,
+        date,
+      });
 
-      // เรียก API ดึงข้อมูลรายละเอียดรายการรับจำนำ
-      const response = await apiClient.get<ContractTransactionDetailsResponse>(
-        `/api/v1/contracts/transactions/details?${params.toString()}`
-      );
-
-      setData(response.data);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Transaction details loaded:", response.data);
-      }
+      setData(response);
     } catch (err) {
       console.error("❌ Error fetching transaction details:", err);
       setError("ไม่สามารถดึงข้อมูลได้");
@@ -249,58 +209,11 @@ export default function ContractTransactionDetails({
     try {
       setLoading(true);
 
-      // สร้าง URL พร้อม authentication headers
-      const exportUrl = getApiUrl(
-        `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
-      );
-
-      // สร้าง headers สำหรับ authentication
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Accept: "text/csv,application/csv",
-      };
-
-      // เพิ่ม Authorization header ถ้ามี token ใน localStorage
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
-
-      // เรียก fetch โดยตรงเพื่อให้ได้ blob response
-      const response = await fetch(exportUrl, {
-        method: "GET",
-        headers,
-        credentials: "include",
+      // เรียกใช้ function จาก dashboard-service
+      await exportContractTransactionsCSV({
+        branchId,
+        date,
       });
-
-      if (!response.ok) {
-        throw new Error(
-          `HTTP Error ${response.status}: ${response.statusText}`
-        );
-      }
-
-      // แปลงเป็น blob
-      const blob = await response.blob();
-
-      // สร้าง blob URL และดาวน์โหลดไฟล์
-      const url = window.URL.createObjectURL(blob);
-
-      // สร้าง element <a> เพื่อดาวน์โหลด
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `contract-transactions-${branchId}-${date}.csv`;
-      document.body.appendChild(link);
-      link.click();
-
-      // ทำความสะอาด
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✅ CSV export completed successfully");
-      }
     } catch (error) {
       console.error("❌ Error exporting CSV:", error);
       showWarning(
@@ -311,37 +224,6 @@ export default function ContractTransactionDetails({
       setLoading(false);
     }
   };
-
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
-    "contract-transaction-details",
-    "รายการรับจำนำทั้งหมด",
-    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
-    data
-      ? {
-          branchId: data.branchId,
-          totalTransactions: data.transactions.length,
-          summaries: data.summaries,
-          sampleTransactions: data.transactions.slice(0, 5).map((t) => ({
-            contractNumber: t.contractNumber,
-            ticketBookNumber: t.ticketBookNumber,
-            customerName: t.customerName,
-            transactionType: t.transactionType,
-            remainingAmount: t.remainingAmount,
-            assetType: t.assetType,
-            ticketStatus: t.contractStatus,
-          })),
-          transactionTypes: [
-            ...new Set(data.transactions.map((t) => t.transactionType)),
-          ],
-          totalAmount: data.transactions.reduce(
-            (sum, t) => sum + t.remainingAmount,
-            0
-          ),
-          lastUpdated: data.timestamp,
-        }
-      : null
-  );
 
   // 🔍 Filter ข้อมูลตามการค้นหา
   const filteredTransactions =
@@ -387,6 +269,52 @@ export default function ContractTransactionDetails({
     page * pageSize
   );
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
+
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
+    "contract-transaction-details",
+    "รายการรับจำนำทั้งหมด",
+    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
+    data
+      ? {
+          branchId: data.branchId,
+          totalTransactions: data.transactions.length,
+          summaries: data.summaries,
+          // ✅ ใช้ transactions ที่กรองและแบ่งหน้าแล้ว (หน้าปัจจุบัน)
+          transactions: paginatedData,
+          // ข้อมูลเพิ่มเติมสำหรับ context
+          currentPage: page,
+          pageSize: pageSize,
+          totalPages: totalPages,
+          filteredTransactionsCount: filteredTransactions.length,
+          searchTerm: searchTerm,
+          selectedType: selectedType,
+          transactionTypes: [
+            ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          totalAmount: data.transactions.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          currentPageAmount: paginatedData.reduce(
+            (sum, t) => sum + t.remainingAmount,
+            0
+          ),
+          lastUpdated: data.timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
+        }
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
+  );
 
   // 🎯 Helper function สำหรับจัดรูปแบบวันที่
   const formatDate = (iso: string) => {

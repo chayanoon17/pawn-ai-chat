@@ -33,7 +33,7 @@ import {
   Phone,
   Building,
 } from "lucide-react";
-import { deleteUser } from "@/lib/auth-service";
+import { deleteUser } from "@/services/user-service";
 import {
   showDeleteConfirmation,
   showDeleteSuccess,

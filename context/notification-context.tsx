@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -8,7 +8,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { UnreadCountResponse } from "@/types";
 import { useAuth } from "./auth-context";
 
@@ -51,9 +51,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const loadUnreadCount = useCallback(async () => {
     // Only load if user is authenticated
     if (!isAuthenticated || !user) {
-      console.log(
-        "🔄 [NotificationContext] Skipping load - user not authenticated"
-      );
       setUnreadCount(0);
       return;
     }
@@ -63,29 +60,18 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       user.role.name === "Super Admin" || user.role.name === "Admin";
 
     if (!canViewNotifications) {
-      console.log(
-        "🔄 [NotificationContext] Skipping load - user lacks permission"
-      );
       setUnreadCount(0);
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("🔄 [NotificationContext] Loading unread count...");
-
       const response = await apiClient.get<UnreadCountResponse>(
         "/api/v1/notifications/unread-count"
       );
 
-      console.log(
-        "✅ [NotificationContext] Unread count response:",
-        response.data
-      );
-
       if (response.status === "success" && response.data) {
         const count = response.data.unreadCount || 0;
-        console.log("📊 [NotificationContext] Setting unread count to:", count);
         setUnreadCount(count);
       } else {
         console.warn(

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -9,8 +9,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { getContractStatusSummary } from "@/services/dashboard-service";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 const COLORS = [
   "#0ea5e9", // sky-500 - สำหรับสถานะปกติ
@@ -32,16 +33,6 @@ type StatusSummaryData = {
   percentage: number;
 };
 
-type StatusSummaryResponse = {
-  branchId: number;
-  summaries: Array<{
-    type: string;
-    value: number;
-    percentage: number;
-  }>;
-  timestamp: string;
-};
-
 interface ContractStatusSummaryProps {
   branchId: string | null; // รองรับ "ทุกสาขา"
   date: string;
@@ -58,6 +49,9 @@ export const ContractStatusSummary = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
   // 🌟 เรียก API ดึงข้อมูลสรุปสถานะสัญญา
   const fetchStatusSummary = async () => {
     // ถ้าไม่มี date ยัง loading อยู่ ไม่ต้องเรียก API
@@ -72,21 +66,14 @@ export const ContractStatusSummary = ({
       setIsLoading(true);
       setError(null);
 
-      // สร้าง URL สำหรับ API - ถ้า branchId เป็น null จะไม่ส่งไป
-      const params = new URLSearchParams();
-      if (branchId) {
-        params.append("branchId", branchId);
-      }
-      params.append("date", date);
-      params.append("summaryType", "contractStatus");
-
-      // เรียก API ดึงข้อมูลสรุปสถานะสัญญา
-      const response = await apiClient.get<StatusSummaryResponse>(
-        `/api/v1/contracts/transactions/summary?${params.toString()}`
-      );
+      // เรียกใช้ function จาก dashboard-service
+      const response = await getContractStatusSummary({
+        branchId,
+        date,
+      });
 
       // แปลงข้อมูลให้เป็นรูปแบบสำหรับ PieChart
-      const chartData = response.data.summaries.map((item, index) => ({
+      const chartData = response.summaries.map((item, index: number) => ({
         name: item.type,
         value: item.value,
         color: COLORS[index % COLORS.length],
@@ -94,12 +81,7 @@ export const ContractStatusSummary = ({
       }));
 
       setData(chartData);
-      setTimestamp(response.data.timestamp);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Contract status summary loaded:", response.data);
-      }
+      setTimestamp(response.timestamp);
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };
@@ -115,7 +97,7 @@ export const ContractStatusSummary = ({
       setTimestamp(null);
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch contract status summary:", err);
       }
     } finally {
@@ -128,8 +110,8 @@ export const ContractStatusSummary = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "contract-status-summary",
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ",
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ เช่น ตั๋วปัจจุบัน หลุดจำนำ ไถ่ถอน",
@@ -147,8 +129,19 @@ export const ContractStatusSummary = ({
             (max, item) => (item.value > max.value ? item : max),
             data[0]
           )?.name,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย

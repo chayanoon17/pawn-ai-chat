@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import {
   XAxis,
@@ -10,9 +10,10 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { Download, Upload, FileBarChart } from "lucide-react";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 interface WeeklyOperationData {
   total: number;
@@ -72,6 +73,9 @@ export const WeeklyOperationSummary = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
   // 🎯 Helper functions สำหรับแปลงข้อมูล
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("th-TH").format(amount);
@@ -123,8 +127,7 @@ export const WeeklyOperationSummary = ({
       setData(response.data);
 
       // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Weekly operation summary loaded:", response.data);
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       }
     } catch (err) {
       console.error("❌ Error fetching weekly operation summary:", err);
@@ -289,8 +292,8 @@ export const WeeklyOperationSummary = ({
     ? formatPercentChange(data.cashOut.percentChange)
     : null;
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "weekly-operation-summary",
     "ยอดรับจำนำและรายละเอียด",
     "ข้อมูลการเปรียบเทียบเงินสดรับและเงินสดจ่ายระหว่างอาทิตย์นี้กับอาทิตย์ที่แล้ว",
@@ -325,9 +328,19 @@ export const WeeklyOperationSummary = ({
               cashOutChange: data.cashOut.percentChange,
             },
           },
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
       : null,
-    [data]
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   return (

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 
 // 📊 Types สำหรับ Widget Data
 export interface WidgetData {
@@ -11,43 +18,120 @@ export interface WidgetData {
   timestamp: string;
 }
 
+// 🔄 Types สำหรับ Context Replacement
+export interface ContextReplacement {
+  autoUpdate: boolean;
+  replaceOnUpdate: boolean;
+}
+
 interface WidgetContextType {
   widgets: Map<string, WidgetData>;
-  registerWidget: (widget: WidgetData) => void;
+  contextReplacement: Map<string, ContextReplacement>;
+  registerWidget: (widget: WidgetData, options?: ContextReplacement) => void;
   unregisterWidget: (id: string) => void;
+  updateWidget: (widget: WidgetData) => void;
   getWidget: (id: string) => WidgetData | undefined;
   getAllWidgets: () => WidgetData[];
   getWidgetsByRoute: (route: string) => WidgetData[];
+  onWidgetUpdate: (callback: (widget: WidgetData) => void) => () => void;
 }
 
 const WidgetContext = createContext<WidgetContextType | undefined>(undefined);
 
 export const WidgetProvider = ({ children }: { children: ReactNode }) => {
   const [widgets, setWidgets] = useState<Map<string, WidgetData>>(new Map());
+  const [contextReplacement, setContextReplacement] = useState<
+    Map<string, ContextReplacement>
+  >(new Map());
+  const updateCallbacksRef = useRef<((widget: WidgetData) => void)[]>([]);
 
-  const registerWidget = (widget: WidgetData) => {
-    setWidgets((prev) => {
-      const newWidgets = new Map(prev);
-      newWidgets.set(widget.id, widget);
-      return newWidgets;
-    });
-  };
+  // 🔄 Register Widget with Auto-Update Options
+  const registerWidget = useCallback(
+    (widget: WidgetData, options?: ContextReplacement) => {
+      setWidgets((prev) => {
+        const newWidgets = new Map(prev);
+        newWidgets.set(widget.id, widget);
+        return newWidgets;
+      });
 
-  const unregisterWidget = (id: string) => {
+      if (options) {
+        setContextReplacement((prev) => {
+          const newOptions = new Map(prev);
+          newOptions.set(widget.id, options);
+          return newOptions;
+        });
+      }
+    },
+    []
+  );
+
+  // 🗑️ Unregister Widget
+  const unregisterWidget = useCallback((id: string) => {
     setWidgets((prev) => {
       const newWidgets = new Map(prev);
       newWidgets.delete(id);
       return newWidgets;
     });
-  };
+    setContextReplacement((prev) => {
+      const newOptions = new Map(prev);
+      newOptions.delete(id);
+      return newOptions;
+    });
+  }, []);
 
-  const getWidget = (id: string): WidgetData | undefined => {
-    return widgets.get(id);
-  };
+  // 🔄 Update Widget และแจ้งเตือน Callbacks
+  const updateWidget = useCallback((widget: WidgetData) => {
+    setWidgets((prev) => {
+      const existing = prev.get(widget.id);
+      if (!existing) return prev;
 
-  const getAllWidgets = (): WidgetData[] => {
+      // ตรวจสอบว่าข้อมูลเปลี่ยนแปลงจริงหรือไม่
+      const hasChanged =
+        JSON.stringify(existing.data) !== JSON.stringify(widget.data);
+      if (!hasChanged) return prev;
+
+      const newWidgets = new Map(prev);
+      const updatedWidget = { ...widget, timestamp: new Date().toISOString() };
+      newWidgets.set(widget.id, updatedWidget);
+
+      // แจ้งเตือน callbacks ที่ subscribe
+      updateCallbacksRef.current.forEach((callback) => {
+        try {
+          callback(updatedWidget);
+        } catch (error) {
+          console.error("Error in widget update callback:", error);
+        }
+      });
+
+      return newWidgets;
+    });
+  }, []);
+
+  // 📡 Subscribe to Widget Updates
+  const onWidgetUpdate = useCallback(
+    (callback: (widget: WidgetData) => void) => {
+      updateCallbacksRef.current.push(callback);
+
+      // Return unsubscribe function
+      return () => {
+        updateCallbacksRef.current = updateCallbacksRef.current.filter(
+          (cb) => cb !== callback
+        );
+      };
+    },
+    []
+  );
+
+  const getWidget = useCallback(
+    (id: string): WidgetData | undefined => {
+      return widgets.get(id);
+    },
+    [widgets]
+  );
+
+  const getAllWidgets = useCallback((): WidgetData[] => {
     return Array.from(widgets.values());
-  };
+  }, [widgets]);
 
   const getWidgetsByRoute = (route: string): WidgetData[] => {
     return Array.from(widgets.values())
@@ -99,11 +183,14 @@ export const WidgetProvider = ({ children }: { children: ReactNode }) => {
     <WidgetContext.Provider
       value={{
         widgets,
+        contextReplacement,
         registerWidget,
         unregisterWidget,
+        updateWidget,
         getWidget,
         getAllWidgets,
         getWidgetsByRoute,
+        onWidgetUpdate,
       }}
     >
       {children}
@@ -119,29 +206,77 @@ export const useWidgetContext = () => {
   return context;
 };
 
-// 🎯 Custom Hook สำหรับ Widget Registration
+// 🎯 Custom Hook สำหรับ Widget Registration with Auto-Update
 export const useWidgetRegistration = (
   id: string,
   name: string,
   description: string,
   data: any,
-  dependencies: any[] = []
+  options?: {
+    autoUpdate?: boolean;
+    replaceOnUpdate?: boolean;
+    dependencies?: any[];
+  }
 ) => {
-  const { registerWidget, unregisterWidget } = useWidgetContext();
+  const { registerWidget, unregisterWidget, updateWidget } = useWidgetContext();
+  const prevDataRef = useRef<any>(null);
+  const isInitializedRef = useRef(false);
+
+  const {
+    autoUpdate = true,
+    replaceOnUpdate = true,
+    dependencies = [],
+  } = options || {};
 
   React.useEffect(() => {
-    if (data) {
-      registerWidget({
-        id,
-        name,
-        description,
-        data,
-        timestamp: new Date().toISOString(),
-      });
+    // 🏁 Initial Registration
+    if (!isInitializedRef.current && data) {
+      registerWidget(
+        {
+          id,
+          name,
+          description,
+          data,
+          timestamp: new Date().toISOString(),
+        },
+        { autoUpdate, replaceOnUpdate }
+      );
+
+      prevDataRef.current = data;
+      isInitializedRef.current = true;
+      return;
     }
 
+    // 🔄 Auto-Update: ตรวจสอบการเปลี่ยนแปลงข้อมูล
+    if (autoUpdate && data && isInitializedRef.current) {
+      const currentDataString = JSON.stringify(data);
+      const prevDataString = JSON.stringify(prevDataRef.current);
+
+      if (currentDataString !== prevDataString) {
+        updateWidget({
+          id,
+          name,
+          description,
+          data,
+          timestamp: new Date().toISOString(),
+        });
+        prevDataRef.current = data;
+      }
+    }
+  }, [
+    id,
+    name,
+    description,
+    JSON.stringify(data),
+    autoUpdate,
+    replaceOnUpdate,
+    ...dependencies,
+  ]);
+
+  React.useEffect(() => {
     return () => {
       unregisterWidget(id);
+      isInitializedRef.current = false;
     };
-  }, [id, name, description, JSON.stringify(data), ...dependencies]);
+  }, [id, unregisterWidget]);
 };

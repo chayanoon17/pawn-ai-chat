@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import apiClient from "@/lib/api";
-import { useWidgetRegistration } from "@/context/widget-context";
+import apiClient from "@/lib/api-client";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 import type {
   BranchDailySummary,
   DailyOperationProps,
@@ -18,6 +19,9 @@ export const DailyOperationSummary = ({
   const [summary, setSummary] = useState<BranchDailySummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   // 🌟 เรียก API ดึงข้อมูลรายงานผลการดำเนินงาน
   const fetchSummary = async () => {
@@ -43,15 +47,7 @@ export const DailyOperationSummary = ({
       const response = await apiClient.get<BranchDailySummary>(
         `/api/v1/branches/daily-operation/summary?${params.toString()}`
       );
-
-      console.log("✅ Fetched Daily Operation Summary:", response.data);
-
       setSummary(response.data);
-
-      // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
-        console.log("✨ Daily operation summary loaded:", response.data);
-      }
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message?: string } };
@@ -66,7 +62,7 @@ export const DailyOperationSummary = ({
       setSummary(null);
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch daily operation summary:", err);
       }
     } finally {
@@ -79,8 +75,8 @@ export const DailyOperationSummary = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "daily-operation-summary",
     "รายงานผลการดำเนินงาน",
     "ข้อมูลเปรียบเทียบผลการดำเนินงานรายวัน (ทรัพย์จำนำยกมาและทรัพย์จำนำปัจจุบัน)",
@@ -93,8 +89,19 @@ export const DailyOperationSummary = ({
           amountChange: summary.amountChange,
           lastUpdated: summary.timestamp,
           netChangeDirection: summary.amountChange >= 0 ? "เพิ่มขึ้น" : "ลดลง",
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatAmount = (value: number) =>
