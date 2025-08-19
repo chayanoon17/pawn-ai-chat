@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Coins, Info } from "lucide-react";
 import { getLatestGoldPrice } from "@/services/dashboard-service";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 import type { GoldPrice } from "@/types/dashboard";
 
 export const GoldPriceCard = () => {
@@ -13,7 +14,10 @@ export const GoldPriceCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🌟 โหลดข้อมูลราคาทองล่าสุด
+  // � ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
+
+  // �🌟 โหลดข้อมูลราคาทองล่าสุด
   useEffect(() => {
     const fetchGoldPrice = async () => {
       try {
@@ -45,10 +49,10 @@ export const GoldPriceCard = () => {
     };
 
     fetchGoldPrice();
-  }, []);
+  }, [filterData]); // 🔄 เพิ่ม filterData เป็น dependency เพื่อให้ reload เมื่อ filter เปลี่ยน
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "gold-price",
     "ราคาทองคำอ้างอิง",
     "ข้อมูลราคาทองคำซื้อ-ขาย ทั้งทองแท่งและทองรูปพรรณ พร้อมวันที่อัปเดตล่าสุด",
@@ -62,8 +66,19 @@ export const GoldPriceCard = () => {
           priceSpreadBar: latestPrice.goldBarSell - latestPrice.goldBarBuy,
           priceSpreadJewelry:
             latestPrice.goldJewelrySell - latestPrice.goldJewelryBuy,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatPrice = (value: number) =>

@@ -1,11 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 import { WidgetFilterData } from "@/components/features/filters";
 
 interface FilterContextType {
   filterData: WidgetFilterData;
   setFilterData: (data: WidgetFilterData) => void;
+  setFilterDataWithNotification: (data: WidgetFilterData) => void;
+  onFilterChange: (callback: (data: WidgetFilterData) => void) => () => void;
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -17,8 +26,56 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     isLoading: true,
   });
 
+  const filterCallbacksRef = useRef<((data: WidgetFilterData) => void)[]>([]);
+
+  // 🔄 Set Filter Data with Auto-Update Notification
+  const setFilterDataWithNotification = useCallback(
+    (data: WidgetFilterData) => {
+      setFilterData((prevData) => {
+        // ตรวจสอบว่าข้อมูลเปลี่ยนแปลงจริงหรือไม่
+        const hasChanged = JSON.stringify(prevData) !== JSON.stringify(data);
+
+        if (hasChanged) {
+          // แจ้งเตือน callbacks ที่ subscribe
+          filterCallbacksRef.current.forEach((callback) => {
+            try {
+              callback(data);
+            } catch (error) {
+              console.error("Error in filter change callback:", error);
+            }
+          });
+        }
+
+        return data;
+      });
+    },
+    []
+  );
+
+  // 📡 Subscribe to Filter Changes
+  const onFilterChange = useCallback(
+    (callback: (data: WidgetFilterData) => void) => {
+      filterCallbacksRef.current.push(callback);
+
+      // Return unsubscribe function
+      return () => {
+        filterCallbacksRef.current = filterCallbacksRef.current.filter(
+          (cb) => cb !== callback
+        );
+      };
+    },
+    []
+  );
+
   return (
-    <FilterContext.Provider value={{ filterData, setFilterData }}>
+    <FilterContext.Provider
+      value={{
+        filterData,
+        setFilterData,
+        setFilterDataWithNotification,
+        onFilterChange,
+      }}
+    >
       {children}
     </FilterContext.Provider>
   );
