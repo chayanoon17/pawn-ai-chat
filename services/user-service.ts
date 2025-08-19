@@ -1,5 +1,6 @@
 import apiClient from "@/lib/api-client";
 
+// ดึงข้อมูลผู้ใช้ทั้งหมด
 export async function getAllUsers(params?: {
   page?: number;
   limit?: number;
@@ -24,16 +25,19 @@ export async function getAllUsers(params?: {
   return response.data;
 }
 
+// ดึงข้อมูลผู้ใช้ตาม ID
 export async function getUserById(id: string) {
   const response = await apiClient.get(`/api/v1/users/${id}`);
   return response.data;
 }
 
+// ดึงข้อมูลสิทธิ์ของผู้ใช้
 export async function getUserPermissions(id: string) {
   const response = await apiClient.get(`/api/v1/users/${id}/permissions`);
   return response.data;
 }
 
+//  สร้างผู้ใช้ใหม่
 export async function createUser(data: {
   email: string;
   password: string;
@@ -48,6 +52,7 @@ export async function createUser(data: {
   return response.data;
 }
 
+// อัปเดตข้อมูลผู้ใช้
 export async function updateUser(
   id: string,
   data: {
@@ -69,11 +74,13 @@ export async function updateUser(
   return response.data;
 }
 
+// อัปเดตบทบาทของผู้ใช้
 export async function updateUserRole(id: string, roleId: number) {
   const response = await apiClient.put(`/api/v1/users/${id}/role`, { roleId });
   return response.data;
 }
 
+// ลบผู้ใช้
 export async function deleteUser(id: string) {
   const response = await apiClient.delete(`/api/v1/users/${id}`);
   return response.data;

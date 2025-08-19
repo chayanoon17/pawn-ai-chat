@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   getAllConversations,
   getConversationMessages,
-} from "@/lib/api-service";
+} from "@/services/chat-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";

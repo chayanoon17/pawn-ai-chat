@@ -57,7 +57,7 @@ import {
   type ContractTransactionDetailsResponse,
   type TransactionDetailItem,
   type TransactionSummaryItem,
-} from "@/lib/api-service";
+} from "@/services/dashboard-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { showWarning } from "@/lib/sweetalert";
 
@@ -169,7 +169,7 @@ export default function ContractTransactionDetails({
       setLoading(true);
       setError(null);
 
-      // เรียกใช้ function จาก api-service
+      // เรียกใช้ function จาก dashboard-service
       const response = await getContractTransactionDetails({
         branchId,
         date,
@@ -205,7 +205,7 @@ export default function ContractTransactionDetails({
     try {
       setLoading(true);
 
-      // เรียกใช้ function จาก api-service
+      // เรียกใช้ function จาก dashboard-service
       await exportContractTransactionsCSV({
         branchId,
         date,

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Users, FileText, Mail, Briefcase } from "lucide-react";
 import { updateUser } from "@/services/user-service";
-import { getMenuBranches } from "@/lib/api-service";
+import { getMenuBranches } from "@/services/menu-service";
 import { showUpdateSuccess, showError, showWarning } from "@/lib/sweetalert";
 import type { User, Branch } from "@/types/auth";
 import type { Role } from "@/types/role";

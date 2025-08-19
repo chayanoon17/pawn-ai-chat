@@ -12,7 +12,7 @@ import {
 import {
   getContractStatusSummary,
   type StatusSummaryResponse,
-} from "@/lib/api-service";
+} from "@/services/dashboard-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [
@@ -65,7 +65,7 @@ export const ContractStatusSummary = ({
       setIsLoading(true);
       setError(null);
 
-      // เรียกใช้ function จาก api-service
+      // เรียกใช้ function จาก dashboard-service
       const response = await getContractStatusSummary({
         branchId,
         date,

@@ -31,7 +31,7 @@ import {
   KeyRound,
   Users,
 } from "lucide-react";
-import { deleteRole } from "@/lib/api-service";
+import { deleteRole } from "@/services/role-service";
 import {
   showDeleteConfirmation,
   showDeleteSuccess,

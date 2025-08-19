@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Briefcase, FileText, LayoutGrid, KeyRound } from "lucide-react";
-import { updateRole } from "@/lib/api-service";
+import { updateRole } from "@/services/role-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { showUpdateSuccess, showError, showWarning } from "@/lib/sweetalert";
 import type {

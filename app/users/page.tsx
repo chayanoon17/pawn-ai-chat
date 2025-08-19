@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { getAllUsers } from "@/services/user-service";
-import { getRoles } from "@/lib/api-service";
+import { getRoles } from "@/services/role-service";
 import type { User } from "@/types/auth";
 import type { Role } from "@/types/role";
 import { showNetworkError } from "@/lib/sweetalert";

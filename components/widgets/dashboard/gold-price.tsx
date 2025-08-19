@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Coins, Info } from "lucide-react";
-import { getLatestGoldPrice } from "@/lib/api-service";
+import { getLatestGoldPrice } from "@/services/dashboard-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 import type { GoldPrice } from "@/types/dashboard";
 
@@ -20,7 +20,7 @@ export const GoldPriceCard = () => {
         setIsLoading(true);
         setError(null);
 
-        // เรียกใช้ function จาก api-service
+        // เรียกใช้ function จาก dashboard-service
         const goldPriceData = await getLatestGoldPrice();
 
         setLatestPrice(goldPriceData);

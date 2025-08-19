@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getActivityLogs } from "@/lib/api-service";
+import { getActivityLogs } from "@/services/log-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ActivityLog } from "@/types/api";
 import { useAuth } from "@/context/auth-context";
