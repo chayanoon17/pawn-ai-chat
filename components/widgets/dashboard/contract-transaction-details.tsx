@@ -58,7 +58,8 @@ import {
   type TransactionDetailItem,
   type TransactionSummaryItem,
 } from "@/services/dashboard-service";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 import { showWarning } from "@/lib/sweetalert";
 
 // 📊 Props สำหรับ Widget
@@ -160,6 +161,9 @@ export default function ContractTransactionDetails({
     useState<TransactionDetailItem | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const pageSize = 10;
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   // 🔄 ดึงข้อมูลจาก API
   const fetchTransactionDetails = async () => {
@@ -266,8 +270,8 @@ export default function ContractTransactionDetails({
   );
   const totalPages = Math.ceil(filteredTransactions.length / pageSize);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "contract-transaction-details",
     "รายการรับจำนำทั้งหมด",
     "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
@@ -297,8 +301,19 @@ export default function ContractTransactionDetails({
             0
           ),
           lastUpdated: data.timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   // 🎯 Helper function สำหรับจัดรูปแบบวันที่

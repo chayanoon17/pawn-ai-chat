@@ -10,7 +10,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { getContractStatusSummary } from "@/services/dashboard-service";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 const COLORS = [
   "#0ea5e9", // sky-500 - สำหรับสถานะปกติ
@@ -47,6 +48,9 @@ export const ContractStatusSummary = ({
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   // 🌟 เรียก API ดึงข้อมูลสรุปสถานะสัญญา
   const fetchStatusSummary = async () => {
@@ -106,8 +110,8 @@ export const ContractStatusSummary = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date, parentLoading]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "contract-status-summary",
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ",
     "ข้อมูลสรุปสถานะสัญญาตั๋วจำนำ เช่น ตั๋วปัจจุบัน หลุดจำนำ ไถ่ถอน",
@@ -125,8 +129,19 @@ export const ContractStatusSummary = ({
             (max, item) => (item.value > max.value ? item : max),
             data[0]
           )?.name,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   // 🎨 Format วันที่เป็นรูปแบบไทย

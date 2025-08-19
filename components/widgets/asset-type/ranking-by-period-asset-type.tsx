@@ -17,7 +17,8 @@ import {
   AreaChart,
 } from "recharts";
 import apiClient from "@/lib/api-client";
-import { useWidgetRegistration } from "@/context/widget-context";
+import { useWidgetContext } from "@/hooks/use-widget-context";
+import { useFilter } from "@/context/filter-context";
 
 interface Props {
   branchId: string | null; // รองรับ "ทุกสาขา"
@@ -73,6 +74,9 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  const { filterData } = useFilter();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -148,8 +152,8 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, date]);
 
-  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้
-  useWidgetRegistration(
+  // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
+  useWidgetContext(
     "ranking-by-period-asset-type",
     "ข้อมูลแนวโน้มประเภททรัพย์และราคาตามช่วงเวลา",
     "ข้อมูลแสดงแนวโน้มอันดับประเภททรัพย์สินตามช่วงเวลาต่างๆ",
@@ -165,8 +169,19 @@ export const RankingByPeriodAssetType = ({ branchId, date }: Props) => {
           totalDataPoints: chartData.length,
           topPerformingAsset: Object.keys(chartConfig)[0], // สมมติว่าเรียงตาม ranking
           lastUpdated: timestamp,
+          // 🆕 เพิ่มข้อมูล context สำหรับ filter
+          filterContext: {
+            branchId: filterData.branchId,
+            date: filterData.date,
+            isLoading: filterData.isLoading,
+          },
         }
-      : null
+      : null,
+    {
+      autoUpdate: true, // 🔄 เปิด auto-update
+      replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
+      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+    }
   );
 
   const formatDate = (iso: string) => {
