@@ -140,6 +140,7 @@ export default function ChatTable({
       const messages = await getConversationMessages(conversationId);
       setChatMessages(messages || []);
     } catch (err) {
+      console.error("Failed to fetch chat messages:", err);
       setChatMessages([]);
     } finally {
       setIsMessagesLoading(false);

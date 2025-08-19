@@ -9,10 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  getContractStatusSummary,
-  type StatusSummaryResponse,
-} from "@/services/dashboard-service";
+import { getContractStatusSummary } from "@/services/dashboard-service";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [

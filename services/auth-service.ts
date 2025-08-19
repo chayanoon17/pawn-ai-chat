@@ -1,4 +1,4 @@
-import apiClient from "./api-client";
+import apiClient from "../lib/api-client";
 import { User } from "@/types/auth";
 import { LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";

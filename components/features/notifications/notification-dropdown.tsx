@@ -135,7 +135,7 @@ export default function NotificationDropdown() {
       );
       // API returns: { status: "success", message: "...", data: {...} }
       if (response.status === "success" && response.data?.notifications) {
-        const { notifications, totalCount } = response.data;
+        const { notifications } = response.data;
 
         if (Array.isArray(notifications)) {
           // Convert raw notifications to typed notifications

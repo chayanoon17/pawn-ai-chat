@@ -11,7 +11,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
-import { useOptimizedMemo, usePerformanceMonitor } from "@/lib/performance";
+import { useOptimizedMemo } from "@/lib/performance";
 
 type AssetTypeSummary = {
   assetType: string;
@@ -74,9 +74,6 @@ export const AssetTypesSummary = ({
   date,
   isLoading: parentLoading,
 }: Props) => {
-  // 🎯 Performance monitoring
-  usePerformanceMonitor("AssetTypesSummary");
-
   const [data, setData] = useState<AssetTypeData[]>([]);
   const [timestamp, setTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,16 +148,12 @@ export const AssetTypesSummary = ({
   ); // Empty dependency array - all values are internal or from props
 
   // 🎯 Memoized chart data transformation
-  const chartData = useOptimizedMemo(
-    () => {
-      return data.map((item, index) => ({
-        ...item,
-        color: COLORS[index % COLORS.length],
-      }));
-    },
-    [data],
-    "AssetTypesSummary-chartData"
-  );
+  const chartData = useOptimizedMemo(() => {
+    return data.map((item, index) => ({
+      ...item,
+      color: COLORS[index % COLORS.length],
+    }));
+  }, [data]);
 
   const fetchData = async () => {
     if (!date || parentLoading) {

@@ -114,13 +114,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left panel */}
-      {/* Left panel */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-b from-blue-400 to-blue-800 items-center justify-center text-white flex-col px-6">
         <div className="flex flex-col items-start w-full max-w-sm px-8 space-y-2">
           {/* Logo + Text aligned left */}
           <div className="bg-white p-6 rounded-md self-start">
             <Image
-              src="/logo 1.png"
+              src="/logo-white-bg.png"
               width={100}
               height={100}
               alt="logo"

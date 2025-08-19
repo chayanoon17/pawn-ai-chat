@@ -1,8 +1,3 @@
-/**
- * 🚀 Performance Optimization Utilities
- * Provides utilities for improving React app performance
- */
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ⏱️ Debounce Hook
@@ -49,16 +44,12 @@ export function usePrevious<T>(value: T): T | undefined {
  * Enhanced useMemo with dependency tracking for debugging
  * @param factory - Factory function
  * @param deps - Dependencies array
- * @param debugName - Optional debug name
  * @returns Memoized value
  */
 export function useOptimizedMemo<T>(
   factory: () => T,
-  deps: React.DependencyList,
-  debugName?: string
+  deps: React.DependencyList
 ): T {
-  const previous = usePrevious(deps);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     return factory();
@@ -78,30 +69,6 @@ export function useStableCallback<T extends (...args: unknown[]) => unknown>(
 ): T {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(callback, deps);
-}
-
-// 🎮 Performance Monitoring
-/**
- * Hook for measuring render performance
- * @param componentName - Name of the component for debugging
- */
-export function usePerformanceMonitor(componentName: string) {
-  const renderCount = useRef(0);
-  const startTime = useRef(performance.now());
-
-  useEffect(() => {
-    renderCount.current += 1;
-    const endTime = performance.now();
-    const renderTime = endTime - startTime.current;
-
-    startTime.current = performance.now();
-  });
-
-  useEffect(() => {
-    return () => {
-      // Component unmounted
-    };
-  }, [componentName]);
 }
 
 // Export React for lazy loading

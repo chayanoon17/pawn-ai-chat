@@ -1,9 +1,4 @@
-﻿/**
- * Authentication Context
- * จัดการ Global Authentication State และ Actions ทั่วทั้งแอพ
- */
-
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -13,7 +8,7 @@ import React, {
   useReducer,
   ReactNode,
 } from "react";
-import authService from "../lib/auth-service";
+import authService from "../services/auth-service";
 import { User, AuthContextType } from "../types/auth";
 import { showSuccess, showError, showUnauthorized } from "../lib/sweetalert";
 
