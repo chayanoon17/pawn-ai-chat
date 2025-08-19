@@ -136,7 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
 
         // Log error ใน development mode
-        if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+        if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
           console.error("❌ Login failed in context:", error);
         }
 
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: "AUTH_LOGOUT" });
 
       // Log warning ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.warn("⚠️ Logout API failed, but cleared local state:", error);
       }
     }
@@ -217,7 +217,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch({ type: "AUTH_FAILURE", payload: errorMessage });
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to refresh user in context:", error);
       }
     }

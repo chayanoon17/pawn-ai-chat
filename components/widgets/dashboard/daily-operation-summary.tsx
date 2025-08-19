@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
 import type {
   BranchDailySummary,
@@ -58,7 +58,7 @@ export const DailyOperationSummary = ({
       setSummary(null);
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch daily operation summary:", err);
       }
     } finally {

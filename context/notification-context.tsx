@@ -8,7 +8,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { UnreadCountResponse } from "@/types";
 import { useAuth } from "./auth-context";
 

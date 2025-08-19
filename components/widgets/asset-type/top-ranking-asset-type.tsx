@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 interface AssetRanking {

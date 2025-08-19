@@ -27,7 +27,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useMenuPermissions } from "@/hooks/use-permissions";
 import { showConfirmation } from "@/lib/sweetalert";
-import { trackMenuAccess } from "@/lib/api";
+import { trackMenuAccess } from "@/lib/api-service";
 import { InlineLoading } from "@/components/ui/loading";
 
 export function AppSidebar() {

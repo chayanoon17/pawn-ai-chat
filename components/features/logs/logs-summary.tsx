@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { getActivitySummary, ActivitySummaryResponse } from "@/lib/api";
+import { getActivitySummary, ActivitySummaryResponse } from "@/lib/api-service";
 import { useAuth } from "@/context/auth-context";
 import { usePermissions } from "@/hooks/use-permissions";
 

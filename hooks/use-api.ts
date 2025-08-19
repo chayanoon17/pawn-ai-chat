@@ -6,7 +6,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 
 /**
  * Generic API Query Hook

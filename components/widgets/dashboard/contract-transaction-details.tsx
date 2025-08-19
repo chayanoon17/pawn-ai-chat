@@ -51,7 +51,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import apiClient, { getApiUrl } from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
 import { showWarning } from "@/lib/sweetalert";
 
@@ -244,54 +244,18 @@ export default function ContractTransactionDetails({
     try {
       setLoading(true);
 
-      // สร้าง URL พร้อม authentication headers
-      const exportUrl = getApiUrl(
-        `/contracts/transactions/export/csv?branchId=${branchId}&date=${date}`
-      );
-
-      // สร้าง headers สำหรับ authentication
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Accept: "text/csv,application/csv",
-      };
-
-      // เพิ่ม Authorization header ถ้ามี token ใน localStorage
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
+      // สร้าง URL สำหรับ export
+      const params = new URLSearchParams();
+      if (branchId) {
+        params.append("branchId", branchId);
       }
+      params.append("date", date);
 
-      // เรียก fetch โดยตรงเพื่อให้ได้ blob response
-      const response = await fetch(exportUrl, {
-        method: "GET",
-        headers,
-        credentials: "include",
-      });
+      const exportUrl = `/api/v1/contracts/transactions/export/csv?${params.toString()}`;
+      const filename = `contract-transactions-${branchId || "all"}-${date}.csv`;
 
-      if (!response.ok) {
-        throw new Error(
-          `HTTP Error ${response.status}: ${response.statusText}`
-        );
-      }
-
-      // แปลงเป็น blob
-      const blob = await response.blob();
-
-      // สร้าง blob URL และดาวน์โหลดไฟล์
-      const url = window.URL.createObjectURL(blob);
-
-      // สร้าง element <a> เพื่อดาวน์โหลด
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `contract-transactions-${branchId}-${date}.csv`;
-      document.body.appendChild(link);
-      link.click();
-
-      // ทำความสะอาด
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // เรียกใช้ download function จาก apiClient
+      await apiClient.download(exportUrl, filename);
     } catch (error) {
       console.error("❌ Error exporting CSV:", error);
       showWarning(

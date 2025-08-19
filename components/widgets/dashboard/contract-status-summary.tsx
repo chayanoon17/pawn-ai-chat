@@ -9,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 const COLORS = [
@@ -110,7 +110,7 @@ export const ContractStatusSummary = ({
       setTimestamp(null);
 
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch contract status summary:", err);
       }
     } finally {

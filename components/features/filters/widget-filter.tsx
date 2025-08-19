@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, Calendar, Lock } from "lucide-react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { format } from "date-fns";
 import { useDebounce, useStableCallback } from "@/lib/performance";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -366,7 +366,7 @@ export const WidgetFilter = ({ onFilterChange }: WidgetFilterProps) => {
       </Popover>
 
       {/* Debug Error */}
-      {error && process.env.NEXT_PUBLIC_DEBUG_AUTH === "true" && (
+      {error && process.env.NEXT_PUBLIC_DEV_MODE === "true" && (
         <div className="text-red-500 text-xs">⚠️ {error}</div>
       )}
     </div>

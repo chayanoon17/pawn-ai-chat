@@ -16,7 +16,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { useWidgetRegistration } from "@/context/widget-context";
 
 interface Props {

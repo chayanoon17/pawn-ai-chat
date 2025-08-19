@@ -1,7 +1,10 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getAllConversations, getConversationMessages } from "@/lib/api";
+import {
+  getAllConversations,
+  getConversationMessages,
+} from "@/lib/api-service";
 import { usePermissions } from "@/hooks/use-permissions";
 import { ConversationItem } from "@/types/api";
 import { useAuth } from "@/context/auth-context";

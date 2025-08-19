@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { sendChatMessageStream } from "@/lib/api";
+import { sendChatMessageStream } from "@/lib/api-service";
 import { WidgetData } from "@/context/widget-context";
 import {
   ChatHeader,

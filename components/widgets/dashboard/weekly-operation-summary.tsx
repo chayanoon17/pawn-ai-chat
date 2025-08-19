@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api-client";
 import { Download, Upload, FileBarChart } from "lucide-react";
 import { useWidgetRegistration } from "@/context/widget-context";
 
@@ -123,7 +123,7 @@ export const WeeklyOperationSummary = ({
       setData(response.data);
 
       // Log ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       }
     } catch (err) {
       console.error("❌ Error fetching weekly operation summary:", err);

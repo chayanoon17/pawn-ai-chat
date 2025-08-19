@@ -3,7 +3,7 @@
  * จัดการ Authentication logic ทั้งหมด รวมถึงการเรียก API และการตรวจสอบสิทธิ์
  */
 
-import apiClient from "./api";
+import apiClient from "./api-client";
 import { User } from "@/types/auth";
 import { LoginResponse } from "@/types/api";
 import { PERMISSION_ACTIONS, MENU_NAMES } from "@/types/common";
@@ -128,8 +128,8 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // เรียก API login endpoint - ใช้ postAuth สำหรับ auth endpoints
-      const response = await apiClient.postAuth<LoginResponse>(
+      // เรียก API login endpoint
+      const response = await apiClient.post<LoginResponse>(
         "/api/auth/login",
         credentials
       );
@@ -142,7 +142,7 @@ class AuthService {
       return response.data;
     } catch (error) {
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Login failed:", error);
       }
 
@@ -156,14 +156,14 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // เรียก API logout endpoint - ใช้ postAuth สำหรับ auth endpoints
-      await apiClient.postAuth("/api/auth/logout");
+      // เรียก API logout endpoint
+      await apiClient.post("/api/auth/logout");
 
       // ลบ access token จาก localStorage
       localStorage.removeItem("accessToken");
     } catch (error) {
       // Log warning แต่ไม่ throw error เพราะ logout ควรสำเร็จเสมอใน frontend
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.warn(
           "⚠️ Logout API failed, but continuing with local logout:",
           error
@@ -183,13 +183,13 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน - ใช้ getAuth สำหรับ auth endpoints
-      const response = await apiClient.getAuth<User>("/api/auth/me");
+      // เรียก API เพื่อดึงข้อมูลผู้ใช้ปัจจุบัน
+      const response = await apiClient.get<User>("/api/auth/me");
 
       return response.data;
     } catch (error) {
       // Log error ใน development mode
-      if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
         console.error("❌ Failed to fetch current user:", error);
       }
 
@@ -211,7 +211,7 @@ class AuthService {
     );
 
     // Log ใน development mode
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       console.log("🔍 Permission check:", {
         action,
         hasPermission,
@@ -236,7 +236,7 @@ class AuthService {
     );
 
     // Log ใน development mode
-    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === "true") {
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
       console.log("🔍 Menu access check:", {
         menuName,
         hasAccess,
