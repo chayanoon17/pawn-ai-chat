@@ -101,23 +101,6 @@ class ApiClient {
 
       clearTimeout(timeoutId);
 
-      // ปรับปรุง error message ให้เป็นมิตรกับผู้ใช้
-      if (error instanceof Error) {
-        if (error.name === "AbortError" || /abort/i.test(error.message)) {
-          // ตรวจสอบว่าเป็น timeout หรือ manual abort
-          const isTimeout =
-            error.message.includes("timeout") ||
-            !error.message.includes("reason");
-          const message = isTimeout
-            ? "การเชื่อมต่อใช้เวลานานเกินไป โปรดลองใหม่อีกครั้ง"
-            : "การเชื่อมต่อถูกยกเลิก โปรดลองใหม่อีกครั้ง";
-
-          const enhancedError = new Error(message);
-          (enhancedError as any).originalError = error;
-          throw enhancedError;
-        }
-      }
-
       throw error;
     }
   }
@@ -366,13 +349,9 @@ class ApiClient {
     const fullUrl = `${this.baseURL}${url}`;
     this.logRequest("POST", fullUrl, data);
 
-    // ใช้ timeout ที่ยาวขึ้นสำหรับ streaming (2 นาที)
-    const streamTimeout = config?.timeout || 120000;
-
     const response = await this.fetchWithTimeout(fullUrl, {
       ...this.getDefaultConfig(),
       ...config,
-      timeout: streamTimeout,
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -513,36 +492,7 @@ class ApiClient {
 
       safeComplete();
 
-      // สร้าง error message ที่เป็นมิตรกับผู้ใช้
-      let userFriendlyMessage = "";
-
-      if (typeof msg === "string") {
-        if (/signal is aborted|abort|aborted/i.test(msg)) {
-          userFriendlyMessage =
-            "การเชื่อมต่อถูกยกเลิก โปรดลองใหม่อีกครั้ง หรือลองเปลี่ยน Context เพื่อสนทนาต่อ";
-        } else if (/timeout|timed out/i.test(msg)) {
-          userFriendlyMessage =
-            "การเชื่อมต่อใช้เวลานานเกินไป โปรดลองใหม่อีกครั้ง หรือลองแบ่งคำถามเป็นส่วนเล็กลง";
-        } else if (/network|connection/i.test(msg)) {
-          userFriendlyMessage =
-            "เกิดปัญหาการเชื่อมต่อเครือข่าย โปรดตรวจสอบอินเทอร์เน็ตและลองใหม่อีกครั้ง";
-        } else if (/reset|closed/i.test(msg)) {
-          userFriendlyMessage =
-            "การเชื่อมต่อถูกปิด โปรดลองใหม่อีกครั้ง หากปัญหายังคงเกิดขึ้น ลองเปลี่ยน Context ใหม่";
-        }
-      }
-
-      // ถ้าไม่มี message ที่เหมาะสม ใช้ default
-      if (!userFriendlyMessage) {
-        userFriendlyMessage =
-          "การสนทนาถูกขัดจังหวะ โปรดลองใหม่อีกครั้ง หรือลองเปลี่ยน Context เพื่อเริ่มสนทนาใหม่";
-      }
-
-      const userFriendlyError = new Error(userFriendlyMessage);
-      // เก็บ original error สำหรับ debugging
-      (userFriendlyError as any).originalError = err;
-
-      throw userFriendlyError;
+      throw err instanceof Error ? err : new Error(String(err));
     }
   }
 
