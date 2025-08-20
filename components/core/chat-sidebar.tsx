@@ -432,16 +432,46 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
       setIsThinking(false);
       setIsSending(false);
 
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+          ? error
+          : "";
+
+      // สร้าง error message ที่เป็นมิตรกับผู้ใช้
+      let userFriendlyMessage = "";
+
+      if (typeof errorMessage === "string") {
+        if (/signal is aborted|abort|aborted/i.test(errorMessage)) {
+          userFriendlyMessage =
+            "การเชื่อมต่อถูกยกเลิก โปรดลองใหม่อีกครั้ง หรือลองเปลี่ยนบริบท (Context) เพื่อสนทนาต่อ";
+        } else if (/timeout|timed out/i.test(errorMessage)) {
+          userFriendlyMessage =
+            "การเชื่อมต่อใช้เวลานานเกินไป โปรดลองใหม่อีกครั้ง หรือลองแบ่งคำถามเป็นส่วนเล็กลง";
+        } else if (/network|connection/i.test(errorMessage)) {
+          userFriendlyMessage =
+            "เกิดปัญหาการเชื่อมต่อเครือข่าย โปรดตรวจสอบอินเทอร์เน็ตและลองใหม่อีกครั้ง";
+        } else if (/reset|closed/i.test(errorMessage)) {
+          userFriendlyMessage =
+            "การเชื่อมต่อถูกปิด โปรดลองใหม่อีกครั้ง หากปัญหายังคงเกิดขึ้น ลองเปลี่ยนบริบท (Context) ใหม่";
+        }
+      }
+
+      // ถ้าไม่มี message ที่เหมาะสม ใช้ default
+      if (!userFriendlyMessage) {
+        userFriendlyMessage =
+          "การสนทนาถูกขัดจังหวะ โปรดลองใหม่อีกครั้ง โดยการเปลี่ยนบริบท (Context) หรือเริ่มสนทนาใหม่";
+      }
+
       // Remove thinking message and add error message
       setMessages((prev) => [
         ...prev.filter((msg) => msg.id !== streamingId),
         createSafeMessage(
           Date.now().toString(),
           "bot",
-          "❌ เกิดข้อผิดพลาดในการติดต่อ AI โปรดลองใหม่อีกครั้ง\n\n" +
-            (error instanceof Error
-              ? `เหตุผล: ${error.message}`
-              : "ข้อผิดพลาดไม่ทราบสาเหตุ")
+          // (error instanceof Error ? error.message : "ข้อผิดพลาดไม่ทราบสาเหตุ") +
+          userFriendlyMessage + "\n\nขออภัยในความไม่สะดวก"
         ),
       ]);
     }

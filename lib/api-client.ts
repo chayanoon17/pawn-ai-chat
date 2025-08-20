@@ -100,6 +100,7 @@ class ApiClient {
       });
 
       clearTimeout(timeoutId);
+
       throw error;
     }
   }
@@ -490,6 +491,7 @@ class ApiClient {
       }
 
       safeComplete();
+
       throw err instanceof Error ? err : new Error(String(err));
     }
   }
