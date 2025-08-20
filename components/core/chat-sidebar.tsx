@@ -438,10 +438,8 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
         createSafeMessage(
           Date.now().toString(),
           "bot",
-          "❌ เกิดข้อผิดพลาดในการติดต่อ AI โปรดลองใหม่อีกครั้ง\n\n" +
-            (error instanceof Error
-              ? `เหตุผล: ${error.message}`
-              : "ข้อผิดพลาดไม่ทราบสาเหตุ")
+          (error instanceof Error ? error.message : "ข้อผิดพลาดไม่ทราบสาเหตุ") +
+            "\nขออภัยในความไม่สะดวก โปรดลองใหม่อีกครั้ง"
         ),
       ]);
     }
