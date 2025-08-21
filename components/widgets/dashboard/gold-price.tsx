@@ -14,8 +14,83 @@ export const GoldPriceCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // � ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
+  // 🎯 ใช้ Filter Context เพื่อ register widget context เท่านั้น (ไม่ใช้เป็น dependency)
   const { filterData } = useFilter();
+
+  // 🎯 Cache configuration
+  const CACHE_KEY = "gold_price_cache";
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 นาที
+
+  // 🎯 ฟังก์ชันตรวจสอบ cache
+  const getCachedData = (): GoldPrice | null => {
+    if (typeof window === "undefined") return null;
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      const now = Date.now();
+
+      // ตรวจสอบว่า cache หมดอายุหรือไม่
+      if (now - timestamp > CACHE_DURATION) {
+        localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.warn("Error reading gold price cache:", error);
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+  };
+
+  // 🎯 ฟังก์ชัน cache ข้อมูล
+  const setCachedData = (data: GoldPrice) => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const cacheData = {
+        data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    } catch (error) {
+      console.warn("Error setting gold price cache:", error);
+    }
+  };
+
+  // � ฟังก์ชัน manual refresh (force update)
+  const refreshGoldPrice = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // ลบ cache และโหลดข้อมูลใหม่
+      localStorage.removeItem(CACHE_KEY);
+
+      const goldPriceData = await getLatestGoldPrice();
+      setLatestPrice(goldPriceData);
+      setCachedData(goldPriceData);
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "ไม่สามารถโหลดราคาทองได้";
+      setError(errorMessage);
+
+      if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
+        console.error("❌ Failed to refresh gold price:", err);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // �🌟 โหลดข้อมูลราคาทองล่าสุด
   useEffect(() => {
@@ -24,10 +99,21 @@ export const GoldPriceCard = () => {
         setIsLoading(true);
         setError(null);
 
+        // ตรวจสอบ cache ก่อน
+        const cachedData = getCachedData();
+        if (cachedData) {
+          setLatestPrice(cachedData);
+          setIsLoading(false);
+          return;
+        }
+
         // เรียกใช้ function จาก dashboard-service
         const goldPriceData = await getLatestGoldPrice();
 
         setLatestPrice(goldPriceData);
+
+        // Cache ข้อมูลใหม่
+        setCachedData(goldPriceData);
       } catch (err: unknown) {
         const error = err as {
           response?: { data?: { message?: string } };
@@ -49,7 +135,7 @@ export const GoldPriceCard = () => {
     };
 
     fetchGoldPrice();
-  }, [filterData]); // 🔄 เพิ่ม filterData เป็น dependency เพื่อให้ reload เมื่อ filter เปลี่ยน
+  }, []); // 🔄 ลบ filterData dependency ออก เพราะราคาทองไม่ขึ้นอยู่กับ filter
 
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
   useWidgetContext(
@@ -77,7 +163,7 @@ export const GoldPriceCard = () => {
     {
       autoUpdate: true, // 🔄 เปิด auto-update
       replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
-      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+      dependencies: [], // 📊 ไม่ใส่ filterData เพราะราคาทองไม่ขึ้นอยู่กับ filter
     }
   );
 
