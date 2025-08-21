@@ -1,27 +1,26 @@
 version: '3.8'
 
 services:
-  pawn-ai-chat:
+  frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.frontend  # แก้ให้ถูกต้อง
+    
     ports:
-      - "3001:8080"
+      - "8080:8080"
+    
     environment:
       - NODE_ENV=production
-      - PORT=8080
-    restart: unless-stopped
-    container_name: pawn-ai-chat-app
+      - NEXT_PUBLIC_APP_NAME=Pawn Shop Management
+      - NEXT_PUBLIC_APP_VERSION=1.0.0
     
-  # Uncomment if you need a reverse proxy like nginx
-  # nginx:
-  #   image: nginx:alpine
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #     - ./ssl:/etc/nginx/ssl  # SSL certificates folder
-  #   depends_on:
-  #     - pawn-ai-chat
-  #   restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # เพื่อเข้าถึง Backend localhost:3000
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
