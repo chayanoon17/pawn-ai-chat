@@ -13,16 +13,43 @@ import { getContractStatusSummary } from "@/services/dashboard-service";
 import { useWidgetContext } from "@/hooks/use-widget-context";
 import { useFilter } from "@/context/filter-context";
 
-const COLORS = [
-  "#0ea5e9", // sky-500 - สำหรับสถานะปกติ
-  "#10b981", // green-500 - สำหรับสถานะดี
-  "#f59e0b", // amber-500 - สำหรับสถานะเตือน
-  "#ef4444", // red-500 - สำหรับสถานะผิดปกติ
-  "#8b5cf6", // violet-500 - สำหรับสถานะพิเศษ
-  "#ec4899", // pink-500 - สำหรับสถานะอื่นๆ
-  "#06b6d4", // cyan-500
-  "#f97316", // orange-500
-];
+const getPieColor = (status: string) => {
+  switch (status) {
+    case "ตั๋วปัจจุบัน":
+      return "#6DEB9B";
+    case "ไถ่ถอนแล้ว":
+      return "#96BEFF";
+    case "หลุดจำนำ":
+      return "#EF4444";
+    case "ยกเลิก":
+      return "#FF9042";
+    case "อายัด":
+      return "#CAB3FF";
+    case "ขายแล้ว":
+      return "#00B0CE";
+    default:
+      return "#4B5563";
+  }
+};
+
+const getLabelColor = (status: string) => {
+  switch (status) {
+    case "ตั๋วปัจจุบัน":
+      return "#00521E";
+    case "ไถ่ถอนแล้ว":
+      return "#1A4286";
+    case "หลุดจำนำ":
+      return "#570909";
+    case "ยกเลิก":
+      return "#4D2A11";
+    case "อายัด":
+      return "#482598";
+    case "ขายแล้ว":
+      return "#10444D";
+    default:
+      return "#1f2937";
+  }
+};
 
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
@@ -76,7 +103,7 @@ export const ContractStatusSummary = ({
       const chartData = response.summaries.map((item, index: number) => ({
         name: item.type,
         value: item.value,
-        color: COLORS[index % COLORS.length],
+        color: getPieColor(item.type),
         percentage: item.percentage,
       }));
 
@@ -225,7 +252,7 @@ export const ContractStatusSummary = ({
             x={ex}
             y={ey + 5}
             textAnchor={textAnchor}
-            fill={color}
+            fill={getLabelColor(currentItem?.name)}
             fontSize={13}
             fontWeight={500}
           >

@@ -52,35 +52,52 @@ export default function Header({
     user && (user.role.name === "Super Admin" || user.role.name === "Admin");
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 backdrop-blur-sm bg-white/95">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 backdrop-blur-sm bg-white/95">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left Section */}
+        <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
           {isMobile && (
-            <SidebarTrigger className="p-2">
+            <SidebarTrigger className="p-2 flex-shrink-0">
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
           )}
 
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
               {PAGE_LABELS[selectedPage] || "ข้อมูลตั๋วรับจำนำ"}
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500 truncate">
               {"อัปเดตล่าสุดเมื่อ "}
-              {new Date().toLocaleString("th-TH", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              <span className="hidden sm:inline">
+                {new Date().toLocaleString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+              <span className="sm:hidden">
+                {new Date().toLocaleString("th-TH", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Right Section */}
+        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           {/* Notification - แสดงเฉพาะ Super Admin และ Admin */}
-          {canViewNotifications && <NotificationDropdown />}
+          {canViewNotifications && (
+            <div className="hidden sm:block">
+              <NotificationDropdown />
+            </div>
+          )}
 
           {/* Widget Filter - แสดงเฉพาะหน้า dashboard และ asset-type */}
           {shouldShowWidgetFilter && (
@@ -93,11 +110,19 @@ export default function Header({
               onClick={onChatToggle}
               variant="outline"
               size="sm"
-              className="flex items-center space-x-1"
+              className="flex items-center space-x-1 text-xs sm:text-sm"
             >
-              <Bot className="w-4 h-4" />
+              <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">{"Pawn AI"}</span>
+              <span className="sm:hidden">{"AI"}</span>
             </Button>
+          )}
+
+          {/* Mobile Notification - แสดงในหน้าจอเล็ก */}
+          {canViewNotifications && (
+            <div className="sm:hidden">
+              <NotificationDropdown />
+            </div>
           )}
         </div>
       </div>

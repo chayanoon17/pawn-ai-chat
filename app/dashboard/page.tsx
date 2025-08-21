@@ -45,6 +45,22 @@ export default function DashboardPage() {
           </div>
         </Card>
 
+        {/* Weekly Summary Skeleton */}
+        <Card className="p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-40" />
+            <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-8" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
         {/* Summary Cards Skeleton */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {[1, 2].map((i) => (
@@ -63,22 +79,6 @@ export default function DashboardPage() {
             </Card>
           ))}
         </div>
-
-        {/* Weekly Summary Skeleton */}
-        <Card className="p-6">
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-40" />
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
-              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-3 w-8" />
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-3 w-12" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
 
         {/* Transaction Details Skeleton */}
         <Card className="p-6">
@@ -121,7 +121,15 @@ export default function DashboardPage() {
         {/* Gold Price Section */}
         <GoldPriceCard />
 
+        {/* Daily Operation Summary */}
         <DailyOperationSummary
+          branchId={filterData.branchId}
+          date={filterData.date}
+          isLoading={filterData.isLoading}
+        />
+
+        {/* Weekly Summary */}
+        <WeeklyOperationSummary
           branchId={filterData.branchId}
           date={filterData.date}
           isLoading={filterData.isLoading}
@@ -140,13 +148,6 @@ export default function DashboardPage() {
             isLoading={filterData.isLoading}
           />
         </div>
-
-        {/* Weekly Summary */}
-        <WeeklyOperationSummary
-          branchId={filterData.branchId}
-          date={filterData.date}
-          isLoading={filterData.isLoading}
-        />
 
         {/* Transaction Details */}
         <ContractTransactionDetails

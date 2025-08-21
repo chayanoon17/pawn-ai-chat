@@ -13,16 +13,39 @@ import apiClient from "@/lib/api-client";
 import { useWidgetContext } from "@/hooks/use-widget-context";
 import { useFilter } from "@/context/filter-context";
 
-const COLORS = [
-  "#10b981", // green-500
-  "#06b6d4", // cyan-500
-  "#8b5cf6", // violet-500
-  "#ef4444", // red-500
-  "#ec4899", // pink-500
-  "#f59e0b", // amber-500
-  "#f97316", // orange-500
-  "#0ea5e9", // sky-500
-];
+const getPieColor = (status: string) => {
+  switch (status) {
+    case "จำนำ":
+      return "#596FF6";
+    case "ส่งดอกเบี้ย":
+      return "#F1C5C4";
+    case "ผ่อนต้น":
+      return "#83DDE5";
+    case "เพิ่มต้น":
+      return "#FBE689";
+    case "แบ่งไถ่":
+      return "#A6A6A6";
+    default:
+      return "#4B5563";
+  }
+};
+
+const getLabelColor = (status: string) => {
+  switch (status) {
+    case "จำนำ":
+      return "#122078";
+    case "ส่งดอกเบี้ย":
+      return "#8D3A3A";
+    case "ผ่อนต้น":
+      return "#0A5359";
+    case "เพิ่มต้น":
+      return "#544D1E";
+    case "แบ่งไถ่":
+      return "#000000";
+    default:
+      return "#1f2937";
+  }
+};
 
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
@@ -93,7 +116,7 @@ export const ContractTransactionSummary = ({
       const chartData = response.data.summaries.map((item, index) => ({
         name: item.type,
         value: item.value,
-        color: COLORS[index % COLORS.length],
+        color: getPieColor(item.type),
         percentage: item.percentage,
       }));
 
@@ -174,9 +197,9 @@ export const ContractTransactionSummary = ({
 
   // 🎯 Memoize chart config to prevent re-renders
   const chartConfig = useMemo(() => {
-    if (!data.length) return { value: { label: "จำนวน" } };
+    if (!data.length) return { value: { label: "มูลค่ารวม" } };
     return {
-      value: { label: "จำนวน" },
+      value: { label: "มูลค่ารวม" },
       ...Object.fromEntries(
         data.map((item) => [item.name, { label: item.name, color: item.color }])
       ),
@@ -242,7 +265,7 @@ export const ContractTransactionSummary = ({
             x={ex}
             y={ey + 5}
             textAnchor={textAnchor}
-            fill={color}
+            fill={getLabelColor(currentItem?.name)}
             fontSize={13}
             fontWeight={500}
           >
