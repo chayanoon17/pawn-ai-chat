@@ -32,6 +32,25 @@ const getPieColor = (status: string) => {
   }
 };
 
+const getLabelColor = (status: string) => {
+  switch (status) {
+    case "ตั๋วปัจจุบัน":
+      return "#00521E";
+    case "ไถ่ถอนแล้ว":
+      return "#1A4286";
+    case "หลุดจำนำ":
+      return "#570909";
+    case "ยกเลิก":
+      return "#4D2A11";
+    case "อายัด":
+      return "#482598";
+    case "ขายแล้ว":
+      return "#10444D";
+    default:
+      return "#1f2937";
+  }
+};
+
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
 type StatusSummaryData = {
@@ -233,7 +252,7 @@ export const ContractStatusSummary = ({
             x={ex}
             y={ey + 5}
             textAnchor={textAnchor}
-            fill={color}
+            fill={getLabelColor(currentItem?.name)}
             fontSize={13}
             fontWeight={500}
           >

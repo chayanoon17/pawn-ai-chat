@@ -573,10 +573,10 @@ export default function ContractTransactionDetails({
                 <div className="w-full sm:w-48">
                   <Select value={selectedType} onValueChange={setSelectedType}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="เลือกประเภท" />
+                      <SelectValue placeholder="เลือกประเภทธุรกรรม" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">ทุกประเภท</SelectItem>
+                      <SelectItem value="all">ทุกประเภทธุรกรรม</SelectItem>
                       {transactionTypes.map((type) => (
                         <SelectItem key={type} value={type}>
                           {type}

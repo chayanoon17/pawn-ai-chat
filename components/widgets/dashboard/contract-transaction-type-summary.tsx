@@ -30,6 +30,23 @@ const getPieColor = (status: string) => {
   }
 };
 
+const getLabelColor = (status: string) => {
+  switch (status) {
+    case "จำนำ":
+      return "#122078";
+    case "ส่งดอกเบี้ย":
+      return "#8D3A3A";
+    case "ผ่อนต้น":
+      return "#0A5359";
+    case "เพิ่มต้น":
+      return "#544D1E";
+    case "แบ่งไถ่":
+      return "#000000";
+    default:
+      return "#1f2937";
+  }
+};
+
 const formatNumber = (num: number): string => num.toLocaleString("th-TH");
 
 type TransactionSummaryData = {
@@ -248,7 +265,7 @@ export const ContractTransactionSummary = ({
             x={ex}
             y={ey + 5}
             textAnchor={textAnchor}
-            fill={color}
+            fill={getLabelColor(currentItem?.name)}
             fontSize={13}
             fontWeight={500}
           >
