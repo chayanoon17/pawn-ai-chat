@@ -16,6 +16,11 @@ import {
   UserRound,
   Gem,
   CircleDollarSign,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  PauseCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -72,18 +77,30 @@ interface ContractTransactionDetailsProps {
 // ✅ สีของการ์ดและไอคอน
 const getStatusColor = (status: string) => {
   switch (status) {
+    // ประเภทธุรกรรม
     case "จำนำ":
       return "bg-[#596FF6] text-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
       return "bg-[#F1C5C4] text-[#8D3A3A]";
-    case "ไถ่ถอน":
-      return "bg-[#AD2E27] text-[#FFFFFF]";
     case "ผ่อนต้น":
       return "bg-[#83DDE5] text-[#0A5359]";
     case "เพิ่มต้น":
       return "bg-[#FBE689] text-[#544D1E]";
     case "แบ่งไถ่":
       return "bg-[#A6A6A6] text-[#000000]";
+    // สถานะสัญญา
+    case "ตั๋วปัจจุบัน":
+      return "bg-[#6DEB9B] text-[#00521E]";
+    case "ไถ่ถอนแล้ว":
+      return "bg-[#96BEFF] text-[#1A4286]";
+    case "หลุดจำนำ":
+      return "bg-[#EF4444] text-[#FFFFFF]";
+    case "ยกเลิก":
+      return "bg-[#FF9042] text-[#FFFFFF]";
+    case "อายัด":
+      return "bg-[#CAB3FF] text-[#482598]";
+    case "ขายแล้ว":
+      return "bg-[#00B0CE] text-[#FFFFFF]";
     default:
       return "bg-gray-100 text-gray-600";
   }
@@ -91,17 +108,29 @@ const getStatusColor = (status: string) => {
 
 const getIconBgColor = (status: string) => {
   switch (status) {
+    // ประเภทธุรกรรม
     case "จำนำ":
       return "bg-[#FFFFFF]";
     case "ส่งดอกเบี้ย":
       return "bg-[#8D3A3A]";
-    case "ไถ่ถอน":
-      return "bg-[#FFFFFF]";
     case "ผ่อนต้น":
       return "bg-[#0A5359]";
     case "เพิ่มต้น":
       return "bg-[#544D1E]";
     case "แบ่งไถ่":
+      return "bg-[#FFFFFF]";
+    // สถานะสัญญา
+    case "ตั๋วปัจจุบัน":
+      return "bg-[#FFFFFF]";
+    case "ไถ่ถอนแล้ว":
+      return "bg-[#FFFFFF]";
+    case "หลุดจำนำ":
+      return "bg-[#FFFFFF]";
+    case "ยกเลิก":
+      return "bg-[#FFFFFF]";
+    case "อายัด":
+      return "bg-[#FFFFFF]";
+    case "ขายแล้ว":
       return "bg-[#FFFFFF]";
     default:
       return "bg-gray-500";
@@ -111,18 +140,32 @@ const getIconBgColor = (status: string) => {
 type TransactionType =
   | "จำนำ"
   | "ส่งดอกเบี้ย"
-  | "ไถ่ถอน"
   | "ผ่อนต้น"
   | "เพิ่มต้น"
   | "แบ่งไถ่";
 
-const statusIconMap: Record<TransactionType, JSX.Element> = {
+type ContractStatus =
+  | "ตั๋วปัจจุบัน"
+  | "ไถ่ถอนแล้ว"
+  | "หลุดจำนำ"
+  | "ยกเลิก"
+  | "อายัด"
+  | "ขายแล้ว";
+
+const statusIconMap: Record<TransactionType | ContractStatus, JSX.Element> = {
+  // ประเภทธุรกรรม
   จำนำ: <Ticket className="w-5 h-5 text-[#596FF6]" />,
   ส่งดอกเบี้ย: <TicketPercent className="w-5 h-5 text-white" />,
-  ไถ่ถอน: <TicketMinus className="w-5 h-5 text-[#AD2E27]" />,
   ผ่อนต้น: <TicketCheck className="w-5 h-5 text-white" />,
   เพิ่มต้น: <TicketPlus className="w-5 h-5 text-white" />,
   แบ่งไถ่: <Tickets className="w-5 h-5 text-[#000000]" />,
+  // สถานะสัญญา
+  ตั๋วปัจจุบัน: <Ticket className="w-5 h-5 text-[#00521E]" />,
+  ไถ่ถอนแล้ว: <CheckCircle className="w-5 h-5 text-[#1A4286]" />,
+  หลุดจำนำ: <XCircle className="w-5 h-5 text-[#EF4444]" />,
+  ยกเลิก: <AlertCircle className="w-5 h-5 text-[#F97316]" />,
+  อายัด: <PauseCircle className="w-5 h-5 text-[#482598]" />,
+  ขายแล้ว: <ShoppingCart className="w-5 h-5 text-[#06B6D4]" />,
 };
 
 // ✅ Utilities สำหรับปิดบังข้อมูลชื่อ-นามสกุล (รองรับตัวอักษรไทย)
@@ -156,10 +199,14 @@ export default function ContractTransactionDetails({
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionDetailItem | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [summaryType, setSummaryType] = useState<
+    "contractStatus" | "transactionType"
+  >("contractStatus");
   const pageSize = 10;
 
   // 🎯 ใช้ Filter Context เพื่อรับการแจ้งเตือนเมื่อ filter เปลี่ยน
@@ -177,6 +224,7 @@ export default function ContractTransactionDetails({
       const response = await getContractTransactionDetails({
         branchId,
         date,
+        summaryType: summaryType,
       });
 
       setData(response);
@@ -192,12 +240,12 @@ export default function ContractTransactionDetails({
   useEffect(() => {
     fetchTransactionDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, date]);
+  }, [branchId, date, summaryType]);
 
   // 🔄 Reset pagination when search or filter changes
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedType]);
+  }, [searchTerm, selectedType, selectedStatus, summaryType]);
 
   // 📥 Export CSV Function
   const handleExportCSV = async () => {
@@ -238,7 +286,7 @@ export default function ContractTransactionDetails({
         transaction.ticketBookNumber
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        transaction.assetType
+        transaction.assetName
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
         transaction.assetDetail
@@ -256,12 +304,22 @@ export default function ContractTransactionDetails({
       const matchesType =
         selectedType === "all" || transaction.transactionType === selectedType;
 
-      return matchesSearch && matchesType;
+      // Status filter
+      const matchesStatus =
+        selectedStatus === "all" ||
+        transaction.contractStatus === selectedStatus;
+
+      return matchesSearch && matchesType && matchesStatus;
     }) || [];
 
   // 🎯 Get unique transaction types for dropdown
   const transactionTypes = data
     ? [...new Set(data.transactions.map((t) => t.transactionType))].sort()
+    : [];
+
+  // 🎯 Get unique contract statuses for dropdown
+  const contractStatuses = data
+    ? [...new Set(data.transactions.map((t) => t.contractStatus))].sort()
     : [];
 
   const paginatedData = filteredTransactions.slice(
@@ -273,11 +331,12 @@ export default function ContractTransactionDetails({
   // 🎯 Register Widget เพื่อให้ Chat สามารถใช้เป็น Context ได้ - ใช้ระบบใหม่
   useWidgetContext(
     "contract-transaction-details",
-    "รายการรับจำนำทั้งหมด",
-    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ พร้อมข้อมูลลูกค้า สถานะ และยอดเงิน",
+    "รายการตั๋วจำนำทั้งหมด",
+    "ข้อมูลรายละเอียดธุรกรรมทุกตั๋วจำนำ สถานะ และราคารับจำนำ พร้อมข้อมูลลูกค้า",
     data
       ? {
           branchId: data.branchId,
+          summaryType: summaryType,
           totalTransactions: data.transactions.length,
           summaries: data.summaries,
           // ✅ ใช้ transactions ที่กรองและแบ่งหน้าแล้ว (หน้าปัจจุบัน)
@@ -289,8 +348,12 @@ export default function ContractTransactionDetails({
           filteredTransactionsCount: filteredTransactions.length,
           searchTerm: searchTerm,
           selectedType: selectedType,
+          selectedStatus: selectedStatus,
           transactionTypes: [
             ...new Set(data.transactions.map((t) => t.transactionType)),
+          ],
+          contractStatuses: [
+            ...new Set(data.transactions.map((t) => t.contractStatus)),
           ],
           totalAmount: data.transactions.reduce(
             (sum, t) => sum + t.remainingAmount,
@@ -312,7 +375,7 @@ export default function ContractTransactionDetails({
     {
       autoUpdate: true, // 🔄 เปิด auto-update
       replaceOnUpdate: true, // 🔄 แทนที่ context เดิมเมื่อมีการอัพเดท
-      dependencies: [filterData], // 📊 dependencies เพิ่มเติม
+      dependencies: [filterData, summaryType], // 📊 dependencies เพิ่มเติม
     }
   );
 
@@ -347,7 +410,16 @@ export default function ContractTransactionDetails({
             </div>
             <div className="flex-1">
               <CardTitle className="text-lg font-semibold text-slate-80">
-                รายการรับจำนำทั้งหมด
+                รายการตั๋วจำนำทั้งหมด
+                {data && data.summaries && (
+                  <span className="text-sm font-normal text-slate-500 ml-2">
+                    (
+                    {summaryType === "contractStatus"
+                      ? "แสดงตามสถานะสัญญาตั๋วจำนำ"
+                      : "แสดงตามประเภทธุรกรรมตั๋วจำนำ"}
+                    )
+                  </span>
+                )}
               </CardTitle>
               <span className="text-sm text-slate-500">
                 {isLoading
@@ -360,18 +432,41 @@ export default function ContractTransactionDetails({
               </span>
             </div>
           </div>
-          {/* Export Button */}
+          {/* Dropdown และ Export Button */}
           {data && data.transactions.length > 0 && (
-            <Button
-              onClick={handleExportCSV}
-              disabled={loading || isLoading}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-            >
-              <Download className="w-4 h-4" />
-              ส่งออกเป็น CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Summary Type Dropdown */}
+              <Select
+                value={summaryType}
+                onValueChange={(value: "contractStatus" | "transactionType") =>
+                  setSummaryType(value)
+                }
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="เลือกรูปแบบการแสดงผล" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="contractStatus">
+                    แสดงตามสถานะสัญญาตั๋วจำนำ
+                  </SelectItem>
+                  <SelectItem value="transactionType">
+                    แสดงตามประเภทธุรกรรมตั๋วจำนำ
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Export Button */}
+              <Button
+                onClick={handleExportCSV}
+                disabled={loading || isLoading}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              >
+                <Download className="w-4 h-4" />
+                ส่งออกเป็น CSV
+              </Button>
+            </div>
           )}
         </div>
       </CardHeader>
@@ -408,9 +503,9 @@ export default function ContractTransactionDetails({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 border-b border-gray-100">
               {data?.summaries.map(
                 (item: TransactionSummaryItem, index: number) => {
-                  const icon = statusIconMap[item.type as TransactionType] || (
-                    <SlidersHorizontal className="w-5 h-5" />
-                  );
+                  const icon = statusIconMap[
+                    item.type as TransactionType | ContractStatus
+                  ] || <SlidersHorizontal className="w-5 h-5" />;
                   const bgClass = getStatusColor(item.type);
                   const iconBg = getIconBgColor(item.type);
 
@@ -447,11 +542,31 @@ export default function ContractTransactionDetails({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder="ค้นหาจากเลขที่สัญญา, เลขที่ตั๋ว, ชื่อ, ประเภททรัพย์, รายละเอียด, สถานะ หรือราคา..."
+                    placeholder="ค้นหาจากเลขที่สัญญา, เลขที่ตั๋ว, ชื่อ, ชื่อทรัพย์, รายละเอียด, สถานะตั๋วจำนำ, ประเภทธุรกรรม หรือราคารับจำนำ..."
                     className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
+                </div>
+
+                {/* Status Filter Dropdown */}
+                <div className="w-full sm:w-48">
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={setSelectedStatus}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="เลือกสถานะ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ทุกสถานะ</SelectItem>
+                      {contractStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Type Filter Dropdown */}
@@ -474,7 +589,9 @@ export default function ContractTransactionDetails({
             </div>
 
             {/* ✅ Search Results Stats */}
-            {(searchTerm || selectedType !== "all") && (
+            {(searchTerm ||
+              selectedType !== "all" ||
+              selectedStatus !== "all") && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-700">
                   🔍 พบ{" "}
@@ -487,6 +604,14 @@ export default function ContractTransactionDetails({
                       {" "}
                       จากการค้นหา &ldquo;
                       <span className="font-semibold">{searchTerm}</span>&rdquo;
+                    </span>
+                  )}
+                  {selectedStatus !== "all" && (
+                    <span>
+                      {" "}
+                      ในสถานะ &ldquo;
+                      <span className="font-semibold">{selectedStatus}</span>
+                      &rdquo;
                     </span>
                   )}
                   {selectedType !== "all" && (
@@ -515,11 +640,13 @@ export default function ContractTransactionDetails({
                     <TableHead>เลขที่สัญญา</TableHead>
                     <TableHead>เลขที่ตั๋ว</TableHead>
                     <TableHead>ชื่อ - นามสกุล</TableHead>
-                    <TableHead>ประเภททรัพย์</TableHead>
+                    <TableHead>ชื่อทรัพย์</TableHead>
                     <TableHead className="text-center">รายละเอียด</TableHead>
-                    <TableHead className="pl-8">ประเภท</TableHead>
-                    <TableHead className="text-center">สถานะ</TableHead>
-                    <TableHead className="text-center pl-8">ราคา</TableHead>
+                    <TableHead className="pl-8">สถานะ</TableHead>
+                    <TableHead>ประเภทธุรกรรม</TableHead>
+                    <TableHead className="text-center pl-8">
+                      ราคารับจำนำ
+                    </TableHead>
                     <TableHead className="text-center">จัดการ</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -546,18 +673,9 @@ export default function ContractTransactionDetails({
                           <TableCell>
                             {maskFirstLast(item.customerName)}
                           </TableCell>
-                          <TableCell>{item.assetType}</TableCell>
+                          <TableCell>{item.assetName}</TableCell>
                           <TableCell className="whitespace-pre-wrap break-words max-w-[280px]">
                             {item.assetDetail}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-block w-[90px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
-                                item.transactionType
-                              )}`}
-                            >
-                              {item.transactionType}
-                            </span>
                           </TableCell>
                           <TableCell>
                             <span
@@ -566,6 +684,15 @@ export default function ContractTransactionDetails({
                               )}`}
                             >
                               {item.contractStatus}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-block w-[80px] px-2 py-1 rounded text-xs font-medium text-center ${getStatusColor(
+                                item.transactionType
+                              )}`}
+                            >
+                              {item.transactionType}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
@@ -703,25 +830,27 @@ export default function ContractTransactionDetails({
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        เลขที่สัญญาต้นฉบับ
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-mono">
+                        {selectedTransaction.primaryContractNumber || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        เลขที่สัญญาก่อนหน้า
+                      </label>
+                      <p className="text-sm text-slate-800 mt-1 font-mono">
+                        {selectedTransaction.previousContractNumber || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         เลขที่ตั๋ว
                       </label>
                       <p className="text-sm text-slate-800 mt-1 font-mono">
                         {selectedTransaction.ticketBookNumber}
                       </p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                        ประเภทธุรกรรม
-                      </label>
-                      <div className="mt-1">
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                            selectedTransaction.transactionType
-                          )}`}
-                        >
-                          {selectedTransaction.transactionType}
-                        </span>
-                      </div>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -734,6 +863,20 @@ export default function ContractTransactionDetails({
                           )}`}
                         >
                           {selectedTransaction.contractStatus}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        ประเภทธุรกรรม
+                      </label>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                            selectedTransaction.transactionType
+                          )}`}
+                        >
+                          {selectedTransaction.transactionType}
                         </span>
                       </div>
                     </div>
@@ -800,10 +943,10 @@ export default function ContractTransactionDetails({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                        ประเภททรัพย์
+                        ชื่อทรัพย์
                       </label>
                       <p className="text-sm text-slate-800 mt-1">
-                        {selectedTransaction.assetType}
+                        {selectedTransaction.assetName}
                       </p>
                     </div>
                     <div>

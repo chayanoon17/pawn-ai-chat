@@ -19,6 +19,8 @@ export interface TransactionSummaryItem {
 
 export interface TransactionDetailItem {
   contractNumber: number;
+  primaryContractNumber: number | null;
+  previousContractNumber: number | null;
   ticketBookNumber: string;
   transactionDate: string;
   interestPaymentDate: string | null;
@@ -30,6 +32,7 @@ export interface TransactionDetailItem {
   branchName: string;
   branchShortName: string;
   branchLocation: string;
+  assetName: string;
   assetType: string;
   assetDetail: string;
   pawnPrice: number;
@@ -99,13 +102,20 @@ export async function getContractTransactionTypeSummary(params: {
 export async function getContractTransactionDetails(params: {
   branchId?: string | null;
   date: string;
+  summaryType: string | null;
 }): Promise<ContractTransactionDetailsResponse> {
   const searchParams = new URLSearchParams();
 
   if (params.branchId) {
     searchParams.append("branchId", params.branchId);
   }
+
   searchParams.append("date", params.date);
+
+  if (params.summaryType) {
+    // summaryType มีสองแบบ คือ contractStatus และ transactionType
+    searchParams.append("summaryType", params.summaryType);
+  }
 
   const response = await apiClient.get<ContractTransactionDetailsResponse>(
     `/api/v1/contracts/transactions/details?${searchParams.toString()}`
