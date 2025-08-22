@@ -15,9 +15,9 @@ const prompt = Prompt({
 });
 
 export const metadata: Metadata = {
-  title: "Pawn Shop Management",
+  title: "Pawn AI Hub",
   description:
-    "Pawn Shop Management with AI Chatbot - ระบบจัดการร้านรับจำนำด้วย AI Chatbot",
+    "Pawn AI Hub with AI Chatbot - ระบบจัดการร้านรับจำนำด้วย AI Chatbot",
 };
 
 /**
