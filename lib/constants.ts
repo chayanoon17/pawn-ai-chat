@@ -11,4 +11,5 @@ export const PAGE_LABELS: Record<string, string> = {
   "role-management": "จัดการตำแหน่งและสิทธิ์",
   "log-management": "ประวัติการใช้งาน",
   settings: "การตั้งค่า",
+  "api-tester": "ทดสอบ API",
 } as const;

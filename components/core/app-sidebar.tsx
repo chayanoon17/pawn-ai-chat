@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Shield,
+  Code,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,7 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context";
-import { useMenuPermissions } from "@/hooks/use-permissions";
+import { useMenuPermissions, usePermissions } from "@/hooks/use-permissions";
 import { showConfirmation } from "@/lib/sweetalert";
 import { trackMenuAccess } from "@/services/log-service";
 import { InlineLoading } from "@/components/ui/loading";
@@ -34,6 +35,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
   const { hasMenuPermission } = useMenuPermissions();
+  const { isSuperAdmin } = usePermissions();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Default: expand ทุกกลุ่มไว้ ผู้ใช้สามารถ collapse ได้เอง
@@ -163,6 +165,19 @@ export function AppSidebar() {
       type: "single",
       permission: "Activity Logs",
     },
+    // เมนู API Tester สำหรับ Super Admin เท่านั้น
+    ...(isSuperAdmin() && process.env.NEXT_PUBLIC_ENABLE_API_TESTER === "true"
+      ? [
+          {
+            id: "/api-tester",
+            menuId: "7",
+            label: "ทดสอบ API",
+            icon: Code,
+            type: "single" as const,
+            permission: null, // ไม่ต้องเช็ค permission เพิ่ม เพราะเช็คใน layout แล้ว
+          },
+        ]
+      : []),
   ];
 
   // Filter menu items based on permissions
