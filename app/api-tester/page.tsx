@@ -20,8 +20,6 @@ import {
   Send,
   Trash2,
   Save,
-  Upload,
-  Download,
   Clock,
   CheckCircle,
   XCircle,
@@ -48,10 +46,15 @@ interface ApiResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
-  data: any;
+  data: unknown;
   responseTime: number;
   size: number;
-  requestConfig?: any; // เพิ่มฟิลด์สำหรับเก็บ request config
+  requestConfig?: {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    data?: unknown;
+  }; // เพิ่มฟิลด์สำหรับเก็บ request config
 }
 
 export default function ApiTesterPage() {
@@ -94,7 +97,13 @@ export default function ApiTesterPage() {
       }
 
       // สร้าง axios config
-      const config: any = {
+      const config: {
+        method: string;
+        url: string;
+        headers: Record<string, string>;
+        timeout: number;
+        data?: unknown;
+      } = {
         method: method.toLowerCase(),
         url,
         headers,
@@ -105,7 +114,7 @@ export default function ApiTesterPage() {
       if (["POST", "PUT", "PATCH"].includes(method) && body.trim()) {
         try {
           config.data = JSON.parse(body.trim());
-        } catch (jsonError) {
+        } catch {
           // หากไม่ใช่ JSON ให้ส่งเป็น string
           config.data = body.trim();
           // เปลี่ยน Content-Type ถ้าไม่ใช่ JSON
