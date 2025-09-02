@@ -39,6 +39,7 @@ import {
   History,
   User,
 } from "lucide-react";
+import { MarkdownMessage } from "@/components/core/chat-sidebar/markdown-message";
 
 export default function ChatTable({
   startDate,
@@ -723,9 +724,10 @@ export default function ChatTable({
                               </span>
                             </div>
                           )}
-                          <p className="text-sm whitespace-pre-wrap">
-                            {msg.text}
-                          </p>
+                          <MarkdownMessage
+                            content={msg.text}
+                            isUser={msg.from === "user"}
+                          />
                           <p
                             className={`text-xs mt-1 ${
                               msg.from === "user"

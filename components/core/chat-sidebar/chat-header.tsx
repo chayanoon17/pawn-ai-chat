@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Bot, X } from "lucide-react";
-import { AddContextButton } from "@/components/ui/add-context-button";
+// import { AddContextButton } from "@/components/ui/add-context-button";
 import { WidgetData } from "@/context/widget-context";
 
 interface ChatHeaderProps {
@@ -27,11 +27,11 @@ export const ChatHeader = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <AddContextButton
+          {/* <AddContextButton
             onContextAdded={onContextAdded}
             activeContexts={activeContexts}
             className="text-xs bg-white/20 hover:bg-white/30 text-white hover:text-white border-white/30"
-          />
+          /> */}
           <Button
             variant="ghost"
             size="sm"

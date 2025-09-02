@@ -498,7 +498,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     <ChatErrorBoundary>
       <div
         className={cn(
-          "w-168 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 flex flex-col h-full shadow-lg",
+          "w-1/2 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 flex flex-col h-full shadow-lg",
           className
         )}
         data-chat-sidebar

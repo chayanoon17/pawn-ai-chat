@@ -4,7 +4,7 @@ import { ConversationListResponse } from "@/types/api";
 
 // ส่งข้อความไปยัง Chat API
 export async function sendChatMessage(message: string): Promise<string> {
-  return await apiClient.chat("/api/v1/chat", message);
+  return await apiClient.chat("/api/v1/chat-smart", message);
 }
 
 // ส่งข้อความแบบ Streaming ไปยัง Chat API
@@ -17,7 +17,12 @@ export async function sendChatMessageStream(
 ): Promise<void> {
   const requestData = { message, messages, conversationId };
 
-  await apiClient.stream("/api/v1/chat", requestData, onChunk, onComplete);
+  await apiClient.stream(
+    "/api/v1/chat-smart",
+    requestData,
+    onChunk,
+    onComplete
+  );
 }
 
 // ดึงข้อมูลบทสนทนาทั้งหมด
