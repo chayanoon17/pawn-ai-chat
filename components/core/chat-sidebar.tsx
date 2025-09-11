@@ -324,12 +324,12 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     // Count user messages (exclude bot messages and context messages)
     const userMessages = messages.filter((msg) => msg.type === "user");
 
-    // Show if 6 or more user messages
-    // if (userMessages.length >= 6 && !showStartNewChat) {
-    //   setStartNewChatReason("context-limit");
-    //   setShowStartNewChat(true);
-    //   return;
-    // }
+    // Show if reached message limit (20+ messages)
+    if (userMessages.length >= 20 && !showStartNewChat) {
+      setStartNewChatReason("context-limit");
+      setShowStartNewChat(true);
+      return;
+    }
 
     // Check for persistent error messages (only show after multiple errors)
     const recentMessages = messages.slice(-6); // Check last 6 messages
@@ -365,14 +365,39 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   }, [messages, showStartNewChat]);
 
   // 🎯 Helper function to check if we should show context limit warning
-  // const shouldShowContextWarning = () => {
-  //   const userMessages = messages.filter((msg) => msg.type === "user");
-  //   return userMessages.length === 5; // Show warning at 5 messages (1 before limit)
-  // };
+  const getContextWarningLevel = (): {
+    level: "info" | "warning" | "critical";
+    messageCount: number;
+  } | null => {
+    const userMessages = messages.filter((msg) => msg.type === "user");
+    const count = userMessages.length;
+
+    if (count >= 20) {
+      return { level: "critical", messageCount: count };
+    } else if (count >= 15) {
+      return { level: "warning", messageCount: count };
+    } else if (count >= 10) {
+      return { level: "info", messageCount: count };
+    }
+
+    return null;
+  };
+
+  // 🚫 Helper function to check if we reached the message limit
+  const isMessageLimitReached = (): boolean => {
+    const userMessages = messages.filter((msg) => msg.type === "user");
+    return userMessages.length >= 20;
+  };
 
   const handleSendMessage = async (customMessage?: string) => {
     const messageContent = customMessage || inputValue.trim();
     if (!messageContent || isThinking) return;
+
+    // 🚫 Check if message limit reached
+    if (isMessageLimitReached()) {
+      // Don't allow sending new messages when limit is reached
+      return;
+    }
 
     // Ensure message content is always a string
     const safeMessageContent =
@@ -594,7 +619,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           onContextAdded={handleContextAdd}
           activeContexts={activeContexts}
         />
-
         <ActiveContextSection
           activeContexts={activeContexts}
           isExpanded={isContextExpanded}
@@ -602,14 +626,27 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           onContextRemove={handleContextRemove}
           getContextSummary={() => getContextSummary(activeContexts)}
         />
-
         <MessagesArea messages={messages} />
-
-        {/* � Context Warning at 5 messages */}
-        {/* {shouldShowContextWarning() && !showStartNewChat && <ContextWarning />} */}
-
-        {/* �🔄 Start New Chat Button */}
-        {showStartNewChat && (
+        {/* ⚠️ Context Warning - Progressive Warning System */}
+        {(() => {
+          const warningData = getContextWarningLevel();
+          // Don't show warning if:
+          // 1. AI is thinking
+          // 2. We're at critical level (20+) - show Start New Chat button instead
+          // 3. showStartNewChat is already active
+          return warningData &&
+            !isThinking &&
+            !showStartNewChat &&
+            warningData.level !== "critical" ? (
+            <ContextWarning
+              level={warningData.level}
+              messageCount={warningData.messageCount}
+              onStartNewChat={handleStartNewChat}
+            />
+          ) : null;
+        })()}
+        {/* 🔄 Start New Chat Button */}
+        {showStartNewChat && !isThinking && (
           <div className="px-4 py-2">
             <StartNewChatButton
               onStartNewChat={handleStartNewChat}
@@ -617,11 +654,11 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
             />
           </div>
         )}
-
         {promptsVisible &&
           activeContexts.length === 0 &&
           !isThinking &&
-          !showStartNewChat && (
+          !showStartNewChat &&
+          !isMessageLimitReached() && (
             <PromptSuggestions
               isExpanded={isPromptsExpanded}
               onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
@@ -632,11 +669,11 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
               variant="general"
             />
           )}
-
         {promptsVisible &&
           activeContexts.length > 0 &&
           !isThinking &&
-          !showStartNewChat && (
+          !showStartNewChat &&
+          !isMessageLimitReached() && (
             <PromptSuggestions
               isExpanded={isPromptsExpanded}
               onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
@@ -649,7 +686,6 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
               variant="context"
             />
           )}
-
         <ChatInput
           inputValue={inputValue}
           onInputChange={setInputValue}
@@ -657,6 +693,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           onKeyPress={handleKeyPress}
           isThinking={isThinking}
           hasContext={activeContexts.length > 0}
+          disabled={isMessageLimitReached()}
         />
       </div>
     </ChatErrorBoundary>

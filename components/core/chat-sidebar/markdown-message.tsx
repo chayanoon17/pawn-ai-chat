@@ -12,7 +12,11 @@ export const MarkdownMessage = ({ content, isUser }: MarkdownMessageProps) => {
   const safeContent = typeof content === "string" ? content : String(content);
 
   if (isUser) {
-    return <p className="text-sm whitespace-pre-wrap">{safeContent}</p>;
+    return (
+      <p className="text-sm whitespace-pre-wrap selection:bg-white/40 selection:text-blue-700">
+        {safeContent}
+      </p>
+    );
   }
 
   return (

@@ -107,7 +107,7 @@ export const MessagesArea = ({ messages }: MessagesAreaProps) => {
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
                 message.type === "user"
-                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
+                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white selection:bg-white/40 selection:text-gray-800"
                   : "bg-white border border-gray-100 text-gray-900 shadow-md"
               }`}
             >

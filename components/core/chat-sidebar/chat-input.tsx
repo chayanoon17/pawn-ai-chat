@@ -9,6 +9,7 @@ interface ChatInputProps {
   onKeyPress: (e: React.KeyboardEvent) => void;
   isThinking: boolean;
   hasContext: boolean;
+  disabled?: boolean;
 }
 
 export const ChatInput = ({
@@ -18,6 +19,7 @@ export const ChatInput = ({
   onKeyPress,
   isThinking,
   hasContext,
+  disabled = false,
 }: ChatInputProps) => {
   return (
     <div className="p-4 border-t border-gray-200 bg-white shadow-lg">
@@ -44,10 +46,14 @@ export const ChatInput = ({
               onChange={(e) => onInputChange(e.target.value)}
               onKeyPress={onKeyPress}
               placeholder={
-                isThinking ? "AI กำลังคิด..." : "พิมพ์คำถามของคุณ..."
+                disabled
+                  ? "ถึงขีดจำกัดการสนทนาแล้ว กรุณาเริ่มแชทใหม่"
+                  : isThinking
+                  ? "AI กำลังคิด..."
+                  : "พิมพ์คำถามของคุณ..."
               }
               className="pr-12 py-3 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm placeholder:text-gray-400 shadow-sm"
-              disabled={isThinking}
+              disabled={isThinking || disabled}
             />
             {inputValue && !isThinking && (
               <button
@@ -61,7 +67,7 @@ export const ChatInput = ({
           <Button
             onClick={() => onSendMessage()}
             size="sm"
-            disabled={isThinking || !inputValue.trim()}
+            disabled={isThinking || !inputValue.trim() || disabled}
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
