@@ -12,6 +12,8 @@ import {
   PromptSuggestions,
   ChatInput,
   ChatErrorBoundary,
+  StartNewChatButton,
+  ContextWarning,
   generateDynamicPrompts,
   getPromptButtonStyle,
   getContextSummary,
@@ -35,6 +37,13 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
+
+  // 🔄 Start New Chat functionality
+  const [showStartNewChat, setShowStartNewChat] = useState(false);
+  const [startNewChatReason, setStartNewChatReason] = useState<
+    "error" | "context-limit"
+  >("error");
+  const [errorCount, setErrorCount] = useState(0); // นับจำนวน error ติดต่อกัน
 
   // 🎯 Widget Context & Filter Context
   const { onWidgetUpdate, contextReplacement } = useWidgetContext();
@@ -295,6 +304,72 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     handleSendMessage(safePrompt);
   };
 
+  // 🔄 Start New Chat Handler
+  const handleStartNewChat = () => {
+    setMessages([]);
+    setInputValue("");
+    setIsSending(false);
+    setIsThinking(false);
+    setPromptsVisible(true);
+    setActiveContexts([]);
+    setIsContextExpanded(false);
+    setIsPromptsExpanded(false);
+    setShowStartNewChat(false);
+    setErrorCount(0); // Reset error count
+    setConversationId(crypto.randomUUID());
+  };
+
+  // 🎯 useEffect to manage Start New Chat button visibility
+  useEffect(() => {
+    // Count user messages (exclude bot messages and context messages)
+    const userMessages = messages.filter((msg) => msg.type === "user");
+
+    // Show if 6 or more user messages
+    // if (userMessages.length >= 6 && !showStartNewChat) {
+    //   setStartNewChatReason("context-limit");
+    //   setShowStartNewChat(true);
+    //   return;
+    // }
+
+    // Check for persistent error messages (only show after multiple errors)
+    const recentMessages = messages.slice(-6); // Check last 6 messages
+    const errorMessages = recentMessages.filter(
+      (msg) =>
+        msg.type === "bot" &&
+        (msg.content.includes("การเชื่อมต่อถูกยกเลิก") ||
+          msg.content.includes("ขออภัยในความไม่สะดวก") ||
+          msg.content.includes("การสนทนาถูกขัดจังหวะ") ||
+          msg.content.includes("เกิดปัญหาการเชื่อมต่อ") ||
+          msg.content.includes("ไม่สามารถประมวลผล"))
+    );
+
+    // Show Start New Chat only if there are 2+ errors in recent messages
+    // or if the last 2 consecutive messages are errors
+    if (
+      !showStartNewChat &&
+      (errorMessages.length >= 2 ||
+        (recentMessages.length >= 2 &&
+          recentMessages
+            .slice(-2)
+            .every(
+              (msg) =>
+                msg.type === "bot" &&
+                (msg.content.includes("การเชื่อมต่อถูกยกเลิก") ||
+                  msg.content.includes("ขออภัยในความไม่สะดวก") ||
+                  msg.content.includes("การสนทนาถูกขัดจังหวะ"))
+            )))
+    ) {
+      setStartNewChatReason("error");
+      setShowStartNewChat(true);
+    }
+  }, [messages, showStartNewChat]);
+
+  // 🎯 Helper function to check if we should show context limit warning
+  // const shouldShowContextWarning = () => {
+  //   const userMessages = messages.filter((msg) => msg.type === "user");
+  //   return userMessages.length === 5; // Show warning at 5 messages (1 before limit)
+  // };
+
   const handleSendMessage = async (customMessage?: string) => {
     const messageContent = customMessage || inputValue.trim();
     if (!messageContent || isThinking) return;
@@ -415,6 +490,7 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
         () => {
           setIsSending(false);
           setIsThinking(false);
+          setErrorCount(0); // Reset error count on successful completion
         }
       );
     } catch (error) {
@@ -474,6 +550,16 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
           userFriendlyMessage + "\n\nขออภัยในความไม่สะดวก"
         ),
       ]);
+
+      // 🔄 Only show Start New Chat button after multiple consecutive errors
+      setErrorCount((prev) => prev + 1);
+
+      // Show Start New Chat only after 2 consecutive errors
+      if (errorCount >= 1) {
+        // This will be 2 after increment
+        setShowStartNewChat(true);
+        setStartNewChatReason("error");
+      }
     }
   };
 
@@ -519,31 +605,50 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
 
         <MessagesArea messages={messages} />
 
-        {promptsVisible && activeContexts.length === 0 && !isThinking && (
-          <PromptSuggestions
-            isExpanded={isPromptsExpanded}
-            onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
-            prompts={generalPrompts}
-            onPromptClick={handlePromptClick}
-            isLoading={isSending || isThinking}
-            title="คำถามที่แนะนำ"
-            variant="general"
-          />
+        {/* � Context Warning at 5 messages */}
+        {/* {shouldShowContextWarning() && !showStartNewChat && <ContextWarning />} */}
+
+        {/* �🔄 Start New Chat Button */}
+        {showStartNewChat && (
+          <div className="px-4 py-2">
+            <StartNewChatButton
+              onStartNewChat={handleStartNewChat}
+              reason={startNewChatReason}
+            />
+          </div>
         )}
 
-        {promptsVisible && activeContexts.length > 0 && !isThinking && (
-          <PromptSuggestions
-            isExpanded={isPromptsExpanded}
-            onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
-            prompts={contextPrompts}
-            onPromptClick={handlePromptClick}
-            isLoading={isSending || isThinking}
-            getPromptButtonStyle={getPromptButtonStyle}
-            title="คำถามสำหรับข้อมูลที่เลือก"
-            subtitle="อัจฉริยะ"
-            variant="context"
-          />
-        )}
+        {promptsVisible &&
+          activeContexts.length === 0 &&
+          !isThinking &&
+          !showStartNewChat && (
+            <PromptSuggestions
+              isExpanded={isPromptsExpanded}
+              onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
+              prompts={generalPrompts}
+              onPromptClick={handlePromptClick}
+              isLoading={isSending || isThinking}
+              title="คำถามที่แนะนำ"
+              variant="general"
+            />
+          )}
+
+        {promptsVisible &&
+          activeContexts.length > 0 &&
+          !isThinking &&
+          !showStartNewChat && (
+            <PromptSuggestions
+              isExpanded={isPromptsExpanded}
+              onToggleExpanded={() => setIsPromptsExpanded(!isPromptsExpanded)}
+              prompts={contextPrompts}
+              onPromptClick={handlePromptClick}
+              isLoading={isSending || isThinking}
+              getPromptButtonStyle={getPromptButtonStyle}
+              title="คำถามสำหรับข้อมูลที่เลือก"
+              subtitle="อัจฉริยะ"
+              variant="context"
+            />
+          )}
 
         <ChatInput
           inputValue={inputValue}

@@ -7,6 +7,8 @@ export { ChatInput } from "./chat-input";
 export { ThinkingAnimation } from "./thinking-animation";
 export { MarkdownMessage } from "./markdown-message";
 export { ChatErrorBoundary } from "./chat-error-boundary";
+export { StartNewChatButton } from "./start-new-chat-button";
+export { ContextWarning } from "./context-warning";
 
 // Export utilities
 export {

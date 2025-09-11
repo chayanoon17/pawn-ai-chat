@@ -26,7 +26,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = getBaseUrl();
-    this.timeout = 30000; // 30 วินาที timeout
+    this.timeout = 60000; // 60 วินาที timeout (เพิ่มขึ้นเพื่อรองรับ delay 20-25 วินาที + AI processing)
 
     // ตรวจสอบว่า baseURL ไม่ว่าง
     if (!this.baseURL) {
@@ -349,12 +349,16 @@ class ApiClient {
     const fullUrl = `${this.baseURL}${url}`;
     this.logRequest("POST", fullUrl, data);
 
-    const response = await this.fetchWithTimeout(fullUrl, {
+    // Use extended timeout for streaming requests (90 seconds)
+    const streamConfig = {
       ...this.getDefaultConfig(),
       ...config,
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
-    });
+      timeout: 90000, // 90 seconds for streaming with delays
+    };
+
+    const response = await this.fetchWithTimeout(fullUrl, streamConfig);
 
     if (!response.ok || !response.body) {
       throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
