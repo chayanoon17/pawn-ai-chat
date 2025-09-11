@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { sendChatMessageStream } from "@/services/chat-service";
 import { WidgetData, useWidgetContext } from "@/context/widget-context";
@@ -89,47 +89,12 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
     return unsubscribeWidgetUpdate;
   }, [onWidgetUpdate, contextReplacement]);
 
-  // 🔄 Auto-Update: Filter Changes (แสดงข้อความเดียว)
-  useEffect(() => {
-    let filterTimeout: NodeJS.Timeout;
-
-    const unsubscribeFilterChange = onFilterChange(() => {
-      // ยกเลิก timeout เก่า
-      if (filterTimeout) {
-        clearTimeout(filterTimeout);
-      }
-
-      // รอให้ widget อัพเดทก่อน แล้วค่อยแสดงข้อความรวม
-      filterTimeout = setTimeout(() => {
-        if (activeContexts.length > 0) {
-          const contextNames = activeContexts
-            .map((ctx) => ctx.widget.name)
-            .join(", ");
-          const combinedMessage = createSafeMessage(
-            `context-updated-${Date.now()}`,
-            "bot",
-            `🔄 อัพเดท Context เรียบร้อยแล้ว: ${contextNames}`
-          );
-
-          setMessages((prevMessages) => [...prevMessages, combinedMessage]);
-        }
-      }, 800); // รอให้ widget update เสร็จก่อน
-    });
-
-    return () => {
-      if (filterTimeout) {
-        clearTimeout(filterTimeout);
-      }
-      unsubscribeFilterChange();
-    };
-  }, [onFilterChange, activeContexts.length]);
-
   const latestMessagesRef = useRef<Message[]>(messages);
   useEffect(() => {
     latestMessagesRef.current = messages;
   }, [messages]);
 
-  // 🛡️ Safe JSON stringify function to handle circular references
+  // �️ Safe JSON stringify function to handle circular references
   const safeStringify = (obj: unknown): string => {
     const seen = new Set();
     try {
@@ -185,33 +150,71 @@ export const ChatSidebar = ({ onClose, className }: ChatSidebarProps) => {
   };
 
   // 🛡️ Helper function to create safe message objects
-  const createSafeMessage = (
-    id: string,
-    type: "user" | "bot",
-    content: unknown,
-    timestamp: Date = new Date()
-  ): Message => {
-    let safeContent: string;
+  const createSafeMessage = useCallback(
+    (
+      id: string,
+      type: "user" | "bot",
+      content: unknown,
+      timestamp: Date = new Date()
+    ): Message => {
+      let safeContent: string;
 
-    if (typeof content === "string") {
-      safeContent = content;
-    } else if (content === null || content === undefined) {
-      safeContent = "";
-    } else if (typeof content === "object") {
-      // ใช้ safeStringify สำหรับ object แทน String()
-      safeContent = safeStringify(content);
-    } else {
-      // สำหรับ primitive types อื่นๆ (number, boolean, etc.)
-      safeContent = String(content);
-    }
+      if (typeof content === "string") {
+        safeContent = content;
+      } else if (content === null || content === undefined) {
+        safeContent = "";
+      } else if (typeof content === "object") {
+        // ใช้ safeStringify สำหรับ object แทน String()
+        safeContent = safeStringify(content);
+      } else {
+        // สำหรับ primitive types อื่นๆ (number, boolean, etc.)
+        safeContent = String(content);
+      }
 
-    return {
-      id: String(id),
-      type,
-      content: safeContent,
-      timestamp,
+      return {
+        id: String(id),
+        type,
+        content: safeContent,
+        timestamp,
+      };
+    },
+    []
+  );
+
+  // �🔄 Auto-Update: Filter Changes (แสดงข้อความเดียว)
+  useEffect(() => {
+    let filterTimeout: NodeJS.Timeout;
+
+    const unsubscribeFilterChange = onFilterChange(() => {
+      // ยกเลิก timeout เก่า
+      if (filterTimeout) {
+        clearTimeout(filterTimeout);
+      }
+
+      // รอให้ widget อัพเดทก่อน แล้วค่อยแสดงข้อความรวม
+      filterTimeout = setTimeout(() => {
+        if (activeContexts.length > 0) {
+          const contextNames = activeContexts
+            .map((ctx) => ctx.widget.name)
+            .join(", ");
+          const combinedMessage = createSafeMessage(
+            `context-updated-${Date.now()}`,
+            "bot",
+            `🔄 อัพเดท Context เรียบร้อยแล้ว: ${contextNames}`
+          );
+
+          setMessages((prevMessages) => [...prevMessages, combinedMessage]);
+        }
+      }, 800); // รอให้ widget update เสร็จก่อน
+    });
+
+    return () => {
+      if (filterTimeout) {
+        clearTimeout(filterTimeout);
+      }
+      unsubscribeFilterChange();
     };
-  };
+  }, [onFilterChange, activeContexts.length, createSafeMessage]);
 
   // 🎯 Handle เพิ่ม Context จาก Widget - รองรับ Context Replacement
   const handleContextAdd = (widget: WidgetData) => {

@@ -16,7 +16,7 @@ export const ContextWarning = ({
   onStartNewChat,
 }: ContextWarningProps) => {
   const getWarningConfig = (): {
-    icon: any;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     bgColor: string;
     borderColor: string;
     iconColor: string;
