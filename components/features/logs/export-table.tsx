@@ -34,7 +34,17 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  FileSpreadsheet,
+  File,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getAllActivityLogsForExport, trackExportReport } from "@/services/log-service";
+import { exportToXlsx, exportToCsv, exportToPdf, ExportFormat } from "@/utils/export-utils";
 
 export function ExportTable({
   startDate,
@@ -47,6 +57,7 @@ export function ExportTable({
   const { isSuperAdmin, isAdmin } = usePermissions();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -119,6 +130,73 @@ export function ExportTable({
     startDate,
     endDate,
   ]); // ใช้ boolean values และ user?.id แทน user object
+
+  const formatDateForAPI = (date?: Date): string | null => {
+    if (!date) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      setIsExporting(true);
+      const isAdminRole = isUserSuperAdmin || isUserAdmin;
+      const targetUserId = isAdminRole ? null : user?.id ? String(user.id) : null;
+
+      const res = await getAllActivityLogsForExport({
+        activity: "EXPORT_REPORT",
+        userId: targetUserId,
+        startDate: formatDateForAPI(startDate),
+        endDate: formatDateForAPI(endDate),
+      });
+
+      const exportColumns = [
+        { header: "ชื่อผู้ใช้", key: "fullName" },
+        { header: "อีเมล", key: "email" },
+        { header: "ชื่อไฟล์", key: "filename" },
+        { header: "ขนาดไฟล์", key: "fileSize" },
+        { header: "สถานะ", key: "status" },
+        { header: "วันที่และเวลา", key: "createdAt" },
+      ];
+
+      const rows = (res.activityLogs || []).map((log: ActivityLog) => ({
+        fullName: log.user?.fullName ?? "-",
+        email: log.user?.email ?? "-",
+        filename: log.description ?? log.metadata?.filename ?? "-",
+        fileSize: log.metadata?.fileSize ? formatFileSize(getFileSize(log.metadata.fileSize)) : "-",
+        status: log.success ? "สำเร็จ" : "ล้มเหลว",
+        createdAt: new Date(log.createdAt).toLocaleString("th-TH"),
+      }));
+
+      const filename = `export-history-${new Date().toISOString().slice(0, 10)}`;
+      let size = 0;
+
+      if (format === "xlsx") {
+        const result = exportToXlsx(rows, exportColumns, filename);
+        size = result.size;
+      } else if (format === "csv") {
+        const result = exportToCsv(rows, exportColumns, filename);
+        size = result.size;
+      } else {
+        const result = await exportToPdf(rows, exportColumns, filename, "ประวัติการส่งออกไฟล์");
+        size = result.size;
+      }
+
+      await trackExportReport({
+        filename: `${filename}.${format}`,
+        format,
+        recordsCount: rows.length,
+        fileSize: size,
+        reportType: "export-history",
+      });
+    } catch (err) {
+      console.error("Export failed", err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Helper function to get file size
   const getFileSize = (fileSize: unknown): number => {
@@ -197,6 +275,33 @@ export function ExportTable({
                   className="pl-10 w-64"
                 />
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isExporting}
+                    className="text-slate-600 border-slate-300"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isExporting ? "กำลัง Export..." : "Export"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2 text-green-600" />
+                    Excel (.xlsx)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>
+                    <FileText className="w-4 h-4 mr-2 text-blue-600" />
+                    CSV (.csv)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                    <File className="w-4 h-4 mr-2 text-red-600" />
+                    PDF (.pdf)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

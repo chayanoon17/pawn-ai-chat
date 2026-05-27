@@ -96,7 +96,39 @@ export async function trackMenuAccess(data: MenuAccessData): Promise<void> {
   try {
     await apiClient.post("/api/v1/activity/menu-access", data);
   } catch (error) {
-    // Log error แต่ไม่ throw เพื่อไม่ให้กระทบการทำงานของเมนู
     console.error("Failed to track menu access:", error);
   }
+}
+
+export interface TrackExportReportData {
+  filename: string;
+  format: "xlsx" | "csv" | "pdf";
+  recordsCount?: number;
+  fileSize?: number;
+  reportType?: string;
+  success?: boolean;
+}
+
+// บันทึกการ export รายงาน
+export async function trackExportReport(data: TrackExportReportData): Promise<void> {
+  try {
+    await apiClient.post("/api/v1/activity/export-report", data);
+  } catch (error) {
+    console.error("Failed to track export report:", error);
+  }
+}
+
+// ดึงข้อมูลทั้งหมดสำหรับ export (ไม่มี pagination)
+export async function getAllActivityLogsForExport({
+  activity,
+  startDate,
+  endDate,
+  userId,
+}: {
+  activity?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  userId?: string | null;
+}) {
+  return getActivityLogs({ page: 1, limit: 10000, activity, startDate, endDate, userId });
 }
