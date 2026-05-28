@@ -179,10 +179,38 @@ export function EditRoleDialog({
           {/* Menu Permissions - Super Admin และ Admin */}
           {(isSuperAdmin() || isAdmin()) && (
             <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
-              <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
-                <LayoutGrid className="w-4 h-4 text-slate-500" />
-                <span>สิทธิ์การเข้าถึงเมนู</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-slate-700 flex items-center space-x-2">
+                  <LayoutGrid className="w-4 h-4 text-slate-500" />
+                  <span>สิทธิ์การเข้าถึงเมนู</span>
+                </h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7 px-2 border-slate-300 text-slate-600 hover:bg-slate-100"
+                  onClick={() => {
+                    const allSelected =
+                      availableMenuPermissions.length > 0 &&
+                      availableMenuPermissions.every((mp) =>
+                        (editRoleData.menuPermissionIds || []).includes(mp.id)
+                      );
+                    setEditRoleData((prev) => ({
+                      ...prev,
+                      menuPermissionIds: allSelected
+                        ? []
+                        : availableMenuPermissions.map((mp) => mp.id),
+                    }));
+                  }}
+                >
+                  {availableMenuPermissions.length > 0 &&
+                  availableMenuPermissions.every((mp) =>
+                    (editRoleData.menuPermissionIds || []).includes(mp.id)
+                  )
+                    ? "ล้างทั้งหมด"
+                    : "เลือกทั้งหมด"}
+                </Button>
+              </div>
               <p className="text-xs text-slate-500 mb-3">
                 เลือกเมนูที่ตำแหน่งนี้สามารถเข้าถึงได้ (Super Admin และ Admin)
               </p>
@@ -236,10 +264,38 @@ export function EditRoleDialog({
           {/* Permissions - เฉพาะ Super Admin เท่านั้น */}
           {isSuperAdmin() && (
             <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
-              <h3 className="font-medium text-slate-700 mb-3 flex items-center space-x-2">
-                <KeyRound className="w-4 h-4 text-slate-500" />
-                <span>สิทธิ์การใช้งาน</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-slate-700 flex items-center space-x-2">
+                  <KeyRound className="w-4 h-4 text-slate-500" />
+                  <span>สิทธิ์การใช้งาน</span>
+                </h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7 px-2 border-slate-300 text-slate-600 hover:bg-slate-100"
+                  onClick={() => {
+                    const allSelected =
+                      availablePermissions.length > 0 &&
+                      availablePermissions.every((p) =>
+                        (editRoleData.permissionIds || []).includes(p.id)
+                      );
+                    setEditRoleData((prev) => ({
+                      ...prev,
+                      permissionIds: allSelected
+                        ? []
+                        : availablePermissions.map((p) => p.id),
+                    }));
+                  }}
+                >
+                  {availablePermissions.length > 0 &&
+                  availablePermissions.every((p) =>
+                    (editRoleData.permissionIds || []).includes(p.id)
+                  )
+                    ? "ล้างทั้งหมด"
+                    : "เลือกทั้งหมด"}
+                </Button>
+              </div>
               <p className="text-xs text-slate-500 mb-3">
                 เลือกสิทธิ์ที่ตำแหน่งนี้จะมี (เฉพาะ Super Admin)
               </p>

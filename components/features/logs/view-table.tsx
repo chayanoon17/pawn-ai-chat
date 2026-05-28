@@ -100,11 +100,11 @@ export default function ViewTable({
       });
 
       const exportColumns = [
-        { header: "ชื่อผู้ใช้", key: "fullName" },
-        { header: "อีเมล", key: "email" },
-        { header: "เมนู", key: "menuName" },
-        { header: "เส้นทาง", key: "menuPath" },
-        { header: "วันที่และเวลา", key: "createdAt" },
+        { header: "ชื่อผู้ใช้", pdfHeader: "Full Name", key: "fullName" },
+        { header: "อีเมล", pdfHeader: "Email", key: "email" },
+        { header: "เมนู", pdfHeader: "Menu", key: "menuName" },
+        { header: "เส้นทาง", pdfHeader: "Path", key: "menuPath" },
+        { header: "วันที่และเวลา", pdfHeader: "Date/Time", key: "createdAt" },
       ];
 
       const rows = (res.activityLogs || []).map((log: ActivityLog) => ({
@@ -125,7 +125,7 @@ export default function ViewTable({
         const result = exportToCsv(rows, exportColumns, filename);
         size = result.size;
       } else {
-        const result = await exportToPdf(rows, exportColumns, filename, "ประวัติการเข้าดู");
+        const result = await exportToPdf(rows, exportColumns, filename, "View History");
         size = result.size;
       }
 

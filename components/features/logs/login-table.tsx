@@ -50,11 +50,11 @@ import {
 import { exportToXlsx, exportToCsv, exportToPdf, ExportFormat } from "@/utils/export-utils";
 
 const EXPORT_COLUMNS = [
-  { header: "ชื่อผู้ใช้", key: "fullName" },
-  { header: "อีเมล", key: "email" },
-  { header: "กิจกรรม", key: "activity" },
-  { header: "วันที่และเวลา", key: "createdAt" },
-  { header: "IP Address", key: "ipAddress" },
+  { header: "ชื่อผู้ใช้", pdfHeader: "Full Name", key: "fullName" },
+  { header: "อีเมล", pdfHeader: "Email", key: "email" },
+  { header: "กิจกรรม", pdfHeader: "Activity", key: "activity" },
+  { header: "วันที่และเวลา", pdfHeader: "Date/Time", key: "createdAt" },
+  { header: "IP Address", pdfHeader: "IP Address", key: "ipAddress" },
 ];
 
 function toExportRow(log: ActivityLog) {
@@ -79,6 +79,7 @@ export function LoginTable({
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -103,6 +104,7 @@ export function LoginTable({
     const fetchLogs = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const isAdminRole = isUserSuperAdmin || isUserAdmin;
         const targetUserId = isAdminRole ? null : user?.id ? String(user.id) : null;
 
@@ -120,6 +122,8 @@ export function LoginTable({
         setTotalPages(Math.ceil((res.total || 0) / itemsPerPage));
       } catch (err) {
         console.error("Request failed", err);
+        const message = err instanceof Error ? err.message : "ไม่สามารถโหลดข้อมูลได้";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -159,7 +163,7 @@ export function LoginTable({
         const result = exportToCsv(rows, EXPORT_COLUMNS, filename);
         size = result.size;
       } else {
-        const result = await exportToPdf(rows, EXPORT_COLUMNS, filename, "ประวัติการเข้าสู่ระบบ");
+        const result = await exportToPdf(rows, EXPORT_COLUMNS, filename, "Login History");
         size = result.size;
       }
 
@@ -257,7 +261,12 @@ export function LoginTable({
         </CardHeader>
 
         <CardContent>
-          {isLoading ? (
+          {error && (
+            <div className="text-center py-8 text-red-500 text-sm">
+              เกิดข้อผิดพลาด: {error}
+            </div>
+          )}
+          {!error && isLoading ? (
             <div className="space-y-4">
               <div className="rounded-lg border border-slate-200 overflow-hidden">
                 <div className="bg-slate-50 p-4">
@@ -292,7 +301,7 @@ export function LoginTable({
                 </div>
               </div>
             </div>
-          ) : (
+          ) : !error ? (
             <div className="rounded-lg border border-slate-200 overflow-hidden">
               <Table>
                 <TableHeader className="bg-slate-50">
@@ -348,9 +357,9 @@ export function LoginTable({
                 </TableBody>
               </Table>
             </div>
-          )}
+          ) : null}
 
-          {!isLoading && totalPages > 1 && (
+          {!isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
               <div className="text-sm text-slate-500">
                 แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง{" "}

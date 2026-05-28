@@ -58,6 +58,7 @@ export function ExportTable({
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -114,8 +115,11 @@ export function ExportTable({
         setLogs(logs);
         setTotalItems(totalItems);
         setTotalPages(totalPages);
+        setError(null);
       } catch (err) {
         console.error("เกิดข้อผิดพลาด:", err);
+        const message = err instanceof Error ? err.message : "ไม่สามารถโหลดข้อมูลได้";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -153,12 +157,12 @@ export function ExportTable({
       });
 
       const exportColumns = [
-        { header: "ชื่อผู้ใช้", key: "fullName" },
-        { header: "อีเมล", key: "email" },
-        { header: "ชื่อไฟล์", key: "filename" },
-        { header: "ขนาดไฟล์", key: "fileSize" },
-        { header: "สถานะ", key: "status" },
-        { header: "วันที่และเวลา", key: "createdAt" },
+        { header: "ชื่อผู้ใช้", pdfHeader: "Full Name", key: "fullName" },
+        { header: "อีเมล", pdfHeader: "Email", key: "email" },
+        { header: "ชื่อไฟล์", pdfHeader: "Filename", key: "filename" },
+        { header: "ขนาดไฟล์", pdfHeader: "File Size", key: "fileSize" },
+        { header: "สถานะ", pdfHeader: "Status", key: "status" },
+        { header: "วันที่และเวลา", pdfHeader: "Date/Time", key: "createdAt" },
       ];
 
       const rows = (res.activityLogs || []).map((log: ActivityLog) => ({
@@ -180,7 +184,7 @@ export function ExportTable({
         const result = exportToCsv(rows, exportColumns, filename);
         size = result.size;
       } else {
-        const result = await exportToPdf(rows, exportColumns, filename, "ประวัติการส่งออกไฟล์");
+        const result = await exportToPdf(rows, exportColumns, filename, "Export History");
         size = result.size;
       }
 
@@ -307,7 +311,12 @@ export function ExportTable({
         </CardHeader>
 
         <CardContent>
-          {isLoading ? (
+          {error && (
+            <div className="text-center py-8 text-red-500 text-sm">
+              เกิดข้อผิดพลาด: {error}
+            </div>
+          )}
+          {!error && isLoading ? (
             <div className="space-y-4">
               {/* Table Header Skeleton */}
               <div className="rounded-lg border border-slate-200 overflow-hidden">
@@ -352,7 +361,7 @@ export function ExportTable({
                 </div>
               </div>
             </div>
-          ) : (
+          ) : !error ? (
             <div className="rounded-lg border border-slate-200 overflow-hidden">
               <Table>
                 <TableHeader className="bg-slate-50">
@@ -435,10 +444,10 @@ export function ExportTable({
                 </TableBody>
               </Table>
             </div>
-          )}
+          ) : null}
 
           {/* Pagination */}
-          {!isLoading && totalPages > 1 && (
+          {!isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
               <div className="text-sm text-slate-500">
                 แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง{" "}

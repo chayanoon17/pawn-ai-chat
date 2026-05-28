@@ -134,7 +134,7 @@ export function RoleTable({
                 ผู้ใช้ทั้งหมด
               </p>
               <div className="text-xl font-semibold text-slate-800">
-                {roles.reduce((sum, role) => sum + role.userCount, 0)}
+                {roles.reduce((sum, role) => sum + (role.userCount ?? 0), 0)}
               </div>
             </div>
           </div>
@@ -265,7 +265,7 @@ export function RoleTable({
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                          {role.userCount} คน
+                          {role.userCount ?? 0} คน
                         </span>
                       </TableCell>
                       <TableCell className="text-slate-600 text-sm">
@@ -346,7 +346,7 @@ export function RoleTable({
                       จำนวนผู้ใช้
                     </label>
                     <p className="text-sm text-slate-800 mt-1">
-                      {selectedRole.userCount} คน
+                      {selectedRole.userCount ?? 0} คน
                     </p>
                   </div>
                   <div className="col-span-2">

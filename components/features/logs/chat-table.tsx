@@ -169,12 +169,12 @@ export default function ChatTable({
       });
 
       const exportColumns = [
-        { header: "ผู้ใช้", key: "fullName" },
-        { header: "อีเมล", key: "email" },
-        { header: "ID การสนทนา", key: "conversationId" },
-        { header: "จำนวนข้อความ", key: "messageCount" },
-        { header: "โมเดล", key: "model" },
-        { header: "อัปเดตล่าสุด", key: "lastMessageAt" },
+        { header: "ผู้ใช้", pdfHeader: "User", key: "fullName" },
+        { header: "อีเมล", pdfHeader: "Email", key: "email" },
+        { header: "ID การสนทนา", pdfHeader: "Conversation ID", key: "conversationId" },
+        { header: "จำนวนข้อความ", pdfHeader: "Message Count", key: "messageCount" },
+        { header: "โมเดล", pdfHeader: "Model", key: "model" },
+        { header: "อัปเดตล่าสุด", pdfHeader: "Last Updated", key: "lastMessageAt" },
       ];
 
       const rows = (allData.conversations || []).map((c) => ({
@@ -196,7 +196,7 @@ export default function ChatTable({
         const result = exportToCsv(rows, exportColumns, filename);
         size = result.size;
       } else {
-        const result = await exportToPdf(rows, exportColumns, filename, "ประวัติการสนทนา");
+        const result = await exportToPdf(rows, exportColumns, filename, "Chat History");
         size = result.size;
       }
 

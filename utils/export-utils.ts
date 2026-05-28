@@ -4,6 +4,7 @@ export type ExportFormat = "xlsx" | "csv" | "pdf";
 
 export interface ExportColumn {
   header: string;
+  pdfHeader?: string; // English header for PDF (avoids Thai font issues)
   key: string;
 }
 
@@ -18,6 +19,17 @@ export function exportToXlsx(
   ];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Auto column width based on content
+  const colWidths = columns.map((c, colIdx) => {
+    const maxLen = Math.max(
+      c.header.length,
+      ...rows.map((row) => String(row[c.key] ?? "").length)
+    );
+    return { wch: Math.min(maxLen + 2, 50) };
+  });
+  ws["!cols"] = colWidths;
+
   XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
   const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
   const blob = new Blob([buf], {
@@ -32,17 +44,14 @@ export function exportToCsv(
   columns: ExportColumn[],
   filename: string
 ): { blob: Blob; size: number } {
+  // Always wrap in quotes to prevent Excel auto-formatting (especially dates)
   const escape = (val: unknown) => {
     const str = String(val ?? "").replace(/"/g, '""');
-    return str.includes(",") || str.includes('"') || str.includes("\n")
-      ? `"${str}"`
-      : str;
+    return `"${str}"`;
   };
   const lines = [
     columns.map((c) => escape(c.header)).join(","),
-    ...rows.map((row) =>
-      columns.map((c) => escape(row[c.key])).join(",")
-    ),
+    ...rows.map((row) => columns.map((c) => escape(row[c.key])).join(",")),
   ];
   const bom = "﻿";
   const blob = new Blob([bom + lines.join("\n")], {
@@ -62,14 +71,21 @@ export async function exportToPdf(
   const { default: autoTable } = await import("jspdf-autotable");
 
   const doc = new jsPDF({ orientation: "landscape" });
+
+  // Use pdfHeader (English) if provided, otherwise fallback to header
+  const pdfColumns = columns.map((c) => ({
+    ...c,
+    header: c.pdfHeader ?? c.header,
+  }));
+
   if (title) {
     doc.setFontSize(14);
     doc.text(title, 14, 15);
   }
 
   autoTable(doc, {
-    head: [columns.map((c) => c.header)],
-    body: rows.map((row) => columns.map((c) => String(row[c.key] ?? ""))),
+    head: [pdfColumns.map((c) => c.header)],
+    body: rows.map((row) => pdfColumns.map((c) => String(row[c.key] ?? ""))),
     startY: title ? 22 : 10,
     styles: { font: "helvetica", fontSize: 9 },
     headStyles: { fillColor: [59, 130, 246] },
